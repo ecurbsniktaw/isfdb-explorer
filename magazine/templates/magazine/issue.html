@@ -1,0 +1,119 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}{{ issue.pub_title }} — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+{# Back link — preserves search state if we came from search results #}
+<div class="mb-3">
+  {% if back_params %}
+    <a href="/?{{ back_params }}" class="text-decoration-none">&larr; Back to results</a>
+  {% else %}
+    <a href="/" class="text-decoration-none">&larr; Search</a>
+  {% endif %}
+</div>
+
+<div class="d-flex align-items-baseline gap-3 mb-1">
+  <h1 class="h3 mb-0">{{ issue.pub_title }}</h1>
+</div>
+<p class="text-muted mb-4">{{ issue.formatted_date }}</p>
+
+{% if not narrative and not other %}
+  <p class="text-muted">No contents recorded for this issue.</p>
+{% else %}
+
+  {# ── Narrative content ─────────────────────────────────────────────── #}
+  {% if narrative %}
+  <h2 class="h5 mb-2">Contents</h2>
+  <div class="table-responsive mb-4">
+    <table class="table table-sm table-hover toc-table">
+      <thead class="table-light">
+        <tr>
+          <th style="width:5%">Page</th>
+          <th style="width:12%">Type</th>
+          <th style="width:10%">Kind</th>
+          <th style="width:43%">Title</th>
+          <th>Author(s)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in narrative %}
+        <tr>
+          <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
+          <td>
+            <span class="badge text-bg-secondary badge-type fw-normal">
+              {{ row.type_label }}
+            </span>
+          </td>
+          <td class="text-muted small">{{ row.kind }}</td>
+          <td>{{ row.title_title }}</td>
+          <td class="text-muted">{{ row.authors|default:"uncredited" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {# ── Art / Editorial (collapsible) ────────────────────────────────── #}
+  {% if other %}
+  <div class="mb-2">
+    <button id="toggleOther"
+            class="btn btn-sm btn-outline-secondary"
+            type="button"
+            aria-expanded="false"
+            aria-controls="otherContent">
+      Show art &amp; editorial ({{ other|length }} entries)
+    </button>
+  </div>
+  <div class="collapse" id="otherContent">
+    <div class="table-responsive mb-4">
+      <table class="table table-sm table-hover toc-table">
+        <thead class="table-light">
+          <tr>
+            <th style="width:5%">Page</th>
+            <th style="width:12%">Type</th>
+            <th style="width:10%">Kind</th>
+            <th style="width:43%">Title</th>
+            <th>Author(s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in other %}
+          <tr>
+            <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
+            <td>
+              <span class="badge text-bg-light text-dark border badge-type fw-normal">
+                {{ row.type_label }}
+              </span>
+            </td>
+            <td class="text-muted small">{{ row.kind }}</td>
+            <td>{{ row.title_title }}</td>
+            <td class="text-muted">{{ row.authors|default:"uncredited" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var btn    = document.getElementById('toggleOther');
+    var panel  = document.getElementById('otherContent');
+    if (!btn || !panel) return;
+
+    btn.addEventListener('click', function () {
+      var expanded = panel.classList.toggle('show');
+      btn.setAttribute('aria-expanded', expanded);
+      btn.textContent = (expanded ? 'Hide' : 'Show') +
+                        ' art & editorial ({{ other|length }} entries)';
+    });
+  })();
+</script>
+{% endblock %}

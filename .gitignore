@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Django secrets — each machine has its own copy, never committed
+isfdb_site/local_settings.py
+
+# Virtual environment
+venv/
+
+# Large data files not needed in the repo
+isfdb_schema.sql
+
+# Claude Code local config
+.claude/settings.local.json

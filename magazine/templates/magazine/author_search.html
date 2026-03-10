@@ -1,0 +1,104 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Author Fiction Search — ISFDB Explorer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <h1 class="h3 mb-4">Author Fiction Search</h1>
+
+    <form method="get" action="/author/" class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-5">
+            <label for="magazine" class="form-label fw-semibold">Magazine name</label>
+            <input type="text"
+                   id="magazine"
+                   name="magazine"
+                   class="form-control"
+                   placeholder="e.g. Astounding Science-Fiction"
+                   value="{{ magazine_name }}"
+                   required
+                   autofocus>
+            <div class="form-text">Partial match, case-insensitive</div>
+          </div>
+          <div class="col-md-5">
+            <label for="author" class="form-label fw-semibold">Author name</label>
+            <input type="text"
+                   id="author"
+                   name="author"
+                   class="form-control"
+                   placeholder="e.g. Heinlein or Robert Heinlein"
+                   value="{{ author_name }}"
+                   required>
+            <div class="form-text">Partial match against canonical author name</div>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    {% if error %}
+      <div class="alert alert-warning" role="alert">{{ error }}</div>
+    {% endif %}
+
+    {% if rows %}
+      <p class="text-muted mb-3">
+        <strong>{{ total }}</strong> piece{{ total|pluralize }} of fiction
+        across <strong>{{ issue_count }}</strong> issue{{ issue_count|pluralize }}
+      </p>
+
+      <div class="table-responsive">
+        <table class="table table-sm table-hover toc-table">
+          <thead class="table-light">
+            <tr>
+              <th style="width:16%">Date</th>
+              <th style="width:5%">Page</th>
+              <th style="width:11%">Type</th>
+              <th style="width:10%">Kind</th>
+              <th style="width:34%">Title</th>
+              <th>Author(s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td>
+                <a href="{% url 'issue_detail' row.pub_id %}?magazine={{ magazine_name|urlencode }}&author={{ author_name|urlencode }}"
+                   class="text-decoration-none">
+                  {{ row.formatted_date }}
+                </a>
+              </td>
+              <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
+              <td>
+                <span class="badge text-bg-secondary badge-type fw-normal">
+                  {{ row.type_label }}
+                </span>
+              </td>
+              <td class="text-muted small">{{ row.kind }}</td>
+              <td>{{ row.title_title }}</td>
+              <td class="text-muted">{{ row.authors|default:"uncredited" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% elif not error and not magazine_name %}
+      <p class="text-muted">
+        Enter a magazine name and author above to see all their fiction in that magazine.
+        <br>Examples:
+        <a href="/author/?magazine=Astounding&author=Heinlein">Heinlein in Astounding</a>
+        &middot;
+        <a href="/author/?magazine=Astounding&author=Asimov">Asimov in Astounding</a>
+        &middot;
+        <a href="/author/?magazine=Galaxy&author=Sheckley">Sheckley in Galaxy</a>
+      </p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
