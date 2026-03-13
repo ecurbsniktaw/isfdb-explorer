@@ -150,15 +150,27 @@ def get_author_fiction(cursor, magazine_name: str, author_name: str) -> list:
     """
     Return all fiction published in a magazine by a given author.
 
-    Uses two separate joins on canonical_author/authors:
-      - ca_match / a_match  : filters rows to only those involving the searched author
-      - ca_all   / a_all    : fetches all authors for display (handles co-authored works)
+    Uses a two-step approach to avoid slow leading-wildcard LIKE on a large table:
+      1. Resolve author_name → author_ids via a fast scan of the authors table.
+      2. Main query joins canonical_author by author_id (indexed), avoiding any
+         wildcard-driven temp-table materialisation in the main query plan.
 
     Returns a list of dicts with keys:
         pub_id, pub_title, pub_year (int), pub_month (int),
         title_id, title_title, title_ttype, type_label,
         title_storylen, pubc_page, authors, formatted_date
     """
+    # Step 1 — resolve author name to IDs (fast: small table, result cached by MySQL)
+    cursor.execute(
+        "SELECT author_id FROM authors WHERE author_canonical LIKE %s",
+        (f"%{author_name}%",),
+    )
+    author_ids = [row["author_id"] for row in cursor.fetchall()]
+    if not author_ids:
+        return []
+
+    # Step 2 — main query using exact author_id IN (...), no wildcard in the join
+    id_placeholders   = ", ".join(["%s"] * len(author_ids))
     type_placeholders = ", ".join(["%s"] * len(FICTION_TYPES))
 
     query = f"""
@@ -171,23 +183,22 @@ def get_author_fiction(cursor, magazine_name: str, author_name: str) -> list:
             t.title_title,
             t.title_ttype,
             t.title_storylen,
-            MIN(pc.pubc_page) AS pubc_page,
+            MIN(pc.pubc_page)         AS pubc_page,
             GROUP_CONCAT(
                 DISTINCT a_all.author_canonical
                 ORDER BY ca_all.ca_id
                 SEPARATOR ' & '
             ) AS authors
         FROM pubs p
-        JOIN pub_content pc     ON p.pub_id    = pc.pub_id
-        JOIN titles t           ON pc.title_id = t.title_id
-        JOIN canonical_author ca_match ON t.title_id  = ca_match.title_id
-        JOIN authors a_match           ON ca_match.author_id = a_match.author_id
-        LEFT JOIN canonical_author ca_all ON t.title_id  = ca_all.title_id
-        LEFT JOIN authors a_all           ON ca_all.author_id = a_all.author_id
-        JOIN languages lang ON t.title_language = lang.lang_id
+        JOIN pub_content pc               ON pc.pub_id    = p.pub_id
+        JOIN titles t                     ON t.title_id   = pc.title_id
+        JOIN canonical_author ca          ON ca.title_id  = t.title_id
+                                         AND ca.author_id IN ({id_placeholders})
+        LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
+        LEFT JOIN authors a_all           ON a_all.author_id = ca_all.author_id
+        JOIN languages lang               ON lang.lang_id = t.title_language
         WHERE p.pub_ctype = 'MAGAZINE'
           AND p.pub_title LIKE %s
-          AND a_match.author_canonical LIKE %s
           AND t.title_ttype IN ({type_placeholders})
           AND lang.lang_code = 'eng'
         GROUP BY
@@ -202,7 +213,7 @@ def get_author_fiction(cursor, magazine_name: str, author_name: str) -> list:
                 ELSE MIN(pc.pubc_page)
             END
     """
-    cursor.execute(query, (f"%{magazine_name}%", f"%{author_name}%", *FICTION_TYPES))
+    cursor.execute(query, (*author_ids, f"%{magazine_name}%", *FICTION_TYPES))
     rows = cursor.fetchall()
 
     fiction_set = set(FICTION_TYPES)
