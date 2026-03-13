@@ -194,8 +194,8 @@ def get_author_fiction(cursor, magazine_name: str, author_name: str) -> list:
             t.title_id, t.title_title, t.title_ttype,
             t.title_storylen
         ORDER BY
-            YEAR(p.pub_year),
-            MONTH(p.pub_year),
+            YEAR(MIN(p.pub_year)),
+            MONTH(MIN(p.pub_year)),
             CASE
                 WHEN MIN(pc.pubc_page) REGEXP '^[0-9]+$'
                 THEN LPAD(MIN(pc.pubc_page), 6, '0')
