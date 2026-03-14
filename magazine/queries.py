@@ -9,6 +9,9 @@ Always use YEAR() / MONTH() for filtering — never DATE_FORMAT (the
 mysql-connector-python driver sends '%%Y' to MySQL as a literal '%Y' string).
 """
 
+import re
+from urllib.parse import urlparse
+
 MONTH_NAMES = [
     "", "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
@@ -41,6 +44,60 @@ NARRATIVE_TYPES = {
 
 # Fiction types only (excludes essays/reviews/etc.)
 FICTION_TYPES = ("SHORTFICTION", "NOVEL", "SERIAL", "POEM", "CHAPBOOK")
+
+# Human-readable labels for well-known domains used in the webpages table
+_WEBPAGE_LABELS = {
+    "en.wikipedia.org":        "Wikipedia",
+    "imdb.com":                "IMDb",
+    "www.imdb.com":            "IMDb",
+    "sf-encyclopedia.com":     "SF Encyclopedia",
+    "www.sf-encyclopedia.com": "SF Encyclopedia",
+    "isfdb.org":               "ISFDB",
+    "www.isfdb.org":           "ISFDB",
+}
+
+
+def _clean_author_note(note: str) -> str:
+    """Strip ISFDB wiki markup from a biographical note."""
+    if not note:
+        return ""
+    note = re.sub(r"\{\{A\|([^}]+)\}\}", r"\1", note)   # {{A|name}} → name
+    note = re.sub(r"\{\{[^}]+\}\}", "", note)             # other {{…}} → drop
+    return note.strip()
+
+
+def _webpage_label(url: str) -> str:
+    """Return a short human-readable label for a URL."""
+    try:
+        domain = urlparse(url).netloc.lower()
+        if domain in _WEBPAGE_LABELS:
+            return _WEBPAGE_LABELS[domain]
+        return domain.removeprefix("www.")
+    except Exception:
+        return url
+
+
+def _make_author_list(authors_str, author_ids_str) -> list:
+    """
+    Convert parallel GROUP_CONCAT strings into a structured list.
+
+    authors_str     e.g. "Isaac Asimov & Robert Silverberg"
+    author_ids_str  e.g. "5,54"
+    Returns [{'name': str, 'id': int|None}, …]
+    """
+    if not authors_str:
+        return []
+    names = authors_str.split(" & ")
+    ids   = (author_ids_str or "").split(",")
+    result = []
+    for i, name in enumerate(names):
+        if name.strip():
+            raw_id = ids[i].strip() if i < len(ids) else ""
+            result.append({
+                "name": name.strip(),
+                "id":   int(raw_id) if raw_id.isdigit() else None,
+            })
+    return result
 
 
 def format_date(year, month) -> str:
@@ -116,7 +173,12 @@ def get_contents(cursor, pub_id: int) -> list:
                 a.author_canonical
                 ORDER BY ca.ca_id
                 SEPARATOR ' & '
-            ) AS authors
+            ) AS authors,
+            GROUP_CONCAT(
+                a.author_id
+                ORDER BY ca.ca_id
+                SEPARATOR ','
+            ) AS author_ids
         FROM pub_content pc
         JOIN titles t ON pc.title_id = t.title_id
         LEFT JOIN canonical_author ca ON t.title_id = ca.title_id
@@ -139,9 +201,10 @@ def get_contents(cursor, pub_id: int) -> list:
     # Annotate each row with a human-readable type label
     fiction_set = set(FICTION_TYPES)
     for row in rows:
-        row["type_label"] = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
         row["is_narrative"] = row["title_ttype"] in NARRATIVE_TYPES
-        row["kind"] = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
+        row["kind"]        = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
+        row["author_list"] = _make_author_list(row.get("authors"), row.get("author_ids"))
 
     return rows
 
@@ -188,7 +251,12 @@ def get_author_fiction(cursor, magazine_name: str, author_name: str) -> list:
                 DISTINCT a_all.author_canonical
                 ORDER BY ca_all.ca_id
                 SEPARATOR ' & '
-            ) AS authors
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_id
+                ORDER BY ca_all.ca_id
+                SEPARATOR ','
+            ) AS author_ids
         FROM pubs p
         JOIN pub_content pc               ON pc.pub_id    = p.pub_id
         JOIN titles t                     ON t.title_id   = pc.title_id
@@ -221,5 +289,80 @@ def get_author_fiction(cursor, magazine_name: str, author_name: str) -> list:
         row["type_label"]     = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
         row["formatted_date"] = format_date(row["pub_year"], row["pub_month"])
         row["kind"] = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
+        row["author_list"]    = _make_author_list(row.get("authors"), row.get("author_ids"))
 
     return rows
+
+
+def get_author_detail(cursor, author_id: int) -> dict | None:
+    """
+    Return full author info for the author detail page, or None if not found.
+
+    Returned dict keys:
+        author_id, author_canonical, author_legalname, author_birthplace,
+        author_birthdate (date|None), author_deathdate (date|None),
+        author_image, author_note (wiki markup stripped),
+        debut_year (int|None), title_count (int|None),
+        real_author (dict|None — set when this record is itself a pen name),
+        pseudonyms (list of {author_id, author_canonical} — Latin script only),
+        webpages (list of {url, label})
+    """
+    cursor.execute("""
+        SELECT
+            a.author_id,
+            a.author_canonical,
+            a.author_legalname,
+            a.author_birthplace,
+            a.author_birthdate,
+            a.author_deathdate,
+            a.author_image,
+            a.author_note,
+            abd.debut_year,
+            abd.title_count
+        FROM authors a
+        LEFT JOIN authors_by_debut_date abd ON abd.author_id = a.author_id
+        WHERE a.author_id = %s
+    """, (author_id,))
+    author = cursor.fetchone()
+    if not author:
+        return None
+
+    author["author_note"] = _clean_author_note(author.get("author_note"))
+
+    # Is this record itself a pen name? If so, surface the canonical author.
+    cursor.execute("""
+        SELECT a2.author_id, a2.author_canonical
+        FROM pseudonyms p
+        JOIN authors a2 ON a2.author_id = p.author_id
+        WHERE p.pseudonym = %s
+    """, (author_id,))
+    author["real_author"] = cursor.fetchone()   # None when this is a canonical name
+
+    # Pen names (this is the canonical author — fetch its pseudonyms).
+    # Filter to Latin-script names only; foreign-script transliterations are noise.
+    cursor.execute("""
+        SELECT a2.author_id, a2.author_canonical
+        FROM pseudonyms p
+        JOIN authors a2 ON a2.author_id = p.pseudonym
+        WHERE p.author_id = %s
+        ORDER BY a2.author_canonical
+    """, (author_id,))
+    author["pseudonyms"] = [
+        p for p in cursor.fetchall()
+        if p.get("author_canonical")
+        and "&#" not in p["author_canonical"]
+        and p["author_canonical"].isascii()
+    ]
+
+    # External web links with human-readable labels.
+    cursor.execute("""
+        SELECT url FROM webpages
+        WHERE author_id = %s
+        ORDER BY webpage_id
+    """, (author_id,))
+    author["webpages"] = [
+        {"url": row["url"], "label": _webpage_label(row["url"])}
+        for row in cursor.fetchall()
+    ]
+
+    return author

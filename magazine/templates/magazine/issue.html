@@ -47,7 +47,12 @@
           </td>
           <td class="text-muted small">{{ row.kind }}</td>
           <td>{{ row.title_title }}</td>
-          <td class="text-muted">{{ row.authors|default:"uncredited" }}</td>
+          <td class="text-muted">
+            {% for a in row.author_list %}
+              {% if not forloop.first %} &amp; {% endif %}
+              {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+            {% empty %}uncredited{% endfor %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -89,7 +94,12 @@
             </td>
             <td class="text-muted small">{{ row.kind }}</td>
             <td>{{ row.title_title }}</td>
-            <td class="text-muted">{{ row.authors|default:"uncredited" }}</td>
+            <td class="text-muted">
+            {% for a in row.author_list %}
+              {% if not forloop.first %} &amp; {% endif %}
+              {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+            {% empty %}uncredited{% endfor %}
+          </td>
           </tr>
           {% endfor %}
         </tbody>

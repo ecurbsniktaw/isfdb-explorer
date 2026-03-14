@@ -1,0 +1,106 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}{{ author.author_canonical }} — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<div class="mb-3">
+  <a href="javascript:history.back()" class="text-decoration-none">&larr; Back</a>
+</div>
+
+{# ── Header: photo + key facts ───────────────────────────────────────────── #}
+<div class="row g-4 mb-4">
+
+  {% if author.author_image %}
+  <div class="col-auto">
+    <img src="{{ author.author_image }}"
+         alt="{{ author.author_canonical }}"
+         class="rounded shadow-sm"
+         style="max-width:160px; max-height:200px; object-fit:cover;">
+  </div>
+  {% endif %}
+
+  <div class="col">
+    <h1 class="h2 mb-1">{{ author.author_canonical }}</h1>
+
+    {% if author.author_legalname %}
+      <p class="text-muted mb-1 small">{{ author.author_legalname }}</p>
+    {% endif %}
+
+    {# Dates #}
+    {% if author.author_birthdate or author.author_deathdate %}
+    <p class="mb-1">
+      {% if author.author_birthdate %}
+        {{ author.author_birthdate|date:"F j, Y" }}
+      {% endif %}
+      {% if author.author_deathdate %}
+        &ndash; {{ author.author_deathdate|date:"F j, Y" }}
+      {% elif author.author_birthdate %}
+        &ndash; present
+      {% endif %}
+    </p>
+    {% endif %}
+
+    {% if author.author_birthplace %}
+      <p class="text-muted mb-1">{{ author.author_birthplace }}</p>
+    {% endif %}
+
+    {% if author.debut_year %}
+      <p class="text-muted mb-1 small">
+        {{ author.title_count }} work{{ author.title_count|pluralize }},
+        first published {{ author.debut_year }}
+      </p>
+    {% endif %}
+
+    {# If this record is itself a pen name, link to the canonical author #}
+    {% if author.real_author %}
+      <p class="mb-1 small">
+        Pseudonym of
+        <a href="{% url 'author_detail' author.real_author.author_id %}">
+          {{ author.real_author.author_canonical }}
+        </a>
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+{# ── Biographical note ────────────────────────────────────────────────────── #}
+{% if author.author_note %}
+<div class="mb-4">
+  <p class="mb-0">{{ author.author_note }}</p>
+</div>
+{% endif %}
+
+{# ── Pen names ────────────────────────────────────────────────────────────── #}
+{% if author.pseudonyms %}
+<div class="mb-4">
+  <h2 class="h5 mb-2">Pen Names</h2>
+  <p class="mb-0">
+    {% for p in author.pseudonyms %}
+      {% if not forloop.first %}&middot; {% endif %}
+      <a href="{% url 'author_detail' p.author_id %}" class="text-decoration-none">
+        {{ p.author_canonical }}
+      </a>
+    {% endfor %}
+  </p>
+</div>
+{% endif %}
+
+{# ── External links ────────────────────────────────────────────────────────── #}
+{% if author.webpages %}
+<div class="mb-4">
+  <h2 class="h5 mb-2">External Links</h2>
+  <div class="d-flex flex-wrap gap-2">
+    {% for page in author.webpages %}
+      <a href="{{ page.url }}"
+         target="_blank"
+         rel="noopener"
+         class="btn btn-sm btn-outline-secondary">
+        {{ page.label }}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

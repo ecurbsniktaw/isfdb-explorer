@@ -4,7 +4,7 @@ from django.http import Http404
 
 from .queries import (
     find_issues, get_issue_meta, get_contents,
-    get_author_fiction,
+    get_author_fiction, get_author_detail,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -147,3 +147,17 @@ def author_search(request):
     context["total"]       = len(rows)
     context["issue_count"] = len({r["pub_id"] for r in rows})
     return render(request, "magazine/author_search.html", context)
+
+
+def author_detail(request, author_id):
+    """Biography and metadata for a single author."""
+    cursor = _dict_cursor()
+    try:
+        author = get_author_detail(cursor, author_id)
+    finally:
+        cursor.close()
+
+    if not author:
+        raise Http404(f"No author with id={author_id}")
+
+    return render(request, "magazine/author_detail.html", {"author": author})
