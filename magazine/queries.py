@@ -294,6 +294,67 @@ def get_author_fiction(cursor, magazine_name: str, author_name: str) -> list:
     return rows
 
 
+def get_author_works(cursor, author_id: int) -> list:
+    """
+    Return all works by a specific author (by ID), in chronological order,
+    deduplicated across editions (grouped by title_id).
+
+    Returns a list of dicts with keys:
+        pub_id, pub_title, pub_year (int), pub_month (int),
+        title_id, title_title, title_ttype, type_label,
+        title_storylen, pubc_page, authors, author_list, formatted_date
+    """
+    query = """
+        SELECT
+            MIN(p.pub_id)             AS pub_id,
+            MIN(p.pub_title)          AS pub_title,
+            YEAR(MIN(p.pub_year))     AS pub_year,
+            MONTH(MIN(p.pub_year))    AS pub_month,
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            t.title_storylen,
+            MIN(pc.pubc_page)         AS pubc_page,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_canonical
+                ORDER BY ca_all.ca_id
+                SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_id
+                ORDER BY ca_all.ca_id
+                SEPARATOR ','
+            ) AS author_ids
+        FROM pubs p
+        JOIN pub_content pc               ON pc.pub_id    = p.pub_id
+        JOIN titles t                     ON t.title_id   = pc.title_id
+        JOIN canonical_author ca          ON ca.title_id  = t.title_id
+                                         AND ca.author_id = %s
+        LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
+        LEFT JOIN authors a_all           ON a_all.author_id = ca_all.author_id
+        JOIN languages lang               ON lang.lang_id = t.title_language
+        WHERE p.pub_ctype = 'MAGAZINE'
+          AND lang.lang_code = 'eng'
+        GROUP BY
+            t.title_id, t.title_title, t.title_ttype, t.title_storylen
+        ORDER BY
+            YEAR(MIN(p.pub_year)),
+            MONTH(MIN(p.pub_year)),
+            t.title_title
+    """
+    cursor.execute(query, (author_id,))
+    rows = cursor.fetchall()
+
+    fiction_set = set(FICTION_TYPES)
+    for row in rows:
+        row["type_label"]     = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["formatted_date"] = format_date(row["pub_year"], row["pub_month"])
+        row["kind"]           = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
+        row["author_list"]    = _make_author_list(row.get("authors"), row.get("author_ids"))
+
+    return rows
+
+
 def get_author_detail(cursor, author_id: int) -> dict | None:
     """
     Return full author info for the author detail page, or None if not found.
@@ -328,6 +389,16 @@ def get_author_detail(cursor, author_id: int) -> dict | None:
         return None
 
     author["author_note"] = _clean_author_note(author.get("author_note"))
+
+    birth = author.get("author_birthdate")
+    death = author.get("author_deathdate")
+    if birth and death:
+        age = death.year - birth.year
+        if (death.month, death.day) < (birth.month, birth.day):
+            age -= 1
+        author["age_at_death"] = age
+    else:
+        author["age_at_death"] = None
 
     # Is this record itself a pen name? If so, surface the canonical author.
     cursor.execute("""

@@ -34,7 +34,7 @@
         {{ author.author_birthdate|date:"F j, Y" }}
       {% endif %}
       {% if author.author_deathdate %}
-        &ndash; {{ author.author_deathdate|date:"F j, Y" }}
+        &ndash; {{ author.author_deathdate|date:"F j, Y" }}{% if author.age_at_death %} (aged {{ author.age_at_death }}){% endif %}
       {% elif author.author_birthdate %}
         &ndash; present
       {% endif %}
@@ -42,13 +42,13 @@
     {% endif %}
 
     {% if author.author_birthplace %}
-      <p class="text-muted mb-1">{{ author.author_birthplace }}</p>
+      <p class="text-muted mb-1"><strong>Birth place:</strong> {{ author.author_birthplace }}</p>
     {% endif %}
 
     {% if author.debut_year %}
       <p class="text-muted mb-1 small">
-        {{ author.title_count }} work{{ author.title_count|pluralize }},
-        first published {{ author.debut_year }}
+        <a href="{% url 'author_works' author.author_id %}" class="text-decoration-none">Browse magazine works</a>
+        (first published {{ author.debut_year }})
       </p>
     {% endif %}
 

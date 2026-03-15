@@ -4,7 +4,7 @@ from django.http import Http404
 
 from .queries import (
     find_issues, get_issue_meta, get_contents,
-    get_author_fiction, get_author_detail,
+    get_author_fiction, get_author_detail, get_author_works,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -161,3 +161,21 @@ def author_detail(request, author_id):
         raise Http404(f"No author with id={author_id}")
 
     return render(request, "magazine/author_detail.html", {"author": author})
+
+
+def author_works(request, author_id):
+    """All magazine works by a specific author, in chronological order."""
+    cursor = _dict_cursor()
+    try:
+        author = get_author_detail(cursor, author_id)
+        if not author:
+            raise Http404(f"No author with id={author_id}")
+        rows = get_author_works(cursor, author_id)
+    finally:
+        cursor.close()
+
+    return render(request, "magazine/author_works.html", {
+        "author": author,
+        "rows":   rows,
+        "total":  len(rows),
+    })
