@@ -1,0 +1,61 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Find Author — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-4">Find Author</h1>
+
+<form method="get" action="{% url 'find_authors' %}" class="mb-4">
+  <div class="input-group" style="max-width: 480px;">
+    <input type="text"
+           name="q"
+           value="{{ query }}"
+           class="form-control"
+           placeholder="Author name…"
+           autofocus>
+    <button class="btn btn-primary" type="submit">Search</button>
+  </div>
+</form>
+
+{% if query %}
+  {% if authors %}
+    <p class="text-muted mb-3">{{ total }} author{{ total|pluralize }} matching <strong>{{ query }}</strong></p>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover toc-table">
+        <thead class="table-light">
+          <tr>
+            <th style="width:35%">Name</th>
+            <th style="width:30%">Legal Name</th>
+            <th style="width:12%">Born</th>
+            <th style="width:12%">Died</th>
+            <th style="width:11%">Works</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in authors %}
+          <tr>
+            <td>
+              <a href="{% url 'author_detail' a.author_id %}" class="text-decoration-none">
+                {{ a.author_canonical }}
+              </a>
+            </td>
+            <td class="text-muted small">
+              {% if a.author_legalname and a.author_legalname != a.author_canonical %}
+                {{ a.author_legalname }}
+              {% endif %}
+            </td>
+            <td class="text-muted small">{{ a.birth_year|default:"" }}</td>
+            <td class="text-muted small">{{ a.death_year|default:"" }}</td>
+            <td class="text-muted small">{{ a.title_count|default:"" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted">No authors found matching <strong>{{ query }}</strong>.</p>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

@@ -5,6 +5,7 @@ from django.http import Http404
 from .queries import (
     find_issues, get_issue_meta, get_contents,
     get_author_fiction, get_author_detail, get_author_works, get_author_books,
+    find_authors,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -197,3 +198,20 @@ def author_works(request, author_id):
         "rows":   rows,
         "total":  len(rows),
     })
+
+
+def find_authors_view(request):
+    """Search for authors by name and display a list of matches."""
+    query = request.GET.get("q", "").strip()
+    context = {"query": query}
+
+    if query:
+        cursor = _dict_cursor()
+        try:
+            authors = find_authors(cursor, query)
+        finally:
+            cursor.close()
+        context["authors"] = authors
+        context["total"] = len(authors)
+
+    return render(request, "magazine/find_authors.html", context)

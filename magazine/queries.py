@@ -415,6 +415,31 @@ def get_author_books(cursor, author_id: int) -> list:
     return rows
 
 
+def find_authors(cursor, name: str) -> list:
+    """
+    Return authors whose canonical name contains the given string.
+
+    Returns a list of dicts with keys:
+        author_id, author_canonical, author_legalname,
+        birth_year (int|None), death_year (int|None), title_count (int|None)
+    Ordered alphabetically by author_canonical.
+    """
+    cursor.execute("""
+        SELECT
+            a.author_id,
+            a.author_canonical,
+            a.author_legalname,
+            YEAR(a.author_birthdate) AS birth_year,
+            YEAR(a.author_deathdate) AS death_year,
+            abd.title_count
+        FROM authors a
+        LEFT JOIN authors_by_debut_date abd ON abd.author_id = a.author_id
+        WHERE a.author_canonical LIKE %s
+        ORDER BY a.author_canonical
+    """, (f"%{name}%",))
+    return cursor.fetchall()
+
+
 def get_author_detail(cursor, author_id: int) -> dict | None:
     """
     Return full author info for the author detail page, or None if not found.
