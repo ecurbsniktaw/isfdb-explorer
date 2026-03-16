@@ -9,9 +9,11 @@
 </div>
 
 <h1 class="h3 mb-1">{{ author.author_canonical }}</h1>
-<p class="text-muted mb-4">{{ total }} work{{ total|pluralize }} in English-language magazines</p>
+<p class="text-muted mb-3" id="count-label">{{ total }} work{{ total|pluralize }} in English-language magazines</p>
 
 {% if rows %}
+<div id="type-filter" class="mb-3"></div>
+
 <div class="table-responsive">
   <table class="table table-sm table-hover toc-table">
     <thead class="table-light">
@@ -26,7 +28,7 @@
     </thead>
     <tbody>
       {% for row in rows %}
-      <tr>
+      <tr data-type="{{ row.type_label }}">
         <td>
           <a href="{% url 'issue_detail' row.pub_id %}" class="text-decoration-none">
             {{ row.formatted_date }}
@@ -55,4 +57,74 @@
   <p class="text-muted">No magazine works found for this author.</p>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const total = {{ total }};
+  const suffix = 'work' + (total === 1 ? '' : 's') + ' in English-language magazines';
+
+  const rows = Array.from(document.querySelectorAll('tbody tr[data-type]'));
+  const countLabel = document.getElementById('count-label');
+  const filterDiv = document.getElementById('type-filter');
+  if (!rows.length || !filterDiv) return;
+
+  // Collect unique types preserving first-occurrence order
+  const seen = new Set();
+  const types = [];
+  rows.forEach(r => {
+    const t = r.dataset.type;
+    if (!seen.has(t)) { seen.add(t); types.push(t); }
+  });
+
+  // Only show filter if there's more than one type
+  if (types.length < 2) return;
+
+  // Build button group
+  const group = document.createElement('div');
+  group.className = 'btn-group flex-wrap';
+  group.setAttribute('role', 'group');
+
+  function makeBtn(label, active) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-sm ' + (active ? 'btn-secondary' : 'btn-outline-secondary');
+    btn.textContent = label;
+    btn.dataset.filter = label;
+    return btn;
+  }
+
+  const allBtn = makeBtn('All', true);
+  group.appendChild(allBtn);
+  types.forEach(t => group.appendChild(makeBtn(t, false)));
+  filterDiv.appendChild(group);
+
+  function applyFilter(selected) {
+    let visible = 0;
+    rows.forEach(r => {
+      const show = selected === 'All' || r.dataset.type === selected;
+      r.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    // Update buttons
+    group.querySelectorAll('button').forEach(btn => {
+      const active = btn.dataset.filter === selected;
+      btn.className = 'btn btn-sm ' + (active ? 'btn-secondary' : 'btn-outline-secondary');
+    });
+
+    // Update count label
+    if (selected === 'All') {
+      countLabel.textContent = total + ' ' + suffix;
+    } else {
+      countLabel.textContent = visible + ' ' + selected.toLowerCase() + (visible === 1 ? '' : 's') + ' in English-language magazines';
+    }
+  }
+
+  group.addEventListener('click', e => {
+    if (e.target.tagName === 'BUTTON') applyFilter(e.target.dataset.filter);
+  });
+})();
+</script>
 {% endblock %}
