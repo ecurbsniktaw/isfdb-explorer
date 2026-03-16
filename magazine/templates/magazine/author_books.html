@@ -1,0 +1,50 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}{{ author.author_canonical }} — Books — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<div class="mb-3">
+  <a href="{% url 'author_detail' author.author_id %}" class="text-decoration-none">&larr; {{ author.author_canonical }}</a>
+</div>
+
+<h1 class="h3 mb-1">{{ author.author_canonical }}</h1>
+<p class="text-muted mb-4">{{ total }} English-language book{{ total|pluralize }}</p>
+
+{% if rows %}
+<div class="table-responsive">
+  <table class="table table-sm table-hover toc-table">
+    <thead class="table-light">
+      <tr>
+        <th style="width:10%">Year</th>
+        <th style="width:12%">Type</th>
+        <th style="width:50%">Title</th>
+        <th>Author(s)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.formatted_date }}</td>
+        <td>
+          <span class="badge text-bg-secondary badge-type fw-normal">
+            {{ row.type_label }}
+          </span>
+        </td>
+        <td>{{ row.title_title }}</td>
+        <td class="text-muted">
+          {% for a in row.author_list %}
+            {% if not forloop.first %} &amp; {% endif %}
+            {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+          {% empty %}uncredited{% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <p class="text-muted">No books found for this author.</p>
+{% endif %}
+
+{% endblock %}

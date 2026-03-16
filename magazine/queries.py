@@ -355,6 +355,66 @@ def get_author_works(cursor, author_id: int) -> list:
     return rows
 
 
+BOOK_TYPES = ("NOVEL", "COLLECTION", "ANTHOLOGY", "OMNIBUS", "NONFICTION", "CHAPBOOK")
+
+
+def get_author_books(cursor, author_id: int) -> list:
+    """
+    Return all English-language books by a specific author (by ID), deduplicated
+    across editions (grouped by title_id), in chronological order.
+
+    Only includes the 'parent' title for each pub (where title_ttype = pub_ctype).
+
+    Returns a list of dicts with keys:
+        pub_id, pub_year (int), pub_month (int), title_id, title_title,
+        title_ttype, type_label, formatted_date, authors, author_list, edition_count
+    """
+    type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
+    query = f"""
+        SELECT
+            MIN(p.pub_id)             AS pub_id,
+            YEAR(MIN(p.pub_year))     AS pub_year,
+            MONTH(MIN(p.pub_year))    AS pub_month,
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            COUNT(DISTINCT p.pub_id)  AS edition_count,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_canonical
+                ORDER BY ca_all.ca_id
+                SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_id
+                ORDER BY ca_all.ca_id
+                SEPARATOR ','
+            ) AS author_ids
+        FROM pubs p
+        JOIN pub_content pc               ON pc.pub_id   = p.pub_id
+        JOIN titles t                     ON t.title_id  = pc.title_id
+                                         AND t.title_ttype = p.pub_ctype
+        JOIN canonical_author ca          ON ca.title_id = t.title_id
+                                         AND ca.author_id = %s
+        LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
+        LEFT JOIN authors a_all           ON a_all.author_id = ca_all.author_id
+        JOIN languages lang               ON lang.lang_id = t.title_language
+        WHERE p.pub_ctype IN ({type_placeholders})
+          AND lang.lang_code = 'eng'
+          AND YEAR(p.pub_year) > 0
+        GROUP BY t.title_id, t.title_title, t.title_ttype
+        ORDER BY YEAR(MIN(p.pub_year)), t.title_title
+    """
+    cursor.execute(query, (author_id, *BOOK_TYPES))
+    rows = cursor.fetchall()
+
+    for row in rows:
+        row["type_label"]     = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["formatted_date"] = str(row["pub_year"]) if row["pub_year"] else ""
+        row["author_list"]    = _make_author_list(row.get("authors"), row.get("author_ids"))
+
+    return rows
+
+
 def get_author_detail(cursor, author_id: int) -> dict | None:
     """
     Return full author info for the author detail page, or None if not found.

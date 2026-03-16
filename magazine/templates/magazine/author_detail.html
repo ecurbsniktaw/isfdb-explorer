@@ -51,6 +51,9 @@
         (first published {{ author.debut_year }})
       </p>
     {% endif %}
+    <p class="text-muted mb-1 small">
+      <a href="{% url 'author_books' author.author_id %}" class="text-decoration-none">Browse books</a>
+    </p>
 
     {# If this record is itself a pen name, link to the canonical author #}
     {% if author.real_author %}
