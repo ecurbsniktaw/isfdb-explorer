@@ -1,0 +1,39 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}ISFDB Explorer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <h1 class="h2 mb-4">Welcome to ISFDB Explorer</h1>
+
+    <p class="lead">If you want to see a list of all the stories Robert Heinlein published in
+    <em>The Magazine of Fantasy and Science Fiction</em> during his career, or if you&rsquo;re
+    interested in the names of every book published by Poul Anderson (and when they were
+    published), then you have come to the right place.</p>
+
+    <p>This web site uses data from the excellent
+    <a href="https://www.isfdb.org" target="_blank" rel="noopener">Internet Speculative Fiction</a>
+    web site (at isfdb.org). Our queries are done on a backup copy of the isfdb database that was
+    downloaded in early February 2026, so any additions and changes made to the isfdb database
+    since then are not included in our reports.</p>
+
+    <p>At the moment (mid March 2026) there are three features implemented, with more to come:</p>
+    <ul>
+      <li>Enter an author&rsquo;s name (or part of their name) in order to display basic
+      biographical data, together with links to lists of their magazine and book publications.</li>
+      <li>Enter a magazine&rsquo;s name (or part of the name) together with a year or year and
+      month, in order to view a detailed list of an issue&rsquo;s contents.</li>
+      <li>Enter a magazine&rsquo;s name (or part of the name) together with an author&rsquo;s
+      name (or part of the name) in order to view a list of all stories that author published in
+      that magazine, with links to the contents of the individual issues.</li>
+    </ul>
+
+    <p class="mt-4">
+      <a href="{% url 'combined_search' %}" class="btn btn-primary">Go to Search</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@
 
     <h1 class="h3 mb-4">Magazine Issue Search</h1>
 
-    <form method="get" action="/" class="card shadow-sm mb-4">
+    <form method="get" action="{% url 'search' %}" class="card shadow-sm mb-4">
       <div class="card-body">
         <div class="row g-3 align-items-end">
           <div class="col-md-6">
@@ -64,11 +64,11 @@
       <p class="text-muted">
         Enter a magazine name and date above to see its table of contents.
         <br>Examples:
-        <a href="/?magazine=Astounding+Science-Fiction&date=1939-07">Astounding, July 1939</a>
+        <a href="{% url 'search' %}?magazine=Astounding+Science-Fiction&date=1939-07">Astounding, July 1939</a>
         &middot;
-        <a href="/?magazine=Galaxy+Science+Fiction&date=1951">Galaxy, 1951</a>
+        <a href="{% url 'search' %}?magazine=Galaxy+Science+Fiction&date=1951">Galaxy, 1951</a>
         &middot;
-        <a href="/?magazine=The+Magazine+of+Fantasy+and+Science+Fiction&date=1965-04">F&amp;SF, April 1965</a>
+        <a href="{% url 'search' %}?magazine=The+Magazine+of+Fantasy+and+Science+Fiction&date=1965-04">F&amp;SF, April 1965</a>
       </p>
     {% endif %}
 

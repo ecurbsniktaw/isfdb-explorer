@@ -43,8 +43,18 @@ def _split_contents(contents):
     return narrative, other
 
 
+def home(request):
+    """Home page with site description."""
+    return render(request, "magazine/home.html")
+
+
+def combined_search(request):
+    """Combined search hub — three forms pointing to their result pages."""
+    return render(request, "magazine/combined_search.html")
+
+
 def search(request):
-    """Home page: search form + results."""
+    """Magazine issue search form + results."""
     magazine_name = request.GET.get("magazine", "").strip()
     date_filter   = request.GET.get("date", "").strip()
 

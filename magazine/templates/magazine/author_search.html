@@ -8,7 +8,7 @@
 
     <h1 class="h3 mb-4">Author Fiction Search</h1>
 
-    <form method="get" action="/author/" class="card shadow-sm mb-4">
+    <form method="get" action="{% url 'author_search' %}" class="card shadow-sm mb-4">
       <div class="card-body">
         <div class="row g-3 align-items-end">
           <div class="col-md-5">
@@ -96,11 +96,11 @@
       <p class="text-muted">
         Enter a magazine name and author above to see all their fiction in that magazine.
         <br>Examples:
-        <a href="/author/?magazine=Astounding&author=Heinlein">Heinlein in Astounding</a>
+        <a href="{% url 'author_search' %}?magazine=Astounding&author=Heinlein">Heinlein in Astounding</a>
         &middot;
-        <a href="/author/?magazine=Astounding&author=Asimov">Asimov in Astounding</a>
+        <a href="{% url 'author_search' %}?magazine=Astounding&author=Asimov">Asimov in Astounding</a>
         &middot;
-        <a href="/author/?magazine=Galaxy&author=Sheckley">Sheckley in Galaxy</a>
+        <a href="{% url 'author_search' %}?magazine=Galaxy&author=Sheckley">Sheckley in Galaxy</a>
       </p>
     {% endif %}
 

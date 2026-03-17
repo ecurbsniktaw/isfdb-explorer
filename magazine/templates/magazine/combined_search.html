@@ -1,0 +1,95 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Search — ISFDB Explorer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <h1 class="h3 mb-5">Search</h1>
+
+    {# ── Find Author ─────────────────────────────────────────────────────── #}
+    <h2 class="h5 mb-3">Find Author</h2>
+    <form method="get" action="{% url 'find_authors' %}" class="card shadow-sm mb-5">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col">
+            <label for="fa-q" class="form-label fw-semibold">Author name</label>
+            <input type="text"
+                   id="fa-q"
+                   name="q"
+                   class="form-control"
+                   placeholder="e.g. Smith or Cordwainer Smith"
+                   autofocus>
+            <div class="form-text">Partial match, case-insensitive</div>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Search</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    {# ── Author Fiction Search ────────────────────────────────────────────── #}
+    <h2 class="h5 mb-3">Author Fiction Search</h2>
+    <form method="get" action="{% url 'author_search' %}" class="card shadow-sm mb-5">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-5">
+            <label for="af-magazine" class="form-label fw-semibold">Magazine name</label>
+            <input type="text"
+                   id="af-magazine"
+                   name="magazine"
+                   class="form-control"
+                   placeholder="e.g. Astounding Science-Fiction">
+            <div class="form-text">Partial match, case-insensitive</div>
+          </div>
+          <div class="col-md-5">
+            <label for="af-author" class="form-label fw-semibold">Author name</label>
+            <input type="text"
+                   id="af-author"
+                   name="author"
+                   class="form-control"
+                   placeholder="e.g. Heinlein or Robert Heinlein">
+            <div class="form-text">Partial match against canonical author name</div>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    {# ── Magazine Issue Search ────────────────────────────────────────────── #}
+    <h2 class="h5 mb-3">Magazine Issue Search</h2>
+    <form method="get" action="{% url 'search' %}" class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-6">
+            <label for="mi-magazine" class="form-label fw-semibold">Magazine name</label>
+            <input type="text"
+                   id="mi-magazine"
+                   name="magazine"
+                   class="form-control"
+                   placeholder="e.g. Astounding Science-Fiction">
+            <div class="form-text">Partial match, case-insensitive</div>
+          </div>
+          <div class="col-md-4">
+            <label for="mi-date" class="form-label fw-semibold">Date</label>
+            <input type="text"
+                   id="mi-date"
+                   name="date"
+                   class="form-control"
+                   placeholder="e.g. 1939-07 or 1939">
+            <div class="form-text">YYYY-MM for one issue, YYYY for a year</div>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
