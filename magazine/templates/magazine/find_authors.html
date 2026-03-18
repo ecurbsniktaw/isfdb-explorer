@@ -20,9 +20,17 @@
 
 {% if query %}
   {% if authors %}
-    <p class="text-muted mb-3">{{ total }} author{{ total|pluralize }} matching <strong>{{ query }}</strong></p>
+    <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+      <p class="text-muted mb-0" id="result-count"></p>
+      {% if total_with_works < total %}
+      <div class="btn-group btn-group-sm" role="group">
+        <button type="button" class="btn btn-outline-secondary active" id="btn-with-works" onclick="filterAuthors(true)">With works</button>
+        <button type="button" class="btn btn-outline-secondary" id="btn-all" onclick="filterAuthors(false)">All {{ total }}</button>
+      </div>
+      {% endif %}
+    </div>
     <div class="table-responsive">
-      <table class="table table-sm table-hover toc-table">
+      <table class="table table-sm table-hover toc-table" id="author-table">
         <thead class="table-light">
           <tr>
             <th style="width:35%">Name</th>
@@ -34,7 +42,7 @@
         </thead>
         <tbody>
           {% for a in authors %}
-          <tr>
+          <tr data-has-works="{{ a.title_count|default:0 }}">
             <td>
               <a href="{% url 'author_detail' a.author_id %}" class="text-decoration-none">
                 {{ a.author_canonical }}
@@ -56,6 +64,39 @@
   {% else %}
     <p class="text-muted">No authors found matching <strong>{{ query }}</strong>.</p>
   {% endif %}
+{% endif %}
+
+{% if authors %}
+{% block extra_js %}
+<script>
+(function () {
+  const qVal = "{{ query|escapejs }}";
+
+  function filterAuthors(onlyWithWorks) {
+    const rows = document.querySelectorAll('#author-table tbody tr');
+    let visible = 0;
+    rows.forEach(r => {
+      const hasWorks = parseInt(r.dataset.hasWorks, 10) > 0;
+      const show = !onlyWithWorks || hasWorks;
+      r.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    document.getElementById('result-count').textContent =
+      visible + ' author' + (visible === 1 ? '' : 's') + ' matching \u201c' + qVal + '\u201d';
+    const btnWith = document.getElementById('btn-with-works');
+    const btnAll  = document.getElementById('btn-all');
+    if (btnWith) btnWith.classList.toggle('active', onlyWithWorks);
+    if (btnAll)  btnAll.classList.toggle('active', !onlyWithWorks);
+  }
+
+  // Default: with-works filter
+  filterAuthors(true);
+
+  // Expose for onclick
+  window.filterAuthors = filterAuthors;
+})();
+</script>
+{% endblock %}
 {% endif %}
 
 {% endblock %}

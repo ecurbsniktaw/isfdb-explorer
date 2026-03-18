@@ -223,5 +223,6 @@ def find_authors_view(request):
             cursor.close()
         context["authors"] = authors
         context["total"] = len(authors)
+        context["total_with_works"] = sum(1 for a in authors if a.get("title_count"))
 
     return render(request, "magazine/find_authors.html", context)

@@ -434,9 +434,9 @@ def find_authors(cursor, name: str) -> list:
             abd.title_count
         FROM authors a
         LEFT JOIN authors_by_debut_date abd ON abd.author_id = a.author_id
-        WHERE a.author_canonical LIKE %s
+        WHERE REPLACE(a.author_canonical, '.', '') LIKE %s
         ORDER BY a.author_canonical
-    """, (f"%{name}%",))
+    """, (f"%{name.replace('.', '')}%",))
     return cursor.fetchall()
 
 
