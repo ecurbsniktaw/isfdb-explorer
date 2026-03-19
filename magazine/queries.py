@@ -63,6 +63,20 @@ def _clean_author_note(note: str) -> str:
         return ""
     note = re.sub(r"\{\{A\|([^}]+)\}\}", r"\1", note)   # {{A|name}} → name
     note = re.sub(r"\{\{[^}]+\}\}", "", note)             # other {{…}} → drop
+    # Rewrite isfdb author page links to local author pages
+    note = re.sub(
+        r'href="https?://(?:www\.)?isfdb\.org/cgi-bin/ea\.cgi\?(\d+)"',
+        r'href="/author/\1/"',
+        note,
+        flags=re.IGNORECASE,
+    )
+    # Open remaining external links in a new tab
+    note = re.sub(
+        r'<a (href="https?://)',
+        r'<a target="_blank" rel="noopener" \1',
+        note,
+        flags=re.IGNORECASE,
+    )
     return note.strip()
 
 

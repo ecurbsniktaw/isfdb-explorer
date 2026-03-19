@@ -70,7 +70,7 @@
 {# ── Biographical note ────────────────────────────────────────────────────── #}
 {% if author.author_note %}
 <div class="mb-4">
-  <p class="mb-0">{{ author.author_note }}</p>
+  <p class="mb-0">{{ author.author_note|safe }}</p>
 </div>
 {% endif %}
 
