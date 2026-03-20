@@ -429,27 +429,77 @@ def get_author_books(cursor, author_id: int) -> list:
     return rows
 
 
+# Where Mag_Name in the magazine table doesn't match all pub_title variants,
+# supply the correct LIKE pattern(s).  Each entry is a tuple of one or more
+# patterns OR-ed together in the query.
+_MAG_TITLE_PATTERNS = {
+    "AMF":      ("A. Merritt's Fantasy Magazine%",),
+    "AST":      (                               # all Astounding names (not Frontiers)
+                    "Astounding,%",             # bare "Astounding" issues
+                    "Astounding Stories%",      # Stories / Super-Science / Yearbook
+                    "Astounding Science%",      # Science Fiction & Science-Fiction
+                    "Astounding/Analog%",       # transition issues
+                    "Astounding SF%",
+                ),
+    "ANLG":     ("Analog%",),               # all title variants 1960–present
+    "AVONFR":   ("Avon Fantasy Reader%",),
+    "FAN":      (                               # Fantastic (not Adventures/Universe/Story)
+                    "Fantastic,%",
+                    "Fantastic Science Fiction Stories%",
+                    "Fantastic Stories of Imagination%",
+                    "Fantastic Stories of the Imagination%",
+                    "Fantastic Stories,%",
+                ),
+    "FANTUNIV": ("Fantastic Universe%",),       # separate from FAN
+    "FSF":      ("The Magazine of Fantasy%",),  # catches & and "and" variants
+    "GAL":      (                               # Galaxy (not Galaxy's Edge)
+                    "Galaxy Science Fiction%",
+                    "Galaxy,%",
+                    "Galaxy Magazine%",
+                ),
+    "INTZ":     ("Interzone%",),
+    "MGZNHRR":  ("Magazine of Horror%",),
+    "NEWWR":    ("New Worlds%",),               # New Worlds / Science Fiction / SF
+    "SCIFANT":  ("Science Fantasy%",),
+    "SCIFIQ":   ("Science Fiction Quarterly%",),
+    "SPRSCIS":  ("Super Science Stories%",),    # incl. Canadian & numbered issues
+    "TRMNLF":   ("Terminal Fright%",),
+    "TWONS":    ("Thrilling Wonder Stories%",),
+    "UNKNOWN":  ("Unknown%",),                  # Worlds / Fantasy Fiction / UK
+    "WOFFH":    ("Worlds of Fantasy%",),
+    "WONDST":   ("Wonder Stories%",),           # incl. Wonder Stories Quarterly
+}
+
+
+def _mag_patterns(mag_code: str, mag_name: str) -> tuple:
+    """Return the LIKE pattern(s) to match pub_title for this magazine."""
+    return _MAG_TITLE_PATTERNS.get(mag_code, (f"{mag_name}%",))
+
+
 def get_all_magazines(cursor) -> list:
     """
     Return all 92 curated magazines with issue counts and year ranges,
     sorted alphabetically by name.
     """
-    cursor.execute("""
-        SELECT
-            m.Mag_Code   AS mag_code,
-            m.Mag_Name   AS mag_name,
-            m.Mag_Desc   AS mag_desc,
-            COUNT(p.pub_id)        AS issue_count,
-            YEAR(MIN(p.pub_year))  AS first_year,
-            YEAR(MAX(p.pub_year))  AS last_year
-        FROM magazine m
-        LEFT JOIN pubs p
-            ON p.pub_ctype = 'MAGAZINE'
-           AND p.pub_title LIKE CONCAT(m.Mag_Name, '%')
-        GROUP BY m.Mag_Code, m.Mag_Name, m.Mag_Desc
-        ORDER BY m.Mag_Name
-    """)
-    return cursor.fetchall()
+    cursor.execute("SELECT Mag_Code AS mag_code, Mag_Name AS mag_name, Mag_Desc AS mag_desc FROM magazine ORDER BY Mag_Name")
+    magazines = cursor.fetchall()
+
+    for m in magazines:
+        patterns = _mag_patterns(m["mag_code"], m["mag_name"])
+        or_clause = " OR ".join(["p.pub_title LIKE %s"] * len(patterns))
+        cursor.execute(f"""
+            SELECT COUNT(*) AS issue_count,
+                   MIN(CASE WHEN YEAR(p.pub_year) > 0 AND YEAR(p.pub_year) < 8888 THEN YEAR(p.pub_year) END) AS first_year,
+                   MAX(CASE WHEN YEAR(p.pub_year) > 0 AND YEAR(p.pub_year) < 8888 THEN YEAR(p.pub_year) END) AS last_year
+            FROM pubs p
+            WHERE p.pub_ctype = 'MAGAZINE' AND ({or_clause})
+        """, patterns)
+        counts = cursor.fetchone()
+        m["issue_count"] = counts["issue_count"]
+        m["first_year"]  = counts["first_year"]
+        m["last_year"]   = counts["last_year"]
+
+    return magazines
 
 
 def get_magazine_issues(cursor, mag_code: str) -> tuple:
@@ -460,25 +510,26 @@ def get_magazine_issues(cursor, mag_code: str) -> tuple:
         pub_id, pub_title, pub_year (int), pub_month (int), formatted_date
     """
     cursor.execute(
-        "SELECT Mag_Name FROM magazine WHERE Mag_Code = %s",
+        "SELECT Mag_Name AS mag_name FROM magazine WHERE Mag_Code = %s",
         (mag_code,),
     )
     row = cursor.fetchone()
     if not row:
         return None, []
-    mag_name = row["Mag_Name"] if isinstance(row, dict) else row[0]
+    mag_name = row["mag_name"]
 
-    cursor.execute("""
+    patterns = _mag_patterns(mag_code, mag_name)
+    or_clause = " OR ".join(["p.pub_title LIKE %s"] * len(patterns))
+    cursor.execute(f"""
         SELECT
             p.pub_id,
             p.pub_title,
             YEAR(p.pub_year)  AS pub_year,
             MONTH(p.pub_year) AS pub_month
         FROM pubs p
-        WHERE p.pub_ctype = 'MAGAZINE'
-          AND p.pub_title LIKE %s
+        WHERE p.pub_ctype = 'MAGAZINE' AND ({or_clause})
         ORDER BY p.pub_year, MONTH(p.pub_year), p.pub_title
-    """, (f"{mag_name}%",))
+    """, patterns)
     rows = cursor.fetchall()
 
     for r in rows:
