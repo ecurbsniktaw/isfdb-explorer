@@ -5,6 +5,7 @@ from django.http import Http404
 from .queries import (
     find_issues, get_issue_meta, get_contents,
     get_author_fiction, get_author_detail, get_author_works, get_author_books,
+    get_all_magazines, get_magazine_issues,
     find_authors,
     format_date, NARRATIVE_TYPES,
 )
@@ -207,6 +208,33 @@ def author_works(request, author_id):
         "author": author,
         "rows":   rows,
         "total":  len(rows),
+    })
+
+
+def magazine_list(request):
+    """Card grid of all 92 curated magazines."""
+    cursor = _dict_cursor()
+    try:
+        magazines = get_all_magazines(cursor)
+    finally:
+        cursor.close()
+    return render(request, "magazine/magazine_list.html", {"magazines": magazines})
+
+
+def magazine_issues(request, mag_code):
+    """Chronological list of all issues for one magazine."""
+    cursor = _dict_cursor()
+    try:
+        mag_name, rows = get_magazine_issues(cursor, mag_code)
+    finally:
+        cursor.close()
+    if mag_name is None:
+        raise Http404(f"No magazine with code {mag_code!r}")
+    return render(request, "magazine/magazine_issues.html", {
+        "mag_name": mag_name,
+        "mag_code": mag_code,
+        "rows":     rows,
+        "total":    len(rows),
     })
 
 

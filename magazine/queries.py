@@ -429,6 +429,64 @@ def get_author_books(cursor, author_id: int) -> list:
     return rows
 
 
+def get_all_magazines(cursor) -> list:
+    """
+    Return all 92 curated magazines with issue counts and year ranges,
+    sorted alphabetically by name.
+    """
+    cursor.execute("""
+        SELECT
+            m.Mag_Code   AS mag_code,
+            m.Mag_Name   AS mag_name,
+            m.Mag_Desc   AS mag_desc,
+            COUNT(p.pub_id)        AS issue_count,
+            YEAR(MIN(p.pub_year))  AS first_year,
+            YEAR(MAX(p.pub_year))  AS last_year
+        FROM magazine m
+        LEFT JOIN pubs p
+            ON p.pub_ctype = 'MAGAZINE'
+           AND p.pub_title LIKE CONCAT(m.Mag_Name, '%')
+        GROUP BY m.Mag_Code, m.Mag_Name, m.Mag_Desc
+        ORDER BY m.Mag_Name
+    """)
+    return cursor.fetchall()
+
+
+def get_magazine_issues(cursor, mag_code: str) -> tuple:
+    """
+    Return the magazine name and a list of all its issues in chronological order.
+
+    Returns (mag_name, rows) where rows have keys:
+        pub_id, pub_title, pub_year (int), pub_month (int), formatted_date
+    """
+    cursor.execute(
+        "SELECT Mag_Name FROM magazine WHERE Mag_Code = %s",
+        (mag_code,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return None, []
+    mag_name = row["Mag_Name"] if isinstance(row, dict) else row[0]
+
+    cursor.execute("""
+        SELECT
+            p.pub_id,
+            p.pub_title,
+            YEAR(p.pub_year)  AS pub_year,
+            MONTH(p.pub_year) AS pub_month
+        FROM pubs p
+        WHERE p.pub_ctype = 'MAGAZINE'
+          AND p.pub_title LIKE %s
+        ORDER BY p.pub_year, MONTH(p.pub_year), p.pub_title
+    """, (f"{mag_name}%",))
+    rows = cursor.fetchall()
+
+    for r in rows:
+        r["formatted_date"] = format_date(r["pub_year"], r["pub_month"])
+
+    return mag_name, rows
+
+
 def find_authors(cursor, name: str) -> list:
     """
     Return authors whose canonical name contains the given string.

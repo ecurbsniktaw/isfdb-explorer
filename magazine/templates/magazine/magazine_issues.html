@@ -1,0 +1,41 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}{{ mag_name }} — Issues — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<div class="mb-3">
+  <a href="{% url 'magazine_list' %}" class="text-decoration-none">&larr; Magazines</a>
+</div>
+
+<h1 class="h3 mb-1">{{ mag_name }}</h1>
+<p class="text-muted mb-4">{{ total }} issue{{ total|pluralize }}</p>
+
+{% if rows %}
+<div class="table-responsive">
+  <table class="table table-sm table-hover toc-table">
+    <thead class="table-light">
+      <tr>
+        <th>Date</th>
+        <th>Title</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td style="white-space:nowrap">
+          <a href="{% url 'issue_detail' row.pub_id %}" class="text-decoration-none">
+            {{ row.formatted_date }}
+          </a>
+        </td>
+        <td class="text-muted small">{{ row.pub_title }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <p class="text-muted">No issues found.</p>
+{% endif %}
+
+{% endblock %}

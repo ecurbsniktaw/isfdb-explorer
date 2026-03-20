@@ -1,0 +1,42 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Magazines — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-1">Magazines</h1>
+<p class="text-muted mb-4">{{ magazines|length }} curated science fiction &amp; fantasy magazines</p>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+  {% for m in magazines %}
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title mb-1">
+          {% if m.issue_count %}
+          <a href="{% url 'magazine_issues' m.mag_code %}" class="text-decoration-none stretched-link">
+            {{ m.mag_name }}
+          </a>
+          {% else %}
+          <span class="text-muted">{{ m.mag_name }}</span>
+          {% endif %}
+        </h6>
+        {% if m.first_year %}
+        <p class="card-text small text-muted mb-0">
+          {{ m.first_year }}{% if m.last_year and m.last_year != m.first_year %}–{{ m.last_year }}{% endif %}
+        </p>
+        {% endif %}
+      </div>
+      <div class="card-footer text-muted small">
+        {% if m.issue_count %}
+          {{ m.issue_count }} issue{{ m.issue_count|pluralize }}
+        {% else %}
+          No issues indexed
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
