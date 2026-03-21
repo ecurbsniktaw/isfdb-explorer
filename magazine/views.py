@@ -230,11 +230,30 @@ def magazine_issues(request, mag_code):
         cursor.close()
     if mag_name is None:
         raise Http404(f"No magazine with code {mag_code!r}")
+
+    # Group by decade for large lists
+    use_accordion = len(rows) > 50
+    decades = []
+    if use_accordion:
+        from collections import defaultdict
+        by_decade = defaultdict(list)
+        for r in rows:
+            decade = (r["pub_year"] // 10) * 10
+            by_decade[decade].append(r)
+        for decade in sorted(by_decade):
+            decades.append({
+                "label":  f"{decade}s",
+                "decade": decade,
+                "issues": by_decade[decade],
+            })
+
     return render(request, "magazine/magazine_issues.html", {
-        "mag_name": mag_name,
-        "mag_code": mag_code,
-        "rows":     rows,
-        "total":    len(rows),
+        "mag_name":      mag_name,
+        "mag_code":      mag_code,
+        "rows":          rows,
+        "total":         len(rows),
+        "use_accordion": use_accordion,
+        "decades":       decades,
     })
 
 
