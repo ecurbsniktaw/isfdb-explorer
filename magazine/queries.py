@@ -170,6 +170,15 @@ def get_issue_meta(cursor, pub_id: int) -> dict | None:
     return cursor.fetchone()
 
 
+def get_archive_links(cursor, pub_id: int) -> list:
+    """Return archive.org URLs for a publication (may be empty or multiple)."""
+    cursor.execute(
+        "SELECT url FROM webpages WHERE pub_id = %s AND url LIKE '%%archive.org%%'",
+        (pub_id,)
+    )
+    return [row["url"] for row in cursor.fetchall()]
+
+
 def get_contents(cursor, pub_id: int) -> list:
     """
     Return the table of contents for a publication, sorted by page number.
