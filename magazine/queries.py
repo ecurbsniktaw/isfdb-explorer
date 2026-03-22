@@ -161,7 +161,8 @@ def get_issue_meta(cursor, pub_id: int) -> dict | None:
             p.pub_id,
             p.pub_title,
             YEAR(p.pub_year)  AS pub_year,
-            MONTH(p.pub_year) AS pub_month
+            MONTH(p.pub_year) AS pub_month,
+            p.pub_frontimage
         FROM pubs p
         WHERE p.pub_id = %s AND p.pub_ctype = 'MAGAZINE'
     """
