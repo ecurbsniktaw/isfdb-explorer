@@ -485,7 +485,12 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
                 DISTINCT a_cv.author_canonical
                 ORDER BY ca_cv.ca_id
                 SEPARATOR ' & '
-            ) AS cover_artist
+            ) AS cover_artist,
+            GROUP_CONCAT(
+                DISTINCT a_cv.author_id
+                ORDER BY ca_cv.ca_id
+                SEPARATOR ','
+            ) AS cover_artist_ids
         FROM pubs p
         JOIN pub_content pc           ON pc.pub_id  = p.pub_id
         JOIN titles t                 ON t.title_id = pc.title_id
@@ -514,10 +519,11 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
     if not row:
         return None
 
-    row["type_label"]     = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
-    row["format_label"]   = _PUB_PTYPE_LABELS.get(row["pub_ptype"] or "", row["pub_ptype"] or "")
-    row["formatted_date"] = str(row["pub_year"]) if row["pub_year"] else ""
-    row["author_list"]    = _make_author_list(row.get("authors"), row.get("author_ids"))
+    row["type_label"]        = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+    row["format_label"]      = _PUB_PTYPE_LABELS.get(row["pub_ptype"] or "", row["pub_ptype"] or "")
+    row["formatted_date"]    = str(row["pub_year"]) if row["pub_year"] else ""
+    row["author_list"]       = _make_author_list(row.get("authors"), row.get("author_ids"))
+    row["cover_artist_list"] = _make_author_list(row.get("cover_artist"), row.get("cover_artist_ids"))
     return row
 
 

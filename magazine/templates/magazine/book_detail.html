@@ -83,10 +83,15 @@
           <td>{{ book.pub_isbn }}</td>
         </tr>
         {% endif %}
-        {% if book.cover_artist %}
+        {% if book.cover_artist_list %}
         <tr>
           <th class="text-muted fw-normal pe-4">Cover art</th>
-          <td>{{ book.cover_artist }}</td>
+          <td>
+            {% for a in book.cover_artist_list %}
+              {% if not forloop.first %} &amp; {% endif %}
+              {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+            {% endfor %}
+          </td>
         </tr>
         {% endif %}
       </tbody>
