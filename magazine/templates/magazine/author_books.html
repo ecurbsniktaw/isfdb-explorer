@@ -33,7 +33,7 @@
             {{ row.type_label }}
           </span>
         </td>
-        <td>{{ row.title_title }}</td>
+        <td><a href="{% url 'book_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a></td>
         <td class="text-muted">
           {% for a in row.author_list %}
             {% if not forloop.first %} &amp; {% endif %}

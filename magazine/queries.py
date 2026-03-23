@@ -439,6 +439,88 @@ def get_author_books(cursor, author_id: int) -> list:
     return rows
 
 
+_PUB_PTYPE_LABELS = {
+    "hc":      "Hardcover",
+    "pb":      "Paperback",
+    "tp":      "Trade Paperback",
+    "ebook":   "eBook",
+    "digest":  "Digest",
+    "ph":      "Pamphlet",
+    "audio":   "Audio",
+    "unknown": "Unknown",
+}
+
+
+def get_book_detail(cursor, title_id: int) -> dict | None:
+    """
+    Return details for the first English-language publication of a given title_id.
+    Includes cover image, pub date, catalog id, publisher, format, and cover artist.
+    """
+    type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
+    query = f"""
+        SELECT
+            p.pub_id,
+            p.pub_title,
+            YEAR(p.pub_year)   AS pub_year,
+            MONTH(p.pub_year)  AS pub_month,
+            p.pub_catalog,
+            p.pub_isbn,
+            p.pub_ptype,
+            p.pub_frontimage,
+            pub.publisher_name,
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_canonical
+                ORDER BY ca_all.ca_id
+                SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_id
+                ORDER BY ca_all.ca_id
+                SEPARATOR ','
+            ) AS author_ids,
+            GROUP_CONCAT(
+                DISTINCT a_cv.author_canonical
+                ORDER BY ca_cv.ca_id
+                SEPARATOR ' & '
+            ) AS cover_artist
+        FROM pubs p
+        JOIN pub_content pc           ON pc.pub_id  = p.pub_id
+        JOIN titles t                 ON t.title_id = pc.title_id
+                                     AND t.title_ttype = p.pub_ctype
+        LEFT JOIN publishers pub      ON pub.publisher_id = p.publisher_id
+        LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
+        LEFT JOIN authors a_all       ON a_all.author_id = ca_all.author_id
+        LEFT JOIN pub_content pc_cv   ON pc_cv.pub_id = p.pub_id
+        LEFT JOIN titles t_cv         ON t_cv.title_id = pc_cv.title_id
+                                     AND t_cv.title_ttype = 'COVERART'
+        LEFT JOIN canonical_author ca_cv ON ca_cv.title_id = t_cv.title_id
+        LEFT JOIN authors a_cv        ON a_cv.author_id = ca_cv.author_id
+        JOIN languages lang           ON lang.lang_id = t.title_language
+        WHERE t.title_id = %s
+          AND p.pub_ctype IN ({type_placeholders})
+          AND lang.lang_code = 'eng'
+          AND YEAR(p.pub_year) > 0
+        GROUP BY p.pub_id, p.pub_title, p.pub_year,
+                 p.pub_catalog, p.pub_isbn, p.pub_ptype, p.pub_frontimage,
+                 pub.publisher_name, t.title_id, t.title_title, t.title_ttype
+        ORDER BY p.pub_year, p.pub_id
+        LIMIT 1
+    """
+    cursor.execute(query, (title_id, *BOOK_TYPES))
+    row = cursor.fetchone()
+    if not row:
+        return None
+
+    row["type_label"]     = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+    row["format_label"]   = _PUB_PTYPE_LABELS.get(row["pub_ptype"] or "", row["pub_ptype"] or "")
+    row["formatted_date"] = str(row["pub_year"]) if row["pub_year"] else ""
+    row["author_list"]    = _make_author_list(row.get("authors"), row.get("author_ids"))
+    return row
+
+
 # Where Mag_Name in the magazine table doesn't match all pub_title variants,
 # supply the correct LIKE pattern(s).  Each entry is a tuple of one or more
 # patterns OR-ed together in the query.
