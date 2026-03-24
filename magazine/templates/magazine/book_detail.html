@@ -94,9 +94,22 @@
           </td>
         </tr>
         {% endif %}
+        {% if book.pub_pages %}
+        <tr>
+          <th class="text-muted fw-normal pe-4">Pages</th>
+          <td>{{ book.pub_pages }}</td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
   </div>
 </div>
+
+{% if book.pub_note %}
+<div class="mt-2">
+  <h2 class="h6 text-muted">Notes</h2>
+  <p class="mb-0">{{ book.pub_note }}</p>
+</div>
+{% endif %}
 
 {% endblock %}

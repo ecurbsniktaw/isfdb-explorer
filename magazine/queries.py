@@ -466,8 +466,10 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
             p.pub_catalog,
             p.pub_isbn,
             p.pub_ptype,
+            p.pub_pages,
             p.pub_frontimage,
             pub.publisher_name,
+            n.note_note AS pub_note,
             t.title_id,
             t.title_title,
             t.title_ttype,
@@ -496,6 +498,7 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
         JOIN titles t                 ON t.title_id = pc.title_id
                                      AND t.title_ttype = p.pub_ctype
         LEFT JOIN publishers pub      ON pub.publisher_id = p.publisher_id
+        LEFT JOIN notes n             ON n.note_id = p.note_id
         LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
         LEFT JOIN authors a_all       ON a_all.author_id = ca_all.author_id
         LEFT JOIN pub_content pc_cv   ON pc_cv.pub_id = p.pub_id
@@ -509,8 +512,8 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
           AND lang.lang_code = 'eng'
           AND YEAR(p.pub_year) > 0
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
-                 p.pub_catalog, p.pub_isbn, p.pub_ptype, p.pub_frontimage,
-                 pub.publisher_name, t.title_id, t.title_title, t.title_ttype
+                 p.pub_catalog, p.pub_isbn, p.pub_ptype, p.pub_pages, p.pub_frontimage,
+                 pub.publisher_name, n.note_note, t.title_id, t.title_title, t.title_ttype
         ORDER BY p.pub_year, p.pub_id
         LIMIT 1
     """
