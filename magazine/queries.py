@@ -530,6 +530,61 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
     return row
 
 
+def get_book_editions(cursor, title_id: int, exclude_pub_id: int) -> list:
+    """
+    Return all English-language editions of a title except the one already
+    shown as the first/primary edition.
+    """
+    type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
+    query = f"""
+        SELECT
+            p.pub_id,
+            p.pub_title,
+            YEAR(p.pub_year)  AS pub_year,
+            p.pub_catalog,
+            p.pub_ptype,
+            p.pub_pages,
+            pub.publisher_name,
+            t.title_ttype,
+            GROUP_CONCAT(
+                DISTINCT a_cv.author_canonical
+                ORDER BY ca_cv.ca_id
+                SEPARATOR ' & '
+            ) AS cover_artist,
+            GROUP_CONCAT(
+                DISTINCT a_cv.author_id
+                ORDER BY ca_cv.ca_id
+                SEPARATOR ','
+            ) AS cover_artist_ids
+        FROM pubs p
+        JOIN pub_content pc        ON pc.pub_id  = p.pub_id
+        JOIN titles t              ON t.title_id = pc.title_id
+                                  AND t.title_ttype = p.pub_ctype
+        LEFT JOIN publishers pub   ON pub.publisher_id = p.publisher_id
+        LEFT JOIN pub_content pc_cv  ON pc_cv.pub_id = p.pub_id
+        LEFT JOIN titles t_cv        ON t_cv.title_id = pc_cv.title_id
+                                    AND t_cv.title_ttype = 'COVERART'
+        LEFT JOIN canonical_author ca_cv ON ca_cv.title_id = t_cv.title_id
+        LEFT JOIN authors a_cv           ON a_cv.author_id = ca_cv.author_id
+        JOIN languages lang        ON lang.lang_id = t.title_language
+        WHERE t.title_id = %s
+          AND p.pub_id   != %s
+          AND p.pub_ctype IN ({type_placeholders})
+          AND lang.lang_code = 'eng'
+          AND YEAR(p.pub_year) > 0
+        GROUP BY p.pub_id, p.pub_title, p.pub_year, p.pub_catalog,
+                 p.pub_ptype, p.pub_pages, pub.publisher_name, t.title_ttype
+        ORDER BY p.pub_year, p.pub_id
+    """
+    cursor.execute(query, (title_id, exclude_pub_id, *BOOK_TYPES))
+    rows = cursor.fetchall()
+    for row in rows:
+        row["type_label"]        = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["format_label"]      = _PUB_PTYPE_LABELS.get(row["pub_ptype"] or "", row["pub_ptype"] or "")
+        row["cover_artist_list"] = _make_author_list(row.get("cover_artist"), row.get("cover_artist_ids"))
+    return rows
+
+
 # Where Mag_Name in the magazine table doesn't match all pub_title variants,
 # supply the correct LIKE pattern(s).  Each entry is a tuple of one or more
 # patterns OR-ed together in the query.

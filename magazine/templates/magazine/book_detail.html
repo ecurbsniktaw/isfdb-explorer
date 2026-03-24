@@ -112,4 +112,45 @@
 </div>
 {% endif %}
 
+{% if editions %}
+<div class="mt-4">
+  <h2 class="h5 mb-3">Other Editions</h2>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Title</th>
+          <th>Year</th>
+          <th>Publisher</th>
+          <th>Format</th>
+          <th>Type</th>
+          <th>Catalog ID</th>
+          <th>Cover Artist</th>
+          <th>Pages</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ed in editions %}
+        <tr>
+          <td>{{ ed.pub_title }}</td>
+          <td>{{ ed.pub_year }}</td>
+          <td class="text-muted small">{{ ed.publisher_name|default:"" }}</td>
+          <td class="text-muted small">{{ ed.format_label }}</td>
+          <td class="text-muted small">{{ ed.type_label }}</td>
+          <td class="text-muted small">{{ ed.pub_catalog|default:"" }}</td>
+          <td class="text-muted small">
+            {% for a in ed.cover_artist_list %}
+              {% if not forloop.first %} &amp; {% endif %}
+              {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+            {% endfor %}
+          </td>
+          <td class="text-muted small">{{ ed.pub_pages|default:"" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
