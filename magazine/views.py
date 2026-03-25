@@ -8,6 +8,7 @@ from .queries import (
     get_book_detail, get_book_editions,
     get_all_magazines, get_magazine_issues,
     find_authors,
+    get_random_author_id, get_random_issue_id, get_random_book_title_id,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -289,3 +290,24 @@ def find_authors_view(request):
         context["total_with_works"] = sum(1 for a in authors if a.get("title_count"))
 
     return render(request, "magazine/find_authors.html", context)
+
+
+def random_item(request, kind):
+    """Pick a random author, magazine issue, or book and redirect to its page."""
+    cursor = _dict_cursor()
+    try:
+        if kind == "author":
+            item_id = get_random_author_id(cursor)
+            if item_id:
+                return redirect("author_detail", author_id=item_id)
+        elif kind == "issue":
+            item_id = get_random_issue_id(cursor)
+            if item_id:
+                return redirect("issue_detail", pub_id=item_id)
+        elif kind == "book":
+            item_id = get_random_book_title_id(cursor)
+            if item_id:
+                return redirect("book_detail", title_id=item_id)
+    finally:
+        cursor.close()
+    raise Http404(f"Could not find a random {kind}")

@@ -62,7 +62,7 @@
 
     {# ── Magazine Issue Search ────────────────────────────────────────────── #}
     <h2 class="h5 mb-3">Magazine Issue Search</h2>
-    <form method="get" action="{% url 'search' %}" class="card shadow-sm mb-4">
+    <form method="get" action="{% url 'search' %}" class="card shadow-sm mb-5">
       <div class="card-body">
         <div class="row g-3 align-items-end">
           <div class="col-md-6">
@@ -89,6 +89,19 @@
         </div>
       </div>
     </form>
+
+    {# ── Random Data Search ───────────────────────────────────────────────── #}
+    <h2 class="h5 mb-3">Random Data Search</h2>
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <p class="text-muted small mb-3">Jump to a randomly selected author, magazine issue, or book.</p>
+        <div class="d-flex gap-2">
+          <a href="{% url 'random_item' 'author' %}" class="btn btn-outline-primary">Author</a>
+          <a href="{% url 'random_item' 'issue' %}" class="btn btn-outline-primary">Magazine Issue</a>
+          <a href="{% url 'random_item' 'book' %}" class="btn btn-outline-primary">Book</a>
+        </div>
+      </div>
+    </div>
 
   </div>
 </div>

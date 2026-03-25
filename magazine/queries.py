@@ -801,3 +801,41 @@ def get_author_detail(cursor, author_id: int) -> dict | None:
     ]
 
     return author
+
+
+def get_random_author_id(cursor) -> int | None:
+    """Return a random author_id from authors who have at least one title."""
+    cursor.execute("""
+        SELECT author_id FROM canonical_author
+        ORDER BY RAND() LIMIT 1
+    """)
+    row = cursor.fetchone()
+    return row["author_id"] if row else None
+
+
+def get_random_issue_id(cursor) -> int | None:
+    """Return a random pub_id from magazine issues."""
+    cursor.execute("""
+        SELECT pub_id FROM pubs WHERE pub_ctype = 'MAGAZINE'
+        ORDER BY RAND() LIMIT 1
+    """)
+    row = cursor.fetchone()
+    return row["pub_id"] if row else None
+
+
+def get_random_book_title_id(cursor) -> int | None:
+    """Return a random title_id for an English-language book."""
+    type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
+    cursor.execute(f"""
+        SELECT t.title_id FROM titles t
+        JOIN pub_content pc ON pc.title_id = t.title_id
+        JOIN pubs p         ON p.pub_id = pc.pub_id
+                           AND p.pub_ctype = t.title_ttype
+        JOIN languages lang ON lang.lang_id = t.title_language
+                           AND lang.lang_code = 'eng'
+        WHERE t.title_ttype IN ({type_placeholders})
+          AND YEAR(p.pub_year) > 0
+        ORDER BY RAND() LIMIT 1
+    """, BOOK_TYPES)
+    row = cursor.fetchone()
+    return row["title_id"] if row else None
