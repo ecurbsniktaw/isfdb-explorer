@@ -852,14 +852,21 @@ def get_random_book_title_id(cursor) -> int | None:
     max_id = bound_row["max_id"]
 
     # Try up to 10 random starting points.  Each attempt uses the primary-key
-    # index (title_id >=) so it returns almost instantly.
+    # index so it returns almost instantly.  We randomly go either forward
+    # (>=) or backward (<=) from the chosen id to avoid always landing on
+    # the same "first book after a large gap" in the id space.
     for _ in range(10):
         rand_id = _random.randint(1, max_id)
+        if _random.random() < 0.5:
+            op, order = ">=", "ASC"
+        else:
+            op, order = "<=", "DESC"
         cursor.execute(
             f"""SELECT title_id FROM titles
                 WHERE title_ttype   IN ({type_placeholders})
                   AND title_language = %s
-                  AND title_id      >= %s
+                  AND title_id      {op} %s
+                ORDER BY title_id {order}
                 LIMIT 1""",
             (*BOOK_TYPES, lang_id, rand_id),
         )
