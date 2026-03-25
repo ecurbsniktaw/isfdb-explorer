@@ -305,9 +305,11 @@ def random_item(request, kind):
             if item_id:
                 return redirect("issue_detail", pub_id=item_id)
         elif kind == "book":
-            item_id = get_random_book_title_id(cursor)
-            if item_id:
-                return redirect("book_detail", title_id=item_id)
+            # Retry up to 5 times in case the title has no qualifying pub.
+            for _ in range(5):
+                item_id = get_random_book_title_id(cursor)
+                if item_id and get_book_detail(cursor, item_id):
+                    return redirect("book_detail", title_id=item_id)
     finally:
         cursor.close()
     raise Http404(f"Could not find a random {kind}")

@@ -824,18 +824,47 @@ def get_random_issue_id(cursor) -> int | None:
 
 
 def get_random_book_title_id(cursor) -> int | None:
-    """Return a random title_id for an English-language book."""
+    """
+    Return a random title_id for an English-language book.
+
+    Queries the titles table only (no pub join) for speed — the caller is
+    responsible for verifying a pub exists via get_book_detail().  Uses a
+    random starting point against the primary-key index instead of
+    ORDER BY RAND() to avoid a full-table sort.
+    """
+    import random as _random
+
     type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
-    cursor.execute(f"""
-        SELECT t.title_id FROM titles t
-        JOIN pub_content pc ON pc.title_id = t.title_id
-        JOIN pubs p         ON p.pub_id = pc.pub_id
-                           AND p.pub_ctype = t.title_ttype
-        JOIN languages lang ON lang.lang_id = t.title_language
-                           AND lang.lang_code = 'eng'
-        WHERE t.title_ttype IN ({type_placeholders})
-          AND YEAR(p.pub_year) > 0
-        ORDER BY RAND() LIMIT 1
-    """, BOOK_TYPES)
-    row = cursor.fetchone()
-    return row["title_id"] if row else None
+
+    # Resolve the English language id once.
+    cursor.execute("SELECT lang_id FROM languages WHERE lang_code = 'eng'")
+    lang_row = cursor.fetchone()
+    if not lang_row:
+        return None
+    lang_id = lang_row["lang_id"]
+
+    # Upper bound: absolute max title_id — no filter so it uses the index
+    # directly.  Non-book IDs picked at random are simply skipped.
+    cursor.execute("SELECT MAX(title_id) AS max_id FROM titles")
+    bound_row = cursor.fetchone()
+    if not bound_row or not bound_row["max_id"]:
+        return None
+    max_id = bound_row["max_id"]
+
+    # Try up to 10 random starting points.  Each attempt uses the primary-key
+    # index (title_id >=) so it returns almost instantly.
+    for _ in range(10):
+        rand_id = _random.randint(1, max_id)
+        cursor.execute(
+            f"""SELECT title_id FROM titles
+                WHERE title_ttype   IN ({type_placeholders})
+                  AND title_language = %s
+                  AND title_id      >= %s
+                LIMIT 1""",
+            (*BOOK_TYPES, lang_id, rand_id),
+        )
+        row = cursor.fetchone()
+        if row:
+            return row["title_id"]
+
+    return None
