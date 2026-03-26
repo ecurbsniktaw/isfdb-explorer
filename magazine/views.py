@@ -6,7 +6,8 @@ from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links,
     get_author_fiction, get_author_detail, get_author_works, get_author_books,
     get_book_detail, get_book_editions,
-    get_all_magazines, get_magazine_issues,
+    get_magazine_issues_by_name,
+    get_all_magazines, get_magazine_issues, search_magazines,
     find_authors,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     format_date, NARRATIVE_TYPES,
@@ -216,13 +217,81 @@ def author_works(request, author_id):
 
 
 def magazine_list(request):
-    """Card grid of all 92 curated magazines."""
+    """Card grid of magazines — searchable, or browsed by first letter."""
+    query  = request.GET.get("q", "").strip()
+    letter = request.GET.get("letter", "A").upper()
+    if len(letter) != 1 or not letter.isalpha():
+        letter = "A"
+
     cursor = _dict_cursor()
     try:
-        magazines = get_all_magazines(cursor)
+        if query:
+            magazines = search_magazines(cursor, query)
+            all_mags  = get_all_magazines(cursor)
+        else:
+            all_mags  = get_all_magazines(cursor)
+            magazines = None
     finally:
         cursor.close()
-    return render(request, "magazine/magazine_list.html", {"magazines": magazines})
+
+    def _first_letter(name):
+        n = name.upper()
+        if n.startswith("THE "):
+            n = n[4:]
+        return n[0] if n and n[0].isalpha() else "#"
+
+    letters_with_mags = sorted({_first_letter(m["mag_name"]) for m in all_mags if _first_letter(m["mag_name"]) != "#"})
+
+    if magazines is None:
+        magazines = [m for m in all_mags if _first_letter(m["mag_name"]) == letter]
+
+    return render(request, "magazine/magazine_list.html", {
+        "magazines":         magazines,
+        "letter":            letter if not query else None,
+        "letters_with_mags": letters_with_mags,
+        "total_all":         len(all_mags),
+        "query":             query,
+    })
+
+
+def magazine_issues_by_name(request):
+    """Chronological list of all issues for one magazine, looked up by name."""
+    mag_name = request.GET.get("name", "").strip()
+    if not mag_name:
+        return redirect("magazine_list")
+
+    cursor = _dict_cursor()
+    try:
+        rows = get_magazine_issues_by_name(cursor, mag_name)
+    finally:
+        cursor.close()
+
+    if not rows:
+        raise Http404(f"No issues found for magazine {mag_name!r}")
+
+    use_accordion = len(rows) > 50
+    decades = []
+    if use_accordion:
+        from collections import defaultdict
+        by_decade = defaultdict(list)
+        for r in rows:
+            decade = (r["pub_year"] // 10) * 10
+            by_decade[decade].append(r)
+        for decade in sorted(by_decade):
+            decades.append({
+                "label":  f"{decade}s",
+                "decade": decade,
+                "issues": by_decade[decade],
+            })
+
+    return render(request, "magazine/magazine_issues.html", {
+        "mag_name":      mag_name,
+        "mag_code":      None,
+        "rows":          rows,
+        "total":         len(rows),
+        "use_accordion": use_accordion,
+        "decades":       decades,
+    })
 
 
 def magazine_issues(request, mag_code):

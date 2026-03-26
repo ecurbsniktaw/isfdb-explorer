@@ -634,28 +634,67 @@ def _mag_patterns(mag_code: str, mag_name: str) -> tuple:
 
 def get_all_magazines(cursor) -> list:
     """
-    Return all 92 curated magazines with issue counts and year ranges,
-    sorted alphabetically by name.
+    Return all magazines derived directly from pubs, grouped by the name
+    portion of pub_title (everything before the first comma).
+    Sorted alphabetically.
     """
-    cursor.execute("SELECT Mag_Code AS mag_code, Mag_Name AS mag_name, Mag_Desc AS mag_desc FROM magazine ORDER BY Mag_Name")
-    magazines = cursor.fetchall()
+    cursor.execute("""
+        SELECT
+            SUBSTRING_INDEX(pub_title, ',', 1)  AS mag_name,
+            COUNT(*)                             AS issue_count,
+            MIN(CASE WHEN YEAR(pub_year) > 0 AND YEAR(pub_year) < 8888
+                     THEN YEAR(pub_year) END)    AS first_year,
+            MAX(CASE WHEN YEAR(pub_year) > 0 AND YEAR(pub_year) < 8888
+                     THEN YEAR(pub_year) END)    AS last_year
+        FROM pubs
+        WHERE pub_ctype = 'MAGAZINE'
+        GROUP BY SUBSTRING_INDEX(pub_title, ',', 1)
+        HAVING mag_name NOT LIKE '%%&#%%'
+        ORDER BY mag_name
+    """)
+    return cursor.fetchall()
 
-    for m in magazines:
-        patterns = _mag_patterns(m["mag_code"], m["mag_name"])
-        or_clause = " OR ".join(["p.pub_title LIKE %s"] * len(patterns))
-        cursor.execute(f"""
-            SELECT COUNT(*) AS issue_count,
-                   MIN(CASE WHEN YEAR(p.pub_year) > 0 AND YEAR(p.pub_year) < 8888 THEN YEAR(p.pub_year) END) AS first_year,
-                   MAX(CASE WHEN YEAR(p.pub_year) > 0 AND YEAR(p.pub_year) < 8888 THEN YEAR(p.pub_year) END) AS last_year
-            FROM pubs p
-            WHERE p.pub_ctype = 'MAGAZINE' AND ({or_clause})
-        """, patterns)
-        counts = cursor.fetchone()
-        m["issue_count"] = counts["issue_count"]
-        m["first_year"]  = counts["first_year"]
-        m["last_year"]   = counts["last_year"]
 
-    return magazines
+def search_magazines(cursor, query: str) -> list:
+    """Return magazines whose name contains the given string (case-insensitive)."""
+    cursor.execute("""
+        SELECT
+            SUBSTRING_INDEX(pub_title, ',', 1)  AS mag_name,
+            COUNT(*)                             AS issue_count,
+            MIN(CASE WHEN YEAR(pub_year) > 0 AND YEAR(pub_year) < 8888
+                     THEN YEAR(pub_year) END)    AS first_year,
+            MAX(CASE WHEN YEAR(pub_year) > 0 AND YEAR(pub_year) < 8888
+                     THEN YEAR(pub_year) END)    AS last_year
+        FROM pubs
+        WHERE pub_ctype = 'MAGAZINE'
+        GROUP BY SUBSTRING_INDEX(pub_title, ',', 1)
+        HAVING mag_name NOT LIKE '%%&#%%'
+           AND mag_name LIKE %s
+        ORDER BY mag_name
+    """, (f"%{query}%",))
+    return cursor.fetchall()
+
+
+def get_magazine_issues_by_name(cursor, mag_name: str) -> list:
+    """
+    Return all issues whose pub_title starts with mag_name followed by a comma,
+    in chronological order.
+    """
+    cursor.execute("""
+        SELECT
+            pub_id,
+            pub_title,
+            YEAR(pub_year)  AS pub_year,
+            MONTH(pub_year) AS pub_month
+        FROM pubs
+        WHERE pub_ctype = 'MAGAZINE'
+          AND pub_title LIKE %s
+        ORDER BY pub_year, MONTH(pub_year), pub_title
+    """, (f"{mag_name},%",))
+    rows = cursor.fetchall()
+    for r in rows:
+        r["formatted_date"] = format_date(r["pub_year"], r["pub_month"])
+    return rows
 
 
 def get_magazine_issues(cursor, mag_code: str) -> tuple:

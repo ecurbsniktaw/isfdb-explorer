@@ -5,7 +5,38 @@
 {% block content %}
 
 <h1 class="h3 mb-1">Magazines</h1>
-<p class="text-muted mb-4">{{ magazines|length }} curated science fiction &amp; fantasy magazines</p>
+<p class="text-muted mb-3">{{ total_all }} magazines in database</p>
+
+{# Search form #}
+<form method="get" action="" class="mb-4">
+  <div class="input-group" style="max-width: 400px;">
+    <input type="text" name="q" value="{{ query }}"
+           class="form-control" placeholder="Search magazine names…" autofocus>
+    <button class="btn btn-secondary" type="submit">Search</button>
+    {% if query %}
+      <a href="{% url 'magazine_list' %}" class="btn btn-outline-secondary">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+{% if query %}
+  <p class="text-muted small mb-3">
+    {{ magazines|length }} result{{ magazines|length|pluralize }} for <strong>{{ query }}</strong>
+  </p>
+{% else %}
+  {# Letter navigation #}
+  <div class="mb-4 d-flex flex-wrap gap-1">
+    {% for l in letters_with_mags %}
+      <a href="?letter={{ l }}"
+         class="btn btn-sm {% if l == letter %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+        {{ l }}
+      </a>
+    {% endfor %}
+  </div>
+  <p class="text-muted small mb-3">
+    Showing {{ magazines|length }} magazine{{ magazines|length|pluralize }} starting with <strong>{{ letter }}</strong>
+  </p>
+{% endif %}
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
   {% for m in magazines %}
@@ -13,13 +44,10 @@
     <div class="card h-100 shadow-sm">
       <div class="card-body">
         <h6 class="card-title mb-1">
-          {% if m.issue_count %}
-          <a href="{% url 'magazine_issues' m.mag_code %}" class="text-decoration-none stretched-link">
+          <a href="{% url 'magazine_issues_by_name' %}?name={{ m.mag_name|urlencode }}"
+             class="text-decoration-none stretched-link">
             {{ m.mag_name }}
           </a>
-          {% else %}
-          <span class="text-muted">{{ m.mag_name }}</span>
-          {% endif %}
         </h6>
         {% if m.first_year %}
         <p class="card-text small text-muted mb-0">
@@ -28,11 +56,7 @@
         {% endif %}
       </div>
       <div class="card-footer text-muted small">
-        {% if m.issue_count %}
-          {{ m.issue_count }} issue{{ m.issue_count|pluralize }}
-        {% else %}
-          No issues indexed
-        {% endif %}
+        {{ m.issue_count }} issue{{ m.issue_count|pluralize }}
       </div>
     </div>
   </div>
