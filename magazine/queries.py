@@ -318,27 +318,54 @@ def get_author_fiction(cursor, magazine_name: str, author_name: str) -> list:
     return rows
 
 
+def _earliest_pub_id_expr(alias="sort_key"):
+    """
+    SQL expression that returns the pub_id of the earliest pub for a grouped set,
+    encoding year+month+pub_id into a zero-padded string so MIN() picks the
+    right row. Returns a 16-char string: YYYY MM pub_id(10). Use RIGHT(..., 10)
+    to extract the pub_id.
+    """
+    return (
+        "RIGHT(MIN(CONCAT("
+        "LPAD(YEAR(p.pub_year), 4, '0'),"
+        "LPAD(MONTH(p.pub_year), 2, '0'),"
+        "LPAD(p.pub_id, 10, '0')"
+        ")), 10)"
+    )
+
+
 def get_author_works(cursor, author_id: int) -> list:
     """
     Return all works by a specific author (by ID), in chronological order,
     deduplicated across editions (grouped by title_id).
 
-    Returns a list of dicts with keys:
-        pub_id, pub_title, pub_year (int), pub_month (int),
-        title_id, title_title, title_ttype, type_label,
-        title_storylen, pubc_page, authors, author_list, formatted_date
+    pub_id and pub_title are always from the *earliest* publication of each
+    title (by pub_year then pub_id), not the alphabetically-first one.
     """
+    # Step 1 — get title-level data with the correct earliest pub_id encoded
+    # in a sortable CONCAT string. We extract year/month/pub_id from it.
     query = """
         SELECT
-            MIN(p.pub_id)             AS pub_id,
-            MIN(p.pub_title)          AS pub_title,
-            YEAR(MIN(p.pub_year))     AS pub_year,
-            MONTH(MIN(p.pub_year))    AS pub_month,
+            CAST(RIGHT(MIN(CONCAT(
+                LPAD(YEAR(p.pub_year), 4, '0'),
+                LPAD(MONTH(p.pub_year), 2, '0'),
+                LPAD(p.pub_id, 10, '0')
+            )), 10) AS UNSIGNED)           AS pub_id,
+            CAST(LEFT(MIN(CONCAT(
+                LPAD(YEAR(p.pub_year), 4, '0'),
+                LPAD(MONTH(p.pub_year), 2, '0'),
+                LPAD(p.pub_id, 10, '0')
+            )), 4) AS UNSIGNED)            AS pub_year,
+            CAST(SUBSTRING(MIN(CONCAT(
+                LPAD(YEAR(p.pub_year), 4, '0'),
+                LPAD(MONTH(p.pub_year), 2, '0'),
+                LPAD(p.pub_id, 10, '0')
+            )), 5, 2) AS UNSIGNED)         AS pub_month,
             t.title_id,
             t.title_title,
             t.title_ttype,
             t.title_storylen,
-            MIN(pc.pubc_page)         AS pubc_page,
+            MIN(pc.pubc_page)             AS pubc_page,
             GROUP_CONCAT(
                 DISTINCT a_all.author_canonical
                 ORDER BY ca_all.ca_id
@@ -362,15 +389,26 @@ def get_author_works(cursor, author_id: int) -> list:
         GROUP BY
             t.title_id, t.title_title, t.title_ttype, t.title_storylen
         ORDER BY
-            YEAR(MIN(p.pub_year)),
-            MONTH(MIN(p.pub_year)),
-            t.title_title
+            pub_year, pub_month, t.title_title
     """
     cursor.execute(query, (author_id,))
     rows = cursor.fetchall()
 
+    if not rows:
+        return rows
+
+    # Step 2 — bulk-fetch pub_titles for the earliest pub_ids in one query
+    pub_ids = [row["pub_id"] for row in rows]
+    placeholders = ", ".join(["%s"] * len(pub_ids))
+    cursor.execute(
+        f"SELECT pub_id, pub_title FROM pubs WHERE pub_id IN ({placeholders})",
+        pub_ids,
+    )
+    pub_title_map = {r["pub_id"]: r["pub_title"] for r in cursor.fetchall()}
+
     fiction_set = set(FICTION_TYPES)
     for row in rows:
+        row["pub_title"]      = pub_title_map.get(row["pub_id"], "")
         row["type_label"]     = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
         row["formatted_date"] = format_date(row["pub_year"], row["pub_month"])
         row["kind"]           = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
