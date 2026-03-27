@@ -105,10 +105,55 @@
   </div>
 </div>
 
-{% if book.pub_note %}
-<div class="mt-2">
+{% if book.title_note or book.pub_note %}
+<div class="mt-2 mb-4">
   <h2 class="h6 text-muted">Notes</h2>
-  <p class="mb-0">{{ book.pub_note|safe }}</p>
+  {% if book.title_note %}<p class="mb-1">{{ book.title_note|safe }}</p>{% endif %}
+  {% if book.pub_note %}<p class="mb-0 text-muted small">{{ book.pub_note|safe }}</p>{% endif %}
+</div>
+{% endif %}
+
+{% if book.webpages %}
+<div class="mb-4">
+  <h2 class="h6 text-muted mb-2">External Links</h2>
+  <div class="d-flex flex-wrap gap-2">
+    {% for page in book.webpages %}
+      <a href="{{ page.url }}" target="_blank" rel="noopener"
+         class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if book.awards %}
+<div class="mb-4">
+  <h2 class="h6 text-muted mb-2">Awards</h2>
+  <table class="table table-sm w-auto">
+    <thead class="table-light">
+      <tr>
+        <th>Award</th>
+        <th>Category</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for award in book.awards %}
+      <tr>
+        <td>{{ award.award_name }}</td>
+        <td class="text-muted">{{ award.category }}</td>
+        <td>
+          {% if award.level == "Winner" %}
+            <span class="badge text-bg-warning">Winner</span>
+          {% elif award.level == "Runner-up" %}
+            <span class="badge text-bg-secondary">Runner-up</span>
+          {% else %}
+            <span class="text-muted small">{{ award.level }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endif %}
 

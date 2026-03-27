@@ -507,7 +507,8 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
             p.pub_pages,
             p.pub_frontimage,
             pub.publisher_name,
-            n.note_note AS pub_note,
+            n.note_note        AS pub_note,
+            tn.note_note       AS title_note,
             t.title_id,
             t.title_title,
             t.title_ttype,
@@ -537,6 +538,7 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
                                      AND t.title_ttype = p.pub_ctype
         LEFT JOIN publishers pub      ON pub.publisher_id = p.publisher_id
         LEFT JOIN notes n             ON n.note_id = p.note_id
+        LEFT JOIN notes tn            ON tn.note_id = t.note_id
         LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
         LEFT JOIN authors a_all       ON a_all.author_id = ca_all.author_id
         LEFT JOIN pub_content pc_cv   ON pc_cv.pub_id = p.pub_id
@@ -551,7 +553,7 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
           AND YEAR(p.pub_year) > 0
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
                  p.pub_catalog, p.pub_isbn, p.pub_ptype, p.pub_pages, p.pub_frontimage,
-                 pub.publisher_name, n.note_note, t.title_id, t.title_title, t.title_ttype
+                 pub.publisher_name, n.note_note, tn.note_note, t.title_id, t.title_title, t.title_ttype
         ORDER BY p.pub_year, p.pub_id
         LIMIT 1
     """
@@ -565,6 +567,35 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
     row["formatted_date"]    = str(row["pub_year"]) if row["pub_year"] else ""
     row["author_list"]       = _make_author_list(row.get("authors"), row.get("author_ids"))
     row["cover_artist_list"] = _make_author_list(row.get("cover_artist"), row.get("cover_artist_ids"))
+
+    # External links
+    cursor.execute("SELECT url FROM webpages WHERE title_id = %s ORDER BY webpage_id", (title_id,))
+    row["webpages"] = [
+        {"url": r["url"], "label": _webpage_label(r["url"])}
+        for r in cursor.fetchall()
+        if r.get("url")
+    ]
+
+    # Awards
+    _AWARD_LEVEL = {"1": "Winner", "2": "Runner-up"}
+    cursor.execute("""
+        SELECT at2.award_type_name, ac.award_cat_name, a.award_level
+        FROM title_awards ta
+        JOIN awards a      ON a.award_id      = ta.award_id
+        JOIN award_types at2 ON at2.award_type_id = a.award_type_id
+        JOIN award_cats ac ON ac.award_cat_id  = a.award_cat_id
+        WHERE ta.title_id = %s
+        ORDER BY at2.award_type_name, ac.award_cat_name
+    """, (title_id,))
+    row["awards"] = [
+        {
+            "award_name": r["award_type_name"],
+            "category":   r["award_cat_name"],
+            "level":      _AWARD_LEVEL.get(str(r["award_level"]), "Nominee/Finalist"),
+        }
+        for r in cursor.fetchall()
+    ]
+
     return row
 
 
