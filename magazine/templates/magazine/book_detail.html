@@ -131,6 +131,7 @@
   <table class="table table-sm w-auto">
     <thead class="table-light">
       <tr>
+        <th>Year</th>
         <th>Award</th>
         <th>Category</th>
         <th>Status</th>
@@ -139,6 +140,7 @@
     <tbody>
       {% for award in book.awards %}
       <tr>
+        <td class="text-muted small">{{ award.year }}</td>
         <td>{{ award.award_name }}</td>
         <td class="text-muted">{{ award.category }}</td>
         <td>
