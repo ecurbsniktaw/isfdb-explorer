@@ -1,0 +1,111 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}About — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-4">About ISFDB Explorer</h1>
+
+<p>This site is built on data from the <a href="https://www.isfdb.org" target="_blank" rel="noopener">Internet Speculative Fiction Database</a>, a community-maintained bibliography of science fiction, fantasy, and horror. Our queries run against a local copy of that database downloaded in early February 2026; additions and corrections made to ISFDB since then are not reflected here.</p>
+
+<hr class="my-4">
+
+<h2 class="h5 mb-3">About The Database</h2>
+
+<div class="row g-4">
+
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">Authors &amp; Titles</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Authors with works</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.authors }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Total titles (all types)</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.total_titles }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>&nbsp;&nbsp;— Novels</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.novels }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>&nbsp;&nbsp;— Short fiction</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.short_fiction }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>&nbsp;&nbsp;— Collections</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.collections }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>&nbsp;&nbsp;— Anthologies</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.anthologies }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>&nbsp;&nbsp;— Nonfiction</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.nonfiction }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Series</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.series }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">Publications</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Magazine issues</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.magazine_issues }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Distinct magazine titles</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.magazine_titles }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Book publications</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.book_pubs }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Publishers</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.publishers }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Publications with cover images</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.cover_images }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Titles with Wikipedia links</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.wikipedia_links }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">Awards</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Award types tracked</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.award_types }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Total award records</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.award_records }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Titles with at least one award</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.titles_with_awards }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
