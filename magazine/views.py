@@ -385,30 +385,5 @@ def random_item(request, kind):
 
 
 def about(request):
-    """About page with database statistics."""
-    with connection.cursor() as c:
-        def count(sql):
-            c.execute(sql)
-            return f"{c.fetchone()[0]:,}"
-
-        stats = {
-            "authors":              count("SELECT COUNT(DISTINCT author_id) FROM canonical_author"),
-            "novels":               count("SELECT COUNT(*) FROM titles WHERE title_ttype='NOVEL'"),
-            "short_fiction":        count("SELECT COUNT(*) FROM titles WHERE title_ttype='SHORTFICTION'"),
-            "collections":          count("SELECT COUNT(*) FROM titles WHERE title_ttype='COLLECTION'"),
-            "anthologies":          count("SELECT COUNT(*) FROM titles WHERE title_ttype='ANTHOLOGY'"),
-            "nonfiction":           count("SELECT COUNT(*) FROM titles WHERE title_ttype='NONFICTION'"),
-            "total_titles":         count("SELECT COUNT(*) FROM titles"),
-            "magazine_issues":      count("SELECT COUNT(*) FROM pubs WHERE pub_ctype='MAGAZINE'"),
-            "magazine_titles":      count("SELECT COUNT(DISTINCT SUBSTRING_INDEX(pub_title,',',1)) FROM pubs WHERE pub_ctype='MAGAZINE'"),
-            "book_pubs":            count("SELECT COUNT(*) FROM pubs WHERE pub_ctype NOT IN ('MAGAZINE','FANZINE','NEWSLETTER')"),
-            "publishers":           count("SELECT COUNT(*) FROM publishers"),
-            "series":               count("SELECT COUNT(*) FROM series"),
-            "award_types":          count("SELECT COUNT(*) FROM award_types"),
-            "award_records":        count("SELECT COUNT(*) FROM awards"),
-            "titles_with_awards":   count("SELECT COUNT(DISTINCT title_id) FROM title_awards"),
-            "cover_images":         count("SELECT COUNT(*) FROM pubs WHERE pub_frontimage IS NOT NULL AND pub_frontimage != ''"),
-            "wikipedia_links":      count("SELECT COUNT(*) FROM webpages WHERE url LIKE '%%wikipedia%%' AND title_id IS NOT NULL"),
-        }
-
-    return render(request, "magazine/about.html", {"stats": stats})
+    """About page with hardcoded database statistics (from Feb 2026 snapshot)."""
+    return render(request, "magazine/about.html")
