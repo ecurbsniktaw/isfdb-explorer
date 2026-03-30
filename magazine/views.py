@@ -5,7 +5,7 @@ from django.http import Http404
 from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links,
     get_author_fiction, get_author_detail, get_author_works, get_author_books,
-    get_book_detail, get_book_editions,
+    get_book_detail, get_book_editions, get_story_detail,
     get_magazine_issues_by_name,
     get_all_magazines, get_magazine_issues, search_magazines,
     find_authors,
@@ -382,6 +382,18 @@ def random_item(request, kind):
     finally:
         cursor.close()
     raise Http404(f"Could not find a random {kind}")
+
+
+def story_detail(request, title_id):
+    """Detail page for a magazine fiction title."""
+    cursor = _dict_cursor()
+    try:
+        story = get_story_detail(cursor, title_id)
+    finally:
+        cursor.close()
+    if not story:
+        raise Http404(f"No title found for title_id={title_id}")
+    return render(request, "magazine/story_detail.html", {"story": story})
 
 
 def about(request):

@@ -601,6 +601,150 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
     return row
 
 
+_STORY_LENGTH_LABELS = {
+    "short story": "Short Story",
+    "novelette":   "Novelette",
+    "novella":     "Novella",
+}
+
+# Publication types that are not magazines
+_BOOK_PUB_CTYPES = ("NOVEL", "COLLECTION", "ANTHOLOGY", "OMNIBUS", "NONFICTION",
+                    "CHAPBOOK", "NONGENRE", "FANZINE", "NEWSLETTER")
+
+
+def get_story_detail(cursor, title_id: int) -> dict | None:
+    """
+    Return details for a fiction/essay/poem title: metadata, authors, first pub,
+    series, note, synopsis, webpages, awards, and all publications.
+    """
+    query = """
+        SELECT
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            t.title_storylen,
+            t.series_id,
+            t.title_seriesnum,
+            t.title_seriesnum_2,
+            t.note_id,
+            t.title_synopsis,
+            GROUP_CONCAT(
+                a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                a.author_id ORDER BY ca.ca_id SEPARATOR ','
+            ) AS author_ids
+        FROM titles t
+        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
+        LEFT JOIN authors a           ON a.author_id  = ca.author_id
+        WHERE t.title_id = %s
+        GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen,
+                 t.series_id, t.title_seriesnum, t.title_seriesnum_2,
+                 t.note_id, t.title_synopsis
+    """
+    cursor.execute(query, (title_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+
+    row["type_label"]   = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+    row["length_label"] = _STORY_LENGTH_LABELS.get(row.get("title_storylen") or "", "")
+    row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
+
+    # Series
+    if row.get("series_id"):
+        cursor.execute("""
+            SELECT s.series_title, s.series_parent, sp.series_title AS parent_title
+            FROM series s
+            LEFT JOIN series sp ON sp.series_id = s.series_parent
+            WHERE s.series_id = %s
+        """, (row["series_id"],))
+        row["series"] = cursor.fetchone()
+    else:
+        row["series"] = None
+
+    # Note
+    if row.get("note_id"):
+        cursor.execute("SELECT note_note FROM notes WHERE note_id = %s", (row["note_id"],))
+        n = cursor.fetchone()
+        row["title_note"] = n["note_note"] if n else ""
+    else:
+        row["title_note"] = ""
+
+    # Synopsis
+    if row.get("title_synopsis"):
+        cursor.execute("SELECT note_note FROM notes WHERE note_id = %s", (row["title_synopsis"],))
+        n = cursor.fetchone()
+        row["synopsis"] = n["note_note"] if n else ""
+    else:
+        row["synopsis"] = ""
+
+    # External links
+    cursor.execute("SELECT url FROM webpages WHERE title_id = %s ORDER BY webpage_id", (title_id,))
+    row["webpages"] = [
+        {"url": r["url"], "label": _webpage_label(r["url"])}
+        for r in cursor.fetchall()
+        if r.get("url")
+    ]
+
+    # Awards
+    _AWARD_LEVEL = {"1": "Winner", "2": "Runner-up"}
+    cursor.execute("""
+        SELECT at2.award_type_name, ac.award_cat_name, a.award_level,
+               YEAR(a.award_year) AS award_year
+        FROM title_awards ta
+        JOIN awards a        ON a.award_id       = ta.award_id
+        JOIN award_types at2 ON at2.award_type_id = a.award_type_id
+        JOIN award_cats ac   ON ac.award_cat_id   = a.award_cat_id
+        WHERE ta.title_id = %s
+        ORDER BY YEAR(a.award_year), at2.award_type_name
+    """, (title_id,))
+    row["awards"] = [
+        {
+            "award_name": r["award_type_name"],
+            "category":   r["award_cat_name"],
+            "level":      _AWARD_LEVEL.get(str(r["award_level"]), "Nominee/Finalist"),
+            "year":       r["award_year"] if r["award_year"] else "",
+        }
+        for r in cursor.fetchall()
+    ]
+
+    # All publications (where and when this story appeared)
+    cursor.execute("""
+        SELECT
+            p.pub_id,
+            p.pub_title,
+            YEAR(p.pub_year)  AS pub_year,
+            MONTH(p.pub_year) AS pub_month,
+            p.pub_ctype,
+            pub2.publisher_name,
+            pc.pubc_page
+        FROM pub_content pc
+        JOIN pubs p ON p.pub_id = pc.pub_id
+        LEFT JOIN publishers pub2 ON pub2.publisher_id = p.publisher_id
+        WHERE pc.title_id = %s
+          AND YEAR(p.pub_year) > 0
+        ORDER BY p.pub_year, p.pub_id
+    """, (title_id,))
+    pubs = cursor.fetchall()
+    for p in pubs:
+        p["formatted_date"] = format_date(p["pub_year"], p["pub_month"])
+        p["is_magazine"]    = p["pub_ctype"] == "MAGAZINE"
+        p["type_label"]     = TITLE_TYPE_LABELS.get(p["pub_ctype"], p["pub_ctype"] or "")
+    row["publications"] = pubs
+
+    # First publication date (earliest entry)
+    if pubs:
+        first = pubs[0]
+        row["first_pub_date"] = first["formatted_date"]
+        row["first_pub_id"]   = first["pub_id"]
+    else:
+        row["first_pub_date"] = ""
+        row["first_pub_id"]   = None
+
+    return row
+
+
 def get_book_editions(cursor, title_id: int, exclude_pub_id: int) -> list:
     """
     Return all English-language editions of a title except the one already

@@ -12,6 +12,7 @@ urlpatterns = [
     path("author/<int:author_id>/books/", views.author_books, name="author_books"),
     path("author/<int:author_id>/works/", views.author_works, name="author_works"),
     path("book/<int:title_id>/", views.book_detail, name="book_detail"),
+    path("story/<int:title_id>/", views.story_detail, name="story_detail"),
     path("magazines/", views.magazine_list, name="magazine_list"),
     path("magazines/browse/", views.magazine_issues_by_name, name="magazine_issues_by_name"),
     path("magazines/<str:mag_code>/", views.magazine_issues, name="magazine_issues"),
