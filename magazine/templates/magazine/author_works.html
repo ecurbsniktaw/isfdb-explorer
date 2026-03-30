@@ -40,7 +40,13 @@
             {{ row.type_label }}
           </span>
         </td>
-        <td>{{ row.title_title }}</td>
+        <td>
+          {% if row.title_id %}
+            <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
+          {% else %}
+            {{ row.title_title }}
+          {% endif %}
+        </td>
         <td class="text-muted small">{{ row.pub_title }}</td>
         <td class="text-muted">
           {% for a in row.author_list %}
