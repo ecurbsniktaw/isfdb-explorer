@@ -5,7 +5,7 @@ from django.http import Http404
 from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links,
     get_author_fiction, get_author_detail, get_author_works, get_author_books,
-    get_book_detail, get_book_editions, get_story_detail,
+    get_book_detail, get_book_editions, get_story_detail, find_titles,
     get_magazine_issues_by_name,
     get_all_magazines, get_magazine_issues, search_magazines,
     find_authors,
@@ -385,6 +385,28 @@ def random_item(request, kind):
     finally:
         cursor.close()
     raise Http404(f"Could not find a random {kind}")
+
+
+def title_search(request):
+    """Search for titles by name."""
+    query        = request.GET.get("q", "").strip()
+    match_type   = request.GET.get("match_type", "exact")
+    content_type = request.GET.get("content_type", "all")
+    if match_type   not in ("exact", "partial"): match_type   = "exact"
+    if content_type not in ("all", "book", "fiction"): content_type = "all"
+
+    context = {"query": query, "match_type": match_type, "content_type": content_type}
+
+    if query:
+        cursor = _dict_cursor()
+        try:
+            titles = find_titles(cursor, query, match_type, content_type)
+        finally:
+            cursor.close()
+        context["titles"] = titles
+        context["total"]  = len(titles)
+
+    return render(request, "magazine/title_search.html", context)
 
 
 def story_detail(request, title_id):

@@ -1,0 +1,111 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Title Search — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<div class="mb-3">
+  <a href="{% url 'combined_search' %}" class="text-decoration-none">&larr; Search</a>
+</div>
+
+<h1 class="h3 mb-4">Title Search</h1>
+
+<form method="get" action="{% url 'title_search' %}" class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-6">
+        <label for="q" class="form-label fw-semibold">Title</label>
+        <input type="text" id="q" name="q" class="form-control"
+               value="{{ query }}" placeholder="e.g. Foundation" autofocus required>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </div>
+    <div class="row g-4 mt-1">
+      <div class="col-auto">
+        <div class="fw-semibold small mb-1">Match</div>
+        <div class="d-flex gap-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="match_type" id="mt-exact"
+                   value="exact" {% if match_type != "partial" %}checked{% endif %}>
+            <label class="form-check-label" for="mt-exact">Exact</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="match_type" id="mt-partial"
+                   value="partial" {% if match_type == "partial" %}checked{% endif %}>
+            <label class="form-check-label" for="mt-partial">Partial</label>
+          </div>
+        </div>
+      </div>
+      <div class="col-auto">
+        <div class="fw-semibold small mb-1">Type</div>
+        <div class="d-flex gap-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="content_type" id="ct-all"
+                   value="all" {% if content_type == "all" %}checked{% endif %}>
+            <label class="form-check-label" for="ct-all">All</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="content_type" id="ct-book"
+                   value="book" {% if content_type == "book" %}checked{% endif %}>
+            <label class="form-check-label" for="ct-book">Books only</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="content_type" id="ct-fiction"
+                   value="fiction" {% if content_type == "fiction" %}checked{% endif %}>
+            <label class="form-check-label" for="ct-fiction">Short fiction only</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+{% if query %}
+  {% if titles %}
+    <p class="text-muted mb-3">
+      <strong>{{ total }}</strong> result{{ total|pluralize }}
+      {% if total == 200 %} (limit reached — try a more specific search){% endif %}
+    </p>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover toc-table">
+        <thead class="table-light">
+          <tr>
+            <th style="width:35%">Title</th>
+            <th style="width:30%">Author(s)</th>
+            <th style="width:10%">Type</th>
+            <th style="width:10%">Length</th>
+            <th style="width:10%">Year</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in titles %}
+          <tr>
+            <td>
+              {% if t.is_book %}
+                <a href="{% url 'book_detail' t.title_id %}" class="text-decoration-none">{{ t.title_title }}</a>
+              {% else %}
+                <a href="{% url 'story_detail' t.title_id %}" class="text-decoration-none">{{ t.title_title }}</a>
+              {% endif %}
+            </td>
+            <td class="text-muted">
+              {% for a in t.author_list %}
+                {% if not forloop.first %} &amp; {% endif %}
+                {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+              {% empty %}Uncredited{% endfor %}
+            </td>
+            <td class="text-muted small">{{ t.type_label }}</td>
+            <td class="text-muted small">{{ t.length_label }}</td>
+            <td class="text-muted small">{{ t.first_year|default:"" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted">No titles found matching <strong>{{ query }}</strong>.</p>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

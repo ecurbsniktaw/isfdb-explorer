@@ -101,6 +101,63 @@
       </div>
     </form>
 
+    {# ── Title Search ─────────────────────────────────────────────────────── #}
+    <h2 class="h5 mb-3">Search For a Title</h2>
+    <form method="get" action="{% url 'title_search' %}" class="card shadow-sm mb-5">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col">
+            <label for="ts-q" class="form-label fw-semibold">Title</label>
+            <input type="text"
+                   id="ts-q"
+                   name="q"
+                   class="form-control"
+                   placeholder="e.g. Foundation">
+            <div class="row g-4 mt-0">
+              <div class="col-auto">
+                <div class="fw-semibold small mb-1">Match</div>
+                <div class="d-flex gap-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="match_type"
+                           id="cs-mt-exact" value="exact" checked>
+                    <label class="form-check-label" for="cs-mt-exact">Exact</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="match_type"
+                           id="cs-mt-partial" value="partial">
+                    <label class="form-check-label" for="cs-mt-partial">Partial</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="fw-semibold small mb-1">Type</div>
+                <div class="d-flex gap-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="content_type"
+                           id="cs-ct-all" value="all" checked>
+                    <label class="form-check-label" for="cs-ct-all">All</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="content_type"
+                           id="cs-ct-book" value="book">
+                    <label class="form-check-label" for="cs-ct-book">Books only</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="content_type"
+                           id="cs-ct-fiction" value="fiction">
+                    <label class="form-check-label" for="cs-ct-fiction">Short fiction only</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Search</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
     {# ── Random Data Search ───────────────────────────────────────────────── #}
     <h2 class="h5 mb-3">Random Data Search</h2>
     <div class="card shadow-sm mb-4">

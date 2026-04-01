@@ -948,6 +948,80 @@ def get_magazine_issues(cursor, mag_code: str) -> tuple:
     return mag_name, rows
 
 
+_SEARCHABLE_TYPES = (
+    "NOVEL", "COLLECTION", "ANTHOLOGY", "OMNIBUS", "NONFICTION", "CHAPBOOK",
+    "SHORTFICTION", "SERIAL", "ESSAY", "POEM",
+)
+_BOOK_SEARCH_TYPES    = ("NOVEL", "COLLECTION", "ANTHOLOGY", "OMNIBUS", "NONFICTION", "CHAPBOOK")
+_FICTION_SEARCH_TYPES = ("SHORTFICTION", "SERIAL")
+
+
+def find_titles(cursor, title: str, match_type: str = "exact",
+                content_type: str = "all") -> list:
+    """
+    Search for titles by name.
+
+    match_type:   'exact'   — full title match (case-insensitive)
+                  'partial' — substring match
+    content_type: 'all'     — novels, collections, short fiction, etc.
+                  'book'    — books only (NOVEL, COLLECTION, ANTHOLOGY, …)
+                  'fiction' — short fiction / serials only
+
+    Returns up to 200 results sorted by title then first-pub year.
+    """
+    if content_type == "book":
+        type_list = _BOOK_SEARCH_TYPES
+    elif content_type == "fiction":
+        type_list = _FICTION_SEARCH_TYPES
+    else:
+        type_list = _SEARCHABLE_TYPES
+
+    type_placeholders = ", ".join(["%s"] * len(type_list))
+
+    if match_type == "partial":
+        title_clause = "LOWER(t.title_title) LIKE LOWER(%s)"
+        title_param  = f"%{title}%"
+    else:
+        title_clause = "LOWER(t.title_title) = LOWER(%s)"
+        title_param  = title
+
+    query = f"""
+        SELECT
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            t.title_storylen,
+            MIN(YEAR(p.pub_year)) AS first_year,
+            GROUP_CONCAT(
+                DISTINCT a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT a.author_id ORDER BY ca.ca_id SEPARATOR ','
+            ) AS author_ids
+        FROM titles t
+        LEFT JOIN canonical_author ca ON ca.title_id  = t.title_id
+        LEFT JOIN authors a           ON a.author_id   = ca.author_id
+        LEFT JOIN pub_content pc      ON pc.title_id   = t.title_id
+        LEFT JOIN pubs p              ON p.pub_id      = pc.pub_id
+                                     AND YEAR(p.pub_year) > 0
+        JOIN languages lang           ON lang.lang_id  = t.title_language
+        WHERE {title_clause}
+          AND t.title_ttype IN ({type_placeholders})
+          AND lang.lang_code = 'eng'
+        GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen
+        ORDER BY t.title_title, first_year
+        LIMIT 200
+    """
+    cursor.execute(query, (title_param, *type_list))
+    rows = cursor.fetchall()
+    for row in rows:
+        row["type_label"]   = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["length_label"] = _STORY_LENGTH_LABELS.get(row.get("title_storylen") or "", "")
+        row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
+        row["is_book"]      = row["title_ttype"] in _BOOK_SEARCH_TYPES
+    return rows
+
+
 def find_authors(cursor, name: str, search_type: str = "full") -> list:
     """
     Return authors whose canonical name matches the given string.
