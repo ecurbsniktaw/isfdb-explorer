@@ -948,16 +948,28 @@ def get_magazine_issues(cursor, mag_code: str) -> tuple:
     return mag_name, rows
 
 
-def find_authors(cursor, name: str) -> list:
+def find_authors(cursor, name: str, search_type: str = "full") -> list:
     """
-    Return authors whose canonical name contains the given string.
+    Return authors whose canonical name matches the given string.
+
+    search_type:
+        'full' — match anywhere in the full name (default)
+        'last' — match against the last word of the name only
 
     Returns a list of dicts with keys:
         author_id, author_canonical, author_legalname,
         birth_year (int|None), death_year (int|None), title_count (int|None)
     Ordered alphabetically by author_canonical.
     """
-    cursor.execute("""
+    clean = name.replace(".", "")
+    if search_type == "last":
+        where = "REPLACE(SUBSTRING_INDEX(a.author_canonical, ' ', -1), '.', '') LIKE %s"
+        param = f"%{clean}%"
+    else:
+        where = "REPLACE(a.author_canonical, '.', '') LIKE %s"
+        param = f"%{clean}%"
+
+    cursor.execute(f"""
         SELECT
             a.author_id,
             a.author_canonical,
@@ -967,9 +979,9 @@ def find_authors(cursor, name: str) -> list:
             abd.title_count
         FROM authors a
         LEFT JOIN authors_by_debut_date abd ON abd.author_id = a.author_id
-        WHERE REPLACE(a.author_canonical, '.', '') LIKE %s
+        WHERE {where}
         ORDER BY a.author_canonical
-    """, (f"%{name.replace('.', '')}%",))
+    """, (param,))
     return cursor.fetchall()
 
 

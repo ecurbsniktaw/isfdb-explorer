@@ -21,7 +21,18 @@
                    class="form-control"
                    placeholder="e.g. Smith or Cordwainer Smith"
                    autofocus>
-            <div class="form-text">Partial match, case-insensitive</div>
+            <div class="form-text mt-2 d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="search_type"
+                       id="cs-search-full" value="full" checked>
+                <label class="form-check-label" for="cs-search-full">Full name</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="search_type"
+                       id="cs-search-last" value="last">
+                <label class="form-check-label" for="cs-search-last">Last name only</label>
+              </div>
+            </div>
           </div>
           <div class="col-auto">
             <button type="submit" class="btn btn-primary">Search</button>

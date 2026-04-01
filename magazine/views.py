@@ -345,13 +345,16 @@ def book_detail(request, title_id):
 
 def find_authors_view(request):
     """Search for authors by name and display a list of matches."""
-    query = request.GET.get("q", "").strip()
-    context = {"query": query}
+    query       = request.GET.get("q", "").strip()
+    search_type = request.GET.get("search_type", "full")
+    if search_type not in ("full", "last"):
+        search_type = "full"
+    context = {"query": query, "search_type": search_type}
 
     if query:
         cursor = _dict_cursor()
         try:
-            authors = find_authors(cursor, query)
+            authors = find_authors(cursor, query, search_type)
         finally:
             cursor.close()
         context["authors"] = authors
