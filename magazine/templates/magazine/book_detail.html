@@ -167,6 +167,7 @@
       <thead class="table-light">
         <tr>
           <th>Title</th>
+          <th style="width:52px"></th>
           <th>Year</th>
           <th>Publisher</th>
           <th>Format</th>
@@ -180,6 +181,17 @@
         {% for ed in editions %}
         <tr>
           <td>{{ ed.pub_title }}</td>
+          <td>
+            {% if ed.pub_frontimage %}
+            <img src="{{ ed.pub_frontimage }}"
+                 alt="Cover"
+                 class="edition-thumb rounded"
+                 style="max-width:44px; max-height:56px; object-fit:cover; cursor:zoom-in;"
+                 data-fullsrc="{{ ed.pub_frontimage }}"
+                 data-bs-toggle="modal"
+                 data-bs-target="#editionCoverModal">
+            {% endif %}
+          </td>
           <td>{{ ed.pub_year }}</td>
           <td class="text-muted small">{{ ed.publisher_name|default:"" }}</td>
           <td class="text-muted small">{{ ed.format_label }}</td>
@@ -198,6 +210,31 @@
     </table>
   </div>
 </div>
+
+{# Shared modal for edition cover images #}
+<div class="modal fade" id="editionCoverModal" tabindex="-1" aria-label="Cover image" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0 text-center">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
+                data-bs-dismiss="modal" aria-label="Close"></button>
+        <img id="editionCoverImg" src="" alt="Cover image" class="img-fluid rounded shadow">
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+{% if editions %}
+<script>
+document.querySelectorAll('.edition-thumb').forEach(function(img) {
+  img.addEventListener('click', function() {
+    document.getElementById('editionCoverImg').src = this.dataset.fullsrc;
+  });
+});
+</script>
+{% endif %}
 {% endblock %}

@@ -759,6 +759,7 @@ def get_book_editions(cursor, title_id: int, exclude_pub_id: int) -> list:
             p.pub_catalog,
             p.pub_ptype,
             p.pub_pages,
+            p.pub_frontimage,
             pub.publisher_name,
             t.title_ttype,
             GROUP_CONCAT(
