@@ -1,0 +1,106 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}{{ award.award_type_name }} — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<div class="mb-3">
+  <a href="{% url 'award_list' %}" class="text-decoration-none">&larr; Awards</a>
+</div>
+
+<h1 class="h3 mb-1">{{ award.award_type_name }}</h1>
+
+{% if award.award_type_by %}
+  <p class="text-muted mb-1 small">Presented by: {{ award.award_type_by }}</p>
+{% endif %}
+{% if award.award_type_for %}
+  <p class="text-muted mb-1 small">For: {{ award.award_type_for }}</p>
+{% endif %}
+{% if award.award_type_wikipedia %}
+  <div class="mb-3">
+    <a href="{{ award.award_type_wikipedia }}" target="_blank" rel="noopener"
+       class="btn btn-sm btn-outline-secondary">Wikipedia</a>
+  </div>
+{% endif %}
+
+{% if award.years %}
+<div class="accordion" id="yearAccordion">
+  {% for yr_block in award.years %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="hdr-{{ forloop.counter }}">
+      <button class="accordion-button collapsed" type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#yr-{{ forloop.counter }}"
+              aria-expanded="false"
+              aria-controls="yr-{{ forloop.counter }}">
+        {{ yr_block.year }}
+      </button>
+    </h2>
+    <div id="yr-{{ forloop.counter }}"
+         class="accordion-collapse collapse"
+         aria-labelledby="hdr-{{ forloop.counter }}"
+         data-bs-parent="#yearAccordion">
+      <div class="accordion-body p-2">
+
+        <div class="accordion" id="cats-{{ forloop.counter }}">
+          {% for cat in yr_block.categories %}
+          <div class="accordion-item border-0">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed py-2 ps-3 bg-light" type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#cat-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                      aria-expanded="false"
+                      aria-controls="cat-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                <span class="small fw-semibold">{{ cat.name|default:"General" }}</span>
+              </button>
+            </h2>
+            <div id="cat-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                 class="accordion-collapse collapse">
+              <div class="accordion-body py-2 px-3">
+                <table class="table table-sm mb-0">
+                  <tbody>
+                    {% for e in cat.entries %}
+                    <tr>
+                      <td style="width:110px;">
+                        {% if e.level == "Winner" %}
+                          <span class="badge text-bg-warning">Winner</span>
+                        {% elif e.level == "Runner-up" %}
+                          <span class="badge text-bg-secondary">Runner-up</span>
+                        {% elif e.level == "Finalist" %}
+                          <span class="badge text-bg-light text-dark border">Finalist</span>
+                        {% else %}
+                          <span class="text-muted small">{{ e.level }}</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if e.title_id %}
+                          {% if e.is_book %}
+                            <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                          {% else %}
+                            <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                          {% endif %}
+                        {% else %}
+                          {{ e.title }}
+                        {% endif %}
+                      </td>
+                      <td class="text-muted small">{{ e.author }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+  <p class="text-muted">No entries found for this award.</p>
+{% endif %}
+
+{% endblock %}

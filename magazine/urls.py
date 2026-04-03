@@ -18,5 +18,7 @@ urlpatterns = [
     path("magazines/browse/", views.magazine_issues_by_name, name="magazine_issues_by_name"),
     path("magazines/<str:mag_code>/", views.magazine_issues, name="magazine_issues"),
     path("random/<str:kind>/", views.random_item, name="random_item"),
+    path("awards/", views.award_list, name="award_list"),
+    path("awards/<int:award_type_id>/", views.award_detail, name="award_detail"),
     path("about/", views.about, name="about"),
 ]

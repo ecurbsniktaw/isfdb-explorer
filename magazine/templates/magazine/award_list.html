@@ -1,0 +1,86 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Awards — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-4">Awards</h1>
+
+{# ── Search form ────────────────────────────────────────────────────────── #}
+<form method="get" action="{% url 'award_list' %}" class="mb-4">
+  <div class="input-group" style="max-width:480px;">
+    <input type="text" name="q" value="{{ query }}" class="form-control"
+           placeholder="Search award name…" autofocus>
+    <button class="btn btn-primary" type="submit">Search</button>
+    {% if query or letter %}
+      <a href="{% url 'award_list' %}" class="btn btn-outline-secondary">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+{# ── Search results ─────────────────────────────────────────────────────── #}
+{% if query %}
+  {% if displayed %}
+    <p class="text-muted mb-3">{{ displayed|length }} award{{ displayed|length|pluralize }} matching <strong>{{ query }}</strong></p>
+    <ul class="list-group mb-5" style="max-width:600px;">
+      {% for a in displayed %}
+      <li class="list-group-item">
+        <a href="{% url 'award_detail' a.award_type_id %}" class="text-decoration-none">{{ a.award_type_name }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted mb-4">No awards found matching <strong>{{ query }}</strong>.</p>
+  {% endif %}
+{% endif %}
+
+{# ── Major awards ───────────────────────────────────────────────────────── #}
+{% if not query %}
+<h2 class="h5 mb-3">Major Awards</h2>
+<div class="row g-3 mb-5">
+  {% for a in major_awards %}
+  <div class="col-md-4 col-sm-6">
+    <a href="{% url 'award_detail' a.id %}" class="text-decoration-none">
+      <div class="card h-100 shadow-sm award-card">
+        <div class="card-body d-flex align-items-center">
+          <span class="fs-6">{{ a.name }}</span>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+{# ── A–Z browser ────────────────────────────────────────────────────────── #}
+<h2 class="h5 mb-3">Browse All Awards</h2>
+<div class="d-flex flex-wrap gap-1 mb-3">
+  {% for l in letters %}
+  <a href="?letter={{ l }}"
+     class="btn btn-sm {% if letter == l %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+    {{ l }}
+  </a>
+  {% endfor %}
+</div>
+
+{% if letter and displayed %}
+  <p class="text-muted mb-2">{{ displayed|length }} award{{ displayed|length|pluralize }} starting with <strong>{{ letter }}</strong></p>
+  <ul class="list-group mb-4" style="max-width:600px;">
+    {% for a in displayed %}
+    <li class="list-group-item">
+      <a href="{% url 'award_detail' a.award_type_id %}" class="text-decoration-none">{{ a.award_type_name }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+{% elif letter %}
+  <p class="text-muted">No awards starting with <strong>{{ letter }}</strong>.</p>
+{% endif %}
+{% endif %}
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.award-card { transition: box-shadow .15s; }
+.award-card:hover { box-shadow: 0 .25rem .75rem rgba(0,0,0,.15) !important; background-color: #f8f9fa; }
+</style>
+{% endblock %}

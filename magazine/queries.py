@@ -1216,3 +1216,128 @@ def get_random_book_title_id(cursor) -> int | None:
             return row["title_id"]
 
     return None
+
+
+# ---------------------------------------------------------------------------
+# Awards
+# ---------------------------------------------------------------------------
+
+_MAJOR_AWARD_IDS = [13, 7, 23, 27, 28, 31, 32, 35, 61, 44]
+
+_MAJOR_AWARD_NAMES = {
+    13: "Arthur C. Clarke Award",
+    7:  "British Fantasy Award",
+    23: "Hugo Award",
+    27: "John W. Campbell Award / Astounding Award",
+    28: "Locus Poll Award",
+    31: "Nebula Award",
+    32: "Philip K. Dick Award",
+    35: "Rhysling Award",
+    61: "Seiun Award",
+    44: "World Fantasy Award",
+}
+
+
+def get_all_award_types(cursor) -> list:
+    """Return all English-named award types, sorted alphabetically."""
+    cursor.execute("""
+        SELECT award_type_id, award_type_name
+        FROM award_types
+        WHERE award_type_name NOT LIKE '%%&#%%'
+        ORDER BY award_type_name
+    """)
+    return cursor.fetchall()
+
+
+def search_award_types(cursor, name: str) -> list:
+    """Return award types whose name contains the given string."""
+    cursor.execute("""
+        SELECT award_type_id, award_type_name
+        FROM award_types
+        WHERE award_type_name LIKE %s
+          AND award_type_name NOT LIKE '%%&#%%'
+        ORDER BY award_type_name
+    """, (f"%{name}%",))
+    return cursor.fetchall()
+
+
+_AWARD_LEVEL_LABELS = {
+    "1": "Winner",
+    "2": "Runner-up",
+    "3": "Finalist",
+    "4": "Finalist",
+    "5": "Finalist",
+}
+
+
+def get_award_detail(cursor, award_type_id: int) -> dict | None:
+    """
+    Return award type info plus all its entries grouped by year then category.
+    Each entry includes title, author, level, and optional title_id link.
+    """
+    cursor.execute("""
+        SELECT award_type_id, award_type_name, award_type_wikipedia,
+               award_type_by, award_type_for
+        FROM award_types
+        WHERE award_type_id = %s
+    """, (award_type_id,))
+    award_type = cursor.fetchone()
+    if not award_type:
+        return None
+
+    cursor.execute("""
+        SELECT
+            YEAR(a.award_year)  AS award_year,
+            ac.award_cat_name   AS category,
+            a.award_title,
+            a.award_author,
+            a.award_level,
+            ta.title_id
+        FROM awards a
+        JOIN award_cats ac ON ac.award_cat_id = a.award_cat_id
+        LEFT JOIN title_awards ta ON ta.award_id = a.award_id
+        WHERE a.award_type_id = %s
+        ORDER BY YEAR(a.award_year) DESC, ac.award_cat_order, a.award_level
+    """, (award_type_id,))
+    entries = cursor.fetchall()
+
+    # Determine if each title_id is a book or story for linking
+    title_ids = [e["title_id"] for e in entries if e.get("title_id")]
+    book_ids = set()
+    if title_ids:
+        placeholders = ", ".join(["%s"] * len(title_ids))
+        type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
+        cursor.execute(
+            f"SELECT title_id FROM titles WHERE title_id IN ({placeholders})"
+            f" AND title_ttype IN ({type_placeholders})",
+            (*title_ids, *BOOK_TYPES)
+        )
+        book_ids = {r["title_id"] for r in cursor.fetchall()}
+
+    # Group by year then category
+    from collections import defaultdict
+    by_year = defaultdict(lambda: defaultdict(list))
+    for e in entries:
+        yr  = e["award_year"] or 0
+        cat = e["category"] or ""
+        level_label = _AWARD_LEVEL_LABELS.get(str(e["award_level"] or ""), "Nominee")
+        by_year[yr][cat].append({
+            "title":   e["award_title"] or "",
+            "author":  e["award_author"] or "",
+            "level":   level_label,
+            "title_id": e.get("title_id"),
+            "is_book": e.get("title_id") in book_ids if e.get("title_id") else False,
+        })
+
+    years = sorted(by_year.keys(), reverse=True)
+    award_type["years"] = [
+        {
+            "year": yr if yr else "Unknown",
+            "categories": [
+                {"name": cat, "entries": by_year[yr][cat]}
+                for cat in by_year[yr]
+            ],
+        }
+        for yr in years
+    ]
+    return award_type

@@ -10,6 +10,8 @@ from .queries import (
     get_all_magazines, get_magazine_issues, search_magazines,
     find_authors,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
+    get_all_award_types, search_award_types, get_award_detail,
+    _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -419,6 +421,55 @@ def story_detail(request, title_id):
     if not story:
         raise Http404(f"No title found for title_id={title_id}")
     return render(request, "magazine/story_detail.html", {"story": story})
+
+
+def award_list(request):
+    """Browse all awards with search and A-Z navigation."""
+    query = request.GET.get("q", "").strip()
+    letter = request.GET.get("letter", "").strip().upper()
+
+    cursor = _dict_cursor()
+    try:
+        all_awards = get_all_award_types(cursor)
+    finally:
+        cursor.close()
+
+    # Build A-Z letter set from available awards
+    letters = sorted({a["award_type_name"][0].upper() for a in all_awards
+                      if a["award_type_name"] and a["award_type_name"][0].isalpha()})
+
+    # Filter for display
+    if query:
+        displayed = [a for a in all_awards
+                     if query.lower() in a["award_type_name"].lower()]
+    elif letter:
+        displayed = [a for a in all_awards
+                     if a["award_type_name"].upper().startswith(letter)]
+    else:
+        displayed = []
+
+    major_awards = [{"id": aid, "name": _MAJOR_AWARD_NAMES[aid]}
+                    for aid in _MAJOR_AWARD_IDS]
+
+    return render(request, "magazine/award_list.html", {
+        "query":        query,
+        "letter":       letter,
+        "letters":      letters,
+        "displayed":    displayed,
+        "major_awards": major_awards,
+    })
+
+
+def award_detail(request, award_type_id):
+    """All entries for a single award type, grouped by year and category."""
+    cursor = _dict_cursor()
+    try:
+        award = get_award_detail(cursor, award_type_id)
+    finally:
+        cursor.close()
+    if not award:
+        raise Http404(f"No award with id={award_type_id}")
+    return render(request, "magazine/award_detail.html", {"award": award})
 
 
 def about(request):
