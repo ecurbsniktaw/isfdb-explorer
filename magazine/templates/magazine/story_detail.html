@@ -8,68 +8,78 @@
   <a href="javascript:history.back()" class="text-decoration-none">&larr; Back</a>
 </div>
 
-<h1 class="h2 mb-1">{{ story.title_title }}</h1>
+<div class="row g-4 mb-2">
 
-<p class="text-muted mb-3">
-  {% for a in story.author_list %}
-    {% if not forloop.first %} &amp; {% endif %}
-    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
-  {% empty %}Uncredited{% endfor %}
-</p>
+  {# ── Left column: title, authors, metadata ─────────────────────────────── #}
+  <div class="col-lg-4">
+    <h1 class="h2 mb-1">{{ story.title_title }}</h1>
+    <p class="text-muted mb-3">
+      {% for a in story.author_list %}
+        {% if not forloop.first %} &amp; {% endif %}
+        {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+      {% empty %}Uncredited{% endfor %}
+    </p>
 
-<table class="table table-sm table-borderless w-auto mb-4">
-  <tbody>
-    {% if story.first_pub_date %}
-    <tr>
-      <th class="text-muted fw-normal pe-4">First published</th>
-      <td>
-        {% if story.first_pub_id %}
-          <a href="{% url 'issue_detail' story.first_pub_id %}" class="text-decoration-none">{{ story.first_pub_date }}</a>
-        {% else %}
-          {{ story.first_pub_date }}
+    <table class="table table-sm table-borderless w-auto">
+      <tbody>
+        {% if story.first_pub_date %}
+        <tr>
+          <th class="text-muted fw-normal pe-4">First published</th>
+          <td>
+            {% if story.first_pub_id %}
+              <a href="{% url 'issue_detail' story.first_pub_id %}" class="text-decoration-none">{{ story.first_pub_date }}</a>
+            {% else %}
+              {{ story.first_pub_date }}
+            {% endif %}
+          </td>
+        </tr>
         {% endif %}
-      </td>
-    </tr>
-    {% endif %}
-    {% if story.type_label %}
-    <tr>
-      <th class="text-muted fw-normal pe-4">Type</th>
-      <td>{{ story.type_label }}</td>
-    </tr>
-    {% endif %}
-    {% if story.length_label %}
-    <tr>
-      <th class="text-muted fw-normal pe-4">Length</th>
-      <td>{{ story.length_label }}</td>
-    </tr>
-    {% endif %}
-    {% if story.series %}
-    <tr>
-      <th class="text-muted fw-normal pe-4">Series</th>
-      <td>
-        {% if story.series.parent_title %}{{ story.series.parent_title }} &rsaquo; {% endif %}
-        {{ story.series.series_title }}
-        {% if story.title_seriesnum %} #{{ story.title_seriesnum }}{% endif %}
-        {% if story.title_seriesnum_2 %}.{{ story.title_seriesnum_2 }}{% endif %}
-      </td>
-    </tr>
-    {% endif %}
-  </tbody>
-</table>
+        {% if story.type_label %}
+        <tr>
+          <th class="text-muted fw-normal pe-4">Type</th>
+          <td>{{ story.type_label }}</td>
+        </tr>
+        {% endif %}
+        {% if story.length_label %}
+        <tr>
+          <th class="text-muted fw-normal pe-4">Length</th>
+          <td>{{ story.length_label }}</td>
+        </tr>
+        {% endif %}
+        {% if story.series %}
+        <tr>
+          <th class="text-muted fw-normal pe-4">Series</th>
+          <td>
+            {% if story.series.parent_title %}{{ story.series.parent_title }} &rsaquo; {% endif %}
+            {{ story.series.series_title }}
+            {% if story.title_seriesnum %} #{{ story.title_seriesnum }}{% endif %}
+            {% if story.title_seriesnum_2 %}.{{ story.title_seriesnum_2 }}{% endif %}
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
 
-{% if story.synopsis %}
-<div class="mb-4">
-  <h2 class="h6 text-muted">Synopsis</h2>
-  <p class="mb-0">{{ story.synopsis }}</p>
-</div>
-{% endif %}
+  {# ── Right column: synopsis and notes ──────────────────────────────────── #}
+  {% if story.synopsis or story.title_note %}
+  <div class="col-lg-8">
+    {% if story.synopsis %}
+    <div class="mb-3">
+      <h2 class="h6 text-muted">Synopsis</h2>
+      <p class="mb-0">{{ story.synopsis }}</p>
+    </div>
+    {% endif %}
+    {% if story.title_note %}
+    <div class="mb-0">
+      <h2 class="h6 text-muted">Notes</h2>
+      <p class="mb-0">{{ story.title_note|safe }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
 
-{% if story.title_note %}
-<div class="mb-4">
-  <h2 class="h6 text-muted">Notes</h2>
-  <p class="mb-0">{{ story.title_note|safe }}</p>
 </div>
-{% endif %}
 
 {% if story.webpages %}
 <div class="mb-4">
