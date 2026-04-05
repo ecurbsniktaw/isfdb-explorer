@@ -57,27 +57,47 @@ _WEBPAGE_LABELS = {
 }
 
 
+def _rewrite_isfdb_links(note: str) -> str:
+    """
+    Rewrite isfdb.org links in HTML note text to local site URLs, and
+    open any remaining external links in a new tab.
+    """
+    if not note:
+        return ""
+    # author pages: ea.cgi?N → /author/N/
+    note = re.sub(
+        r'href="https?://(?:www\.)?isfdb\.org/cgi-bin/ea\.cgi\?(\d+)"',
+        r'href="/author/\1/"',
+        note, flags=re.IGNORECASE,
+    )
+    # title pages: title.cgi?N → /story/N/
+    note = re.sub(
+        r'href="https?://(?:www\.)?isfdb\.org/cgi-bin/title\.cgi\?(\d+)"',
+        r'href="/story/\1/"',
+        note, flags=re.IGNORECASE,
+    )
+    # publication pages: pl.cgi?N → /issue/N/
+    note = re.sub(
+        r'href="https?://(?:www\.)?isfdb\.org/cgi-bin/pl\.cgi\?(\d+)"',
+        r'href="/issue/\1/"',
+        note, flags=re.IGNORECASE,
+    )
+    # open remaining external links in a new tab
+    note = re.sub(
+        r'<a (href="https?://)',
+        r'<a target="_blank" rel="noopener" \1',
+        note, flags=re.IGNORECASE,
+    )
+    return note
+
+
 def _clean_author_note(note: str) -> str:
-    """Strip ISFDB wiki markup from a biographical note."""
+    """Strip ISFDB wiki markup from a biographical note, then rewrite links."""
     if not note:
         return ""
     note = re.sub(r"\{\{A\|([^}]+)\}\}", r"\1", note)   # {{A|name}} → name
     note = re.sub(r"\{\{[^}]+\}\}", "", note)             # other {{…}} → drop
-    # Rewrite isfdb author page links to local author pages
-    note = re.sub(
-        r'href="https?://(?:www\.)?isfdb\.org/cgi-bin/ea\.cgi\?(\d+)"',
-        r'href="/author/\1/"',
-        note,
-        flags=re.IGNORECASE,
-    )
-    # Open remaining external links in a new tab
-    note = re.sub(
-        r'<a (href="https?://)',
-        r'<a target="_blank" rel="noopener" \1',
-        note,
-        flags=re.IGNORECASE,
-    )
-    return note.strip()
+    return _rewrite_isfdb_links(note).strip()
 
 
 def _webpage_label(url: str) -> str:
@@ -567,6 +587,8 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
     row["formatted_date"]    = str(row["pub_year"]) if row["pub_year"] else ""
     row["author_list"]       = _make_author_list(row.get("authors"), row.get("author_ids"))
     row["cover_artist_list"] = _make_author_list(row.get("cover_artist"), row.get("cover_artist_ids"))
+    row["pub_note"]          = _rewrite_isfdb_links(row.get("pub_note") or "")
+    row["title_note"]        = _rewrite_isfdb_links(row.get("title_note") or "")
 
     # External links
     cursor.execute("SELECT url FROM webpages WHERE title_id = %s ORDER BY webpage_id", (title_id,))
@@ -667,7 +689,7 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
     if row.get("note_id"):
         cursor.execute("SELECT note_note FROM notes WHERE note_id = %s", (row["note_id"],))
         n = cursor.fetchone()
-        row["title_note"] = n["note_note"] if n else ""
+        row["title_note"] = _rewrite_isfdb_links(n["note_note"] if n else "")
     else:
         row["title_note"] = ""
 
@@ -675,7 +697,7 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
     if row.get("title_synopsis"):
         cursor.execute("SELECT note_note FROM notes WHERE note_id = %s", (row["title_synopsis"],))
         n = cursor.fetchone()
-        row["synopsis"] = n["note_note"] if n else ""
+        row["synopsis"] = _rewrite_isfdb_links(n["note_note"] if n else "")
     else:
         row["synopsis"] = ""
 
