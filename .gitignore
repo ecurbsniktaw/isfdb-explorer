@@ -7,6 +7,7 @@ isfdb_site/local_settings.py
 
 # Virtual environment
 venv/
+.venv/
 
 # Large data files not needed in the repo
 isfdb_schema.sql
