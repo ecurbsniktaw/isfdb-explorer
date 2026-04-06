@@ -1241,6 +1241,170 @@ def get_random_book_title_id(cursor) -> int | None:
 
 
 # ---------------------------------------------------------------------------
+# Series
+# ---------------------------------------------------------------------------
+
+_MAJOR_SERIES_IDS = [186, 11826, 869, 631, 504, 1023, 4543, 13661, 165, 241]
+
+_MAJOR_SERIES_INFO = {
+    186:   {"name": "Discworld",                       "author": "Terry Pratchett"},
+    11826: {"name": "Foundation Universe",             "author": "Isaac Asimov"},
+    869:   {"name": "Dune",                            "author": "Frank Herbert"},
+    631:   {"name": "Wheel of Time",                   "author": "Robert Jordan"},
+    504:   {"name": "Culture",                         "author": "Iain M. Banks"},
+    1023:  {"name": "The Dark Tower",                  "author": "Stephen King"},
+    4543:  {"name": "A Song of Ice and Fire",          "author": "George R.R. Martin"},
+    13661: {"name": "Middle Earth Universe",           "author": "J.R.R. Tolkien"},
+    165:   {"name": "Hitchhiker's Guide to the Galaxy","author": "Douglas Adams"},
+    241:   {"name": "Vorkosigan Universe",             "author": "Lois McMaster Bujold"},
+}
+
+_SERIES_TITLE_TYPES = (
+    "NOVEL", "COLLECTION", "OMNIBUS", "ANTHOLOGY", "NONFICTION", "CHAPBOOK",
+)
+
+
+def get_series_letters(cursor) -> list:
+    """
+    Return the sorted list of first letters (A-Z) for which browsable series exist.
+    'The ' prefix is stripped when determining the letter, matching the view logic.
+    """
+    cursor.execute("""
+        SELECT DISTINCT
+            UPPER(LEFT(
+                CASE WHEN UPPER(s.series_title) LIKE 'THE %%'
+                     THEN SUBSTRING(s.series_title, 5)
+                     ELSE s.series_title END,
+                1
+            )) AS letter
+        FROM series s
+        JOIN titles t ON t.series_id = s.series_id AND t.title_parent = 0
+        WHERE s.series_title NOT LIKE '%%&#%%'
+          AND s.series_title REGEXP '^[A-Za-z]'
+        HAVING letter REGEXP '^[A-Z]$'
+        ORDER BY letter
+    """)
+    return [row["letter"] for row in cursor.fetchall()]
+
+
+def get_series_by_letter(cursor, letter: str, limit: int = 300) -> tuple:
+    """
+    Return (rows, total) for series whose effective first letter matches `letter`
+    ('The ' prefix stripped).  Returns at most `limit` rows.
+    """
+    # The CASE strips 'The ' so "The Dark Tower" sorts/filters under D.
+    cursor.execute("""
+        SELECT s.series_id, s.series_title, COUNT(t.title_id) AS title_count
+        FROM series s
+        JOIN titles t ON t.series_id = s.series_id AND t.title_parent = 0
+        WHERE s.series_title NOT LIKE '%%&#%%'
+        GROUP BY s.series_id, s.series_title
+        HAVING title_count >= 2
+          AND UPPER(LEFT(
+                CASE WHEN UPPER(series_title) LIKE 'THE %%'
+                     THEN SUBSTRING(series_title, 5)
+                     ELSE series_title END,
+                1)) = %s
+        ORDER BY CASE WHEN UPPER(series_title) LIKE 'THE %%'
+                      THEN SUBSTRING(series_title, 5)
+                      ELSE series_title END
+    """, (letter.upper(),))
+    rows = cursor.fetchall()
+    total = len(rows)
+    return rows[:limit], total
+
+
+def search_series(cursor, query: str) -> list:
+    """Return series whose name contains the query string (case-insensitive)."""
+    cursor.execute("""
+        SELECT s.series_id, s.series_title, COUNT(t.title_id) AS title_count
+        FROM series s
+        JOIN titles t ON t.series_id = s.series_id AND t.title_parent = 0
+        WHERE s.series_title NOT LIKE '%%&#%%'
+          AND s.series_title LIKE %s
+        GROUP BY s.series_id, s.series_title
+        HAVING title_count >= 2
+        ORDER BY s.series_title
+        LIMIT 300
+    """, (f"%{query}%",))
+    return cursor.fetchall()
+
+
+def get_series_detail(cursor, series_id: int) -> dict | None:
+    """
+    Return series metadata, its canonical titles (novels/collections/etc.),
+    and any child subseries.
+    """
+    # Series info + optional note + parent link
+    cursor.execute("""
+        SELECT s.series_id, s.series_title, s.series_parent,
+               sp.series_title AS parent_title,
+               n.note_note     AS series_note
+        FROM series s
+        LEFT JOIN series sp ON sp.series_id = s.series_parent
+        LEFT JOIN notes n   ON n.note_id    = s.series_note_id
+        WHERE s.series_id = %s
+    """, (series_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+    row["series_note"] = _rewrite_isfdb_links(row.get("series_note") or "")
+
+    # Titles (canonical only) ordered by series number then publication date
+    type_placeholders = ", ".join(["%s"] * len(_SERIES_TITLE_TYPES))
+    cursor.execute(f"""
+        SELECT
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            t.title_seriesnum,
+            t.title_seriesnum_2,
+            YEAR(t.title_copyright) AS pub_year,
+            GROUP_CONCAT(
+                a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                a.author_id ORDER BY ca.ca_id SEPARATOR ','
+            ) AS author_ids
+        FROM titles t
+        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
+        LEFT JOIN authors a           ON a.author_id  = ca.author_id
+        WHERE t.series_id  = %s
+          AND t.title_parent = 0
+          AND t.title_ttype IN ({type_placeholders})
+        GROUP BY t.title_id, t.title_title, t.title_ttype,
+                 t.title_seriesnum, t.title_seriesnum_2, t.title_copyright
+        ORDER BY (t.title_seriesnum IS NULL), t.title_seriesnum,
+                 t.title_seriesnum_2, t.title_copyright
+    """, (series_id, *_SERIES_TITLE_TYPES))
+    titles = cursor.fetchall()
+    for t in titles:
+        t["type_label"]  = TITLE_TYPE_LABELS.get(t["title_ttype"], t["title_ttype"] or "")
+        t["author_list"] = _make_author_list(t.get("authors"), t.get("author_ids"))
+        t["is_book"]     = t["title_ttype"] in _SERIES_TITLE_TYPES
+        # Format series number label: "3", "3a", etc.
+        num = t.get("title_seriesnum")
+        num2 = (t.get("title_seriesnum_2") or "").strip()
+        if num is not None:
+            t["series_label"] = f"{num}{num2}"
+        else:
+            t["series_label"] = ""
+    row["titles"] = titles
+
+    # Subseries
+    cursor.execute("""
+        SELECT series_id, series_title
+        FROM series
+        WHERE series_parent = %s
+          AND series_title NOT LIKE '%%&#%%'
+        ORDER BY (series_parent_position IS NULL), series_parent_position, series_title
+    """, (series_id,))
+    row["subseries"] = cursor.fetchall()
+
+    return row
+
+
+# ---------------------------------------------------------------------------
 # Awards
 # ---------------------------------------------------------------------------
 

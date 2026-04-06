@@ -1,0 +1,102 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Series — ISFDB Explorer{% endblock %}
+
+{% block extra_css %}
+<style>
+.series-card { transition: box-shadow .15s; }
+.series-card:hover { box-shadow: 0 .25rem .75rem rgba(0,0,0,.15) !important; background-color: #f8f9fa; }
+.series-card .author-name { font-size: .85em; color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-4">Series</h1>
+
+{# ── Search form ────────────────────────────────────────────────────────── #}
+<form method="get" action="{% url 'series_list' %}" class="mb-4">
+  <div class="input-group" style="max-width:480px;">
+    <input type="text" name="q" value="{{ query }}" class="form-control"
+           placeholder="Search series name…" autofocus>
+    <button class="btn btn-primary" type="submit">Search</button>
+    {% if query or letter %}
+      <a href="{% url 'series_list' %}" class="btn btn-outline-secondary">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+{# ── Search results ─────────────────────────────────────────────────────── #}
+{% if query %}
+  {% if displayed %}
+    <p class="text-muted mb-3">
+      {{ total_shown }} series matching <strong>{{ query }}</strong>
+      {% if total_shown >= 300 %} (showing first 300){% endif %}
+    </p>
+    <ul class="list-group mb-5" style="max-width:600px;">
+      {% for s in displayed %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="{% url 'series_detail' s.series_id %}" class="text-decoration-none">{{ s.series_title }}</a>
+        <span class="badge text-bg-secondary rounded-pill">{{ s.title_count }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted mb-4">No series found matching <strong>{{ query }}</strong>.</p>
+  {% endif %}
+{% endif %}
+
+{# ── Major series cards ─────────────────────────────────────────────────── #}
+{% if not query %}
+<h2 class="h5 mb-3">Major Series</h2>
+<div class="row g-3 mb-5">
+  {% for s in major_series %}
+  <div class="col-md-4 col-sm-6">
+    <a href="{% url 'series_detail' s.id %}" class="text-decoration-none">
+      <div class="card h-100 shadow-sm series-card">
+        <div class="card-body">
+          <div class="fs-6 fw-semibold">{{ s.name }}</div>
+          <div class="author-name">{{ s.author }}</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+{# ── A–Z browser ─────────────────────────────────────────────────────────── #}
+<h2 class="h5 mb-3">Browse All Series</h2>
+<div class="d-flex flex-wrap gap-1 mb-3">
+  {% for l in letters %}
+  <a href="?letter={{ l }}"
+     class="btn btn-sm {% if letter == l %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+    {{ l }}
+  </a>
+  {% endfor %}
+</div>
+
+{% if letter and displayed %}
+  {% if total_letter > limit %}
+    <p class="text-muted mb-2">
+      Showing first {{ limit }} of {{ total_letter }} series starting with <strong>{{ letter }}</strong>.
+      Use the search form above to find a specific series.
+    </p>
+  {% else %}
+    <p class="text-muted mb-2">
+      {{ total_shown }} series starting with <strong>{{ letter }}</strong>
+    </p>
+  {% endif %}
+  <ul class="list-group mb-4" style="max-width:600px;">
+    {% for s in displayed %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <a href="{% url 'series_detail' s.series_id %}" class="text-decoration-none">{{ s.series_title }}</a>
+      <span class="badge text-bg-secondary rounded-pill">{{ s.title_count }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+{% elif letter %}
+  <p class="text-muted">No series starting with <strong>{{ letter }}</strong>.</p>
+{% endif %}
+{% endif %}
+
+{% endblock %}

@@ -12,6 +12,8 @@ from .queries import (
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     get_all_award_types, search_award_types, get_award_detail,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
+    get_series_letters, get_series_by_letter, search_series, get_series_detail,
+    _MAJOR_SERIES_IDS, _MAJOR_SERIES_INFO,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -470,6 +472,62 @@ def award_detail(request, award_type_id):
     if not award:
         raise Http404(f"No award with id={award_type_id}")
     return render(request, "magazine/award_detail.html", {"award": award})
+
+
+_SERIES_LIST_LIMIT = 300
+
+
+def series_list(request):
+    """Browse all series with search and A-Z navigation."""
+    query  = request.GET.get("q", "").strip()
+    letter = request.GET.get("letter", "").strip().upper()
+    if len(letter) != 1 or not letter.isalpha():
+        letter = ""
+
+    cursor = _dict_cursor()
+    try:
+        letters   = get_series_letters(cursor)
+        if query:
+            displayed   = search_series(cursor, query)
+            total_shown = len(displayed)
+            total_letter = None
+        elif letter:
+            displayed, total_letter = get_series_by_letter(cursor, letter, _SERIES_LIST_LIMIT)
+            total_shown = len(displayed)
+        else:
+            displayed    = []
+            total_shown  = 0
+            total_letter = None
+    finally:
+        cursor.close()
+
+    major_series = [
+        {"id": sid, **_MAJOR_SERIES_INFO[sid]}
+        for sid in _MAJOR_SERIES_IDS
+    ]
+
+    return render(request, "magazine/series_list.html", {
+        "query":        query,
+        "letter":       letter,
+        "letters":      letters,
+        "displayed":    displayed,
+        "total_shown":  total_shown,
+        "total_letter": total_letter,
+        "limit":        _SERIES_LIST_LIMIT,
+        "major_series": major_series,
+    })
+
+
+def series_detail(request, series_id):
+    """All titles in a single series."""
+    cursor = _dict_cursor()
+    try:
+        series = get_series_detail(cursor, series_id)
+    finally:
+        cursor.close()
+    if not series:
+        raise Http404(f"No series with id={series_id}")
+    return render(request, "magazine/series_detail.html", {"series": series})
 
 
 def about(request):

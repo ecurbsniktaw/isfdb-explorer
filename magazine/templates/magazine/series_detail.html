@@ -1,0 +1,91 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}{{ series.series_title }} — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+{# ── Breadcrumb ──────────────────────────────────────────────────────────── #}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'series_list' %}">Series</a></li>
+    {% if series.series_parent %}
+    <li class="breadcrumb-item">
+      <a href="{% url 'series_detail' series.series_parent %}">{{ series.parent_title }}</a>
+    </li>
+    {% endif %}
+    <li class="breadcrumb-item active">{{ series.series_title }}</li>
+  </ol>
+</nav>
+
+<h1 class="h2 mb-1">{{ series.series_title }}</h1>
+
+{% if series.series_note %}
+<div class="text-muted mb-3" style="max-width:720px;">{{ series.series_note|safe }}</div>
+{% endif %}
+
+{# ── Titles ──────────────────────────────────────────────────────────────── #}
+{% if series.titles %}
+<h2 class="h5 mt-4 mb-3">
+  Titles
+  <small class="text-muted fw-normal fs-6">({{ series.titles|length }})</small>
+</h2>
+<div class="table-responsive" style="max-width:860px;">
+  <table class="table table-sm table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th style="width:3rem;">#</th>
+        <th>Title</th>
+        <th>Author(s)</th>
+        <th>Year</th>
+        <th>Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in series.titles %}
+      <tr>
+        <td class="text-muted">{{ t.series_label }}</td>
+        <td>
+          {% if t.is_book %}
+            <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title }}</a>
+          {% else %}
+            <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title }}</a>
+          {% endif %}
+        </td>
+        <td>
+          {% for auth in t.author_list %}
+            {% if auth.id %}
+              <a href="{% url 'author_detail' auth.id %}">{{ auth.name }}</a>
+            {% else %}
+              {{ auth.name }}
+            {% endif %}
+            {% if not forloop.last %} &amp; {% endif %}
+          {% endfor %}
+        </td>
+        <td class="text-muted">{{ t.pub_year|default:"" }}</td>
+        <td>
+          {% if t.title_ttype != "NOVEL" %}
+            <span class="badge text-bg-secondary">{{ t.type_label }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted mt-3">No titles found in this series.</p>
+{% endif %}
+
+{# ── Subseries ────────────────────────────────────────────────────────────── #}
+{% if series.subseries %}
+<h2 class="h5 mt-4 mb-3">Subseries</h2>
+<ul class="list-group" style="max-width:500px;">
+  {% for sub in series.subseries %}
+  <li class="list-group-item">
+    <a href="{% url 'series_detail' sub.series_id %}" class="text-decoration-none">{{ sub.series_title }}</a>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% endblock %}

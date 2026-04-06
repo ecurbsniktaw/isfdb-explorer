@@ -20,5 +20,7 @@ urlpatterns = [
     path("random/<str:kind>/", views.random_item, name="random_item"),
     path("awards/", views.award_list, name="award_list"),
     path("awards/<int:award_type_id>/", views.award_detail, name="award_detail"),
+    path("series/", views.series_list, name="series_list"),
+    path("series/<int:series_id>/", views.series_detail, name="series_detail"),
     path("about/", views.about, name="about"),
 ]
