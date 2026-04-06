@@ -1244,19 +1244,27 @@ def get_random_book_title_id(cursor) -> int | None:
 # Series
 # ---------------------------------------------------------------------------
 
-_MAJOR_SERIES_IDS = [186, 11826, 869, 631, 504, 1023, 4543, 13661, 165, 241]
+_MAJOR_SERIES_IDS = [
+    165, 11826, 504, 11680, 12290, 518, 24708,
+    869, 1023, 4543, 684, 1154, 875, 13661, 2294,
+]
 
 _MAJOR_SERIES_INFO = {
-    186:   {"name": "Discworld",                       "author": "Terry Pratchett"},
-    11826: {"name": "Foundation Universe",             "author": "Isaac Asimov"},
-    869:   {"name": "Dune",                            "author": "Frank Herbert"},
-    631:   {"name": "Wheel of Time",                   "author": "Robert Jordan"},
-    504:   {"name": "Culture",                         "author": "Iain M. Banks"},
-    1023:  {"name": "The Dark Tower",                  "author": "Stephen King"},
-    4543:  {"name": "A Song of Ice and Fire",          "author": "George R.R. Martin"},
-    13661: {"name": "Middle Earth Universe",           "author": "J.R.R. Tolkien"},
-    165:   {"name": "Hitchhiker's Guide to the Galaxy","author": "Douglas Adams"},
-    241:   {"name": "Vorkosigan Universe",             "author": "Lois McMaster Bujold"},
+    165:   {"name": "Hitchhiker's Guide to the Galaxy",    "author": "Douglas Adams"},
+    11826: {"name": "Foundation Universe",                 "author": "Isaac Asimov"},
+    504:   {"name": "Culture",                             "author": "Iain M. Banks"},
+    11680: {"name": "Parable of the Sower / Earthseed",   "author": "Octavia E. Butler"},
+    12290: {"name": "Ender's Universe",                    "author": "Orson Scott Card"},
+    518:   {"name": "Riverworld",                          "author": "Philip José Farmer"},
+    24708: {"name": "Future History",                      "author": "Robert A. Heinlein"},
+    869:   {"name": "Dune",                                "author": "Frank Herbert"},
+    1023:  {"name": "The Dark Tower",                      "author": "Stephen King"},
+    4543:  {"name": "A Song of Ice and Fire",              "author": "George R.R. Martin"},
+    684:   {"name": "Known Space",                         "author": "Larry Niven"},
+    1154:  {"name": "Witch World Universe",                "author": "Andre Norton"},
+    875:   {"name": "Heechee",                             "author": "Frederik Pohl"},
+    13661: {"name": "Middle Earth Universe",               "author": "J.R.R. Tolkien"},
+    2294:  {"name": "Demon Princes",                       "author": "Jack Vance"},
 }
 
 _SERIES_TITLE_TYPES = (
