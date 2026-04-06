@@ -12,7 +12,8 @@ from .queries import (
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     get_all_award_types, search_award_types, get_award_detail,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
-    get_series_letters, get_series_by_letter, search_series, get_series_detail,
+    get_series_letters, get_series_by_letter, search_series,
+    get_series_detail, get_series_by_author,
     _MAJOR_SERIES_IDS, _MAJOR_SERIES_INFO,
     format_date, NARRATIVE_TYPES,
 )
@@ -478,26 +479,38 @@ _SERIES_LIST_LIMIT = 300
 
 
 def series_list(request):
-    """Browse all series with search and A-Z navigation."""
-    query  = request.GET.get("q", "").strip()
-    letter = request.GET.get("letter", "").strip().upper()
+    """Browse all series: search by name or author, or browse A-Z."""
+    query       = request.GET.get("q", "").strip()
+    search_type = request.GET.get("search_type", "series")
+    letter      = request.GET.get("letter", "").strip().upper()
+    if search_type not in ("series", "author"):
+        search_type = "series"
     if len(letter) != 1 or not letter.isalpha():
         letter = ""
 
     cursor = _dict_cursor()
     try:
-        letters   = get_series_letters(cursor)
-        if query:
-            displayed   = search_series(cursor, query)
-            total_shown = len(displayed)
-            total_letter = None
+        letters = get_series_letters(cursor)
+        if query and search_type == "author":
+            # Return matching authors for the user to choose from
+            author_matches  = find_authors(cursor, query)
+            displayed       = []
+            total_shown     = 0
+            total_letter    = None
+        elif query:
+            author_matches  = []
+            displayed       = search_series(cursor, query)
+            total_shown     = len(displayed)
+            total_letter    = None
         elif letter:
+            author_matches  = []
             displayed, total_letter = get_series_by_letter(cursor, letter, _SERIES_LIST_LIMIT)
-            total_shown = len(displayed)
+            total_shown     = len(displayed)
         else:
-            displayed    = []
-            total_shown  = 0
-            total_letter = None
+            author_matches  = []
+            displayed       = []
+            total_shown     = 0
+            total_letter    = None
     finally:
         cursor.close()
 
@@ -507,14 +520,33 @@ def series_list(request):
     ]
 
     return render(request, "magazine/series_list.html", {
-        "query":        query,
-        "letter":       letter,
-        "letters":      letters,
-        "displayed":    displayed,
-        "total_shown":  total_shown,
-        "total_letter": total_letter,
-        "limit":        _SERIES_LIST_LIMIT,
-        "major_series": major_series,
+        "query":         query,
+        "search_type":   search_type,
+        "letter":        letter,
+        "letters":       letters,
+        "author_matches": author_matches,
+        "displayed":     displayed,
+        "total_shown":   total_shown,
+        "total_letter":  total_letter,
+        "limit":         _SERIES_LIST_LIMIT,
+        "major_series":  major_series,
+    })
+
+
+def series_by_author(request, author_id):
+    """All series containing at least one title by the given author."""
+    cursor = _dict_cursor()
+    try:
+        author_name, series = get_series_by_author(cursor, author_id)
+    finally:
+        cursor.close()
+    if author_name is None:
+        raise Http404(f"No author with id={author_id}")
+    return render(request, "magazine/series_by_author.html", {
+        "author_id":   author_id,
+        "author_name": author_name,
+        "series":      series,
+        "total":       len(series),
     })
 
 

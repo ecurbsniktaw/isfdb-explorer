@@ -1330,6 +1330,38 @@ def search_series(cursor, query: str) -> list:
     return cursor.fetchall()
 
 
+def get_series_by_author(cursor, author_id: int) -> tuple:
+    """
+    Return (author_name, series_list) for a given author.
+
+    series_list entries have keys: series_id, series_title, title_count.
+    Includes all series the author has at least one canonical title in,
+    ordered alphabetically by series title.
+    """
+    cursor.execute(
+        "SELECT author_canonical FROM authors WHERE author_id = %s",
+        (author_id,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return None, []
+    author_name = row["author_canonical"]
+
+    cursor.execute("""
+        SELECT s.series_id, s.series_title,
+               COUNT(DISTINCT t.title_id) AS title_count
+        FROM series s
+        JOIN titles t            ON t.series_id  = s.series_id
+                                AND t.title_parent = 0
+        JOIN canonical_author ca ON ca.title_id  = t.title_id
+        WHERE ca.author_id = %s
+          AND s.series_title NOT LIKE '%%&#%%'
+        GROUP BY s.series_id, s.series_title
+        ORDER BY s.series_title
+    """, (author_id,))
+    return author_name, cursor.fetchall()
+
+
 def get_series_detail(cursor, series_id: int) -> dict | None:
     """
     Return series metadata, its canonical titles (novels/collections/etc.),

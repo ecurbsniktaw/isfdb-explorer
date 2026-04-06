@@ -16,9 +16,22 @@
 
 {# ── Search form ────────────────────────────────────────────────────────── #}
 <form method="get" action="{% url 'series_list' %}" class="mb-4">
+  <div class="mb-2">
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="search_type" id="st_series"
+             value="series" {% if search_type != "author" %}checked{% endif %}>
+      <label class="form-check-label" for="st_series">Series name</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="search_type" id="st_author"
+             value="author" {% if search_type == "author" %}checked{% endif %}>
+      <label class="form-check-label" for="st_author">Author name</label>
+    </div>
+  </div>
   <div class="input-group" style="max-width:480px;">
     <input type="text" name="q" value="{{ query }}" class="form-control"
-           placeholder="Search series name…" autofocus>
+           placeholder="{% if search_type == 'author' %}Search author name…{% else %}Search series name…{% endif %}"
+           autofocus>
     <button class="btn btn-primary" type="submit">Search</button>
     {% if query or letter %}
       <a href="{% url 'series_list' %}" class="btn btn-outline-secondary">Clear</a>
@@ -26,8 +39,32 @@
   </div>
 </form>
 
-{# ── Search results ─────────────────────────────────────────────────────── #}
-{% if query %}
+{# ── Author search results ───────────────────────────────────────────────── #}
+{% if query and search_type == "author" %}
+  {% if author_matches %}
+    <p class="text-muted mb-2">
+      {{ author_matches|length }} author{{ author_matches|length|pluralize }} matching
+      <strong>{{ query }}</strong> — click a name to see their series:
+    </p>
+    <ul class="list-group mb-5" style="max-width:500px;">
+      {% for a in author_matches %}
+      <li class="list-group-item">
+        <a href="{% url 'series_by_author' a.author_id %}" class="text-decoration-none">
+          {{ a.author_canonical }}
+        </a>
+        {% if a.title_count %}
+          <span class="text-muted small ms-1">({{ a.title_count }} title{{ a.title_count|pluralize }})</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted mb-4">No authors found matching <strong>{{ query }}</strong>.</p>
+  {% endif %}
+{% endif %}
+
+{# ── Series name search results ──────────────────────────────────────────── #}
+{% if query and search_type != "author" %}
   {% if displayed %}
     <p class="text-muted mb-3">
       {{ total_shown }} series matching <strong>{{ query }}</strong>
@@ -46,7 +83,7 @@
   {% endif %}
 {% endif %}
 
-{# ── Major series cards ─────────────────────────────────────────────────── #}
+{# ── Major series cards + A-Z (hidden when a search is active) ───────────── #}
 {% if not query %}
 <h2 class="h5 mb-3">Major Series</h2>
 <div class="row g-3 mb-5">
