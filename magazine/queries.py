@@ -174,20 +174,127 @@ def find_issues(cursor, magazine_name: str, date_filter: str) -> list:
     return cursor.fetchall()
 
 
+def _clean_issue_note(note: str) -> str:
+    """
+    Strip the ISFDB-generated prev/next navigation block from an issue note,
+    then rewrite any remaining internal links.
+
+    The raw note format is:
+        <!--isfdb specific-->
+        <nav HTML>
+        <!--isfdb specific-->
+        actual note text...
+    """
+    if not note:
+        return ""
+    parts = note.split("<!--isfdb specific-->")
+    if len(parts) >= 3:
+        note = parts[2].strip()
+    elif len(parts) == 2:
+        note = parts[1].strip()
+    # Strip leading <br/> artifacts
+    note = re.sub(r'^(<br\s*/?>[\s\n]*)+', '', note).strip()
+    return _rewrite_isfdb_links(note)
+
+
 def get_issue_meta(cursor, pub_id: int) -> dict | None:
-    """Return basic metadata for one issue (pub_id, pub_title, year, month)."""
-    query = """
+    """
+    Return metadata for one magazine issue: title, date, cover image,
+    publisher, price, pages, note, editor(s), and cover artist(s).
+    """
+    cursor.execute("""
         SELECT
             p.pub_id,
             p.pub_title,
             YEAR(p.pub_year)  AS pub_year,
             MONTH(p.pub_year) AS pub_month,
-            p.pub_frontimage
+            p.pub_frontimage,
+            p.pub_price,
+            p.pub_pages,
+            pub2.publisher_name,
+            n.note_note AS pub_note
         FROM pubs p
+        LEFT JOIN publishers pub2 ON pub2.publisher_id = p.publisher_id
+        LEFT JOIN notes n         ON n.note_id         = p.note_id
         WHERE p.pub_id = %s AND p.pub_ctype = 'MAGAZINE'
+    """, (pub_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+
+    row["pub_note"] = _clean_issue_note(row.get("pub_note") or "")
+
+    # Editor(s)
+    cursor.execute("""
+        SELECT a.author_id, a.author_canonical
+        FROM pub_content pc
+        JOIN titles t            ON t.title_id  = pc.title_id AND t.title_ttype = 'EDITOR'
+        JOIN canonical_author ca ON ca.title_id = t.title_id
+        JOIN authors a           ON a.author_id  = ca.author_id
+        WHERE pc.pub_id = %s
+        ORDER BY ca.ca_id
+    """, (pub_id,))
+    row["editors"] = cursor.fetchall()
+
+    # Cover artist(s)
+    cursor.execute("""
+        SELECT a.author_id, a.author_canonical
+        FROM pub_content pc
+        JOIN titles t            ON t.title_id  = pc.title_id AND t.title_ttype = 'COVERART'
+        JOIN canonical_author ca ON ca.title_id = t.title_id
+        JOIN authors a           ON a.author_id  = ca.author_id
+        WHERE pc.pub_id = %s
+        ORDER BY ca.ca_id
+    """, (pub_id,))
+    row["cover_artists"] = cursor.fetchall()
+
+    return row
+
+
+def get_adjacent_issues(cursor, pub_id: int) -> tuple:
     """
-    cursor.execute(query, (pub_id,))
-    return cursor.fetchone()
+    Return (prev_issue, next_issue) for the same magazine, where each is a
+    dict with pub_id and pub_title, or None if there is no adjacent issue.
+
+    Uses the leading portion of pub_title (up to the first comma) as the
+    magazine identifier.
+    """
+    cursor.execute("""
+        SELECT SUBSTRING_INDEX(pub_title, ',', 1) AS mag_prefix,
+               YEAR(pub_year)  AS pub_year,
+               MONTH(pub_year) AS pub_month
+        FROM pubs WHERE pub_id = %s
+    """, (pub_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None, None
+
+    prefix   = row["mag_prefix"]
+    yr_mo    = row["pub_year"] * 12 + row["pub_month"]
+
+    cursor.execute("""
+        SELECT pub_id, pub_title
+        FROM pubs
+        WHERE pub_ctype = 'MAGAZINE'
+          AND SUBSTRING_INDEX(pub_title, ',', 1) = %s
+          AND YEAR(pub_year) * 12 + MONTH(pub_year) < %s
+        ORDER BY pub_year DESC, pub_id DESC
+        LIMIT 1
+    """, (prefix, yr_mo))
+    prev_issue = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT pub_id, pub_title
+        FROM pubs
+        WHERE pub_ctype = 'MAGAZINE'
+          AND SUBSTRING_INDEX(pub_title, ',', 1) = %s
+          AND YEAR(pub_year) * 12 + MONTH(pub_year) > %s
+        ORDER BY pub_year ASC, pub_id ASC
+        LIMIT 1
+    """, (prefix, yr_mo))
+    next_issue = cursor.fetchone()
+
+    return prev_issue, next_issue
 
 
 def get_archive_links(cursor, pub_id: int) -> list:

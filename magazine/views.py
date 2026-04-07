@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.http import Http404
 
 from .queries import (
-    find_issues, get_issue_meta, get_contents, get_archive_links,
+    find_issues, get_issue_meta, get_contents, get_archive_links, get_adjacent_issues,
     get_author_fiction, get_author_detail, get_author_works, get_author_books,
     get_book_detail, get_book_editions, get_story_detail, find_titles,
     get_magazine_issues_by_name,
@@ -121,6 +121,7 @@ def issue_detail(request, pub_id):
             raise Http404(f"No magazine issue with pub_id={pub_id}")
         contents = get_contents(cursor, pub_id)
         archive_links = get_archive_links(cursor, pub_id)
+        prev_issue, next_issue = get_adjacent_issues(cursor, pub_id)
     finally:
         cursor.close()
 
@@ -136,6 +137,8 @@ def issue_detail(request, pub_id):
         "other":        other,
         "back_params":  back_params,
         "archive_links": archive_links,
+        "prev_issue":   prev_issue,
+        "next_issue":   next_issue,
     })
 
 

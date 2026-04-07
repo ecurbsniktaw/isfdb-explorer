@@ -13,7 +13,11 @@
   {% endif %}
 </div>
 
-<div class="d-flex gap-4 mb-4">
+<div class="row g-4 mb-4">
+<div class="col-lg-6">
+<div class="d-flex gap-4 align-items-start">
+
+  {# ── Cover image ──────────────────────────────────────────────────────── #}
   {% if issue.pub_frontimage %}
   <div class="flex-shrink-0">
     <a href="#" data-bs-toggle="modal" data-bs-target="#coverModal" style="display:block;">
@@ -39,17 +43,95 @@
     </div>
   </div>
   {% endif %}
+
+  {# ── Metadata panel ───────────────────────────────────────────────────── #}
   <div>
     <h1 class="h3 mb-1">{{ issue.pub_title }}</h1>
-    <p class="text-muted mb-0">{{ issue.formatted_date }}</p>
-    {% for url in archive_links %}
-      <a href="{{ url }}" target="_blank" rel="noopener"
-         class="btn btn-sm btn-outline-secondary mt-2">
-        Read on Archive.org{% if archive_links|length > 1 %} ({{ forloop.counter }}){% endif %}
-      </a>
-    {% endfor %}
+    <p class="text-muted mb-2">{{ issue.formatted_date }}</p>
+
+    <table class="table table-sm table-borderless w-auto mb-2">
+      <tbody>
+        {% if issue.editors %}
+        <tr>
+          <th class="text-muted fw-normal pe-3" style="white-space:nowrap;">Editor</th>
+          <td>
+            {% for ed in issue.editors %}
+              {% if not forloop.first %}, {% endif %}
+              <a href="{% url 'author_detail' ed.author_id %}">{{ ed.author_canonical }}</a>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endif %}
+        {% if issue.cover_artists %}
+        <tr>
+          <th class="text-muted fw-normal pe-3" style="white-space:nowrap;">Cover art</th>
+          <td>
+            {% for ca in issue.cover_artists %}
+              {% if not forloop.first %}, {% endif %}
+              <a href="{% url 'author_detail' ca.author_id %}">{{ ca.author_canonical }}</a>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endif %}
+        {% if issue.publisher_name %}
+        <tr>
+          <th class="text-muted fw-normal pe-3">Publisher</th>
+          <td>{{ issue.publisher_name }}</td>
+        </tr>
+        {% endif %}
+        {% if issue.pub_price %}
+        <tr>
+          <th class="text-muted fw-normal pe-3">Price</th>
+          <td>{{ issue.pub_price }}</td>
+        </tr>
+        {% endif %}
+        {% if issue.pub_pages %}
+        <tr>
+          <th class="text-muted fw-normal pe-3">Pages</th>
+          <td>{{ issue.pub_pages }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    {# ── Prev / Next navigation ─────────────────────────────────────────── #}
+    {% if prev_issue or next_issue %}
+    <div class="d-flex gap-2 mb-2">
+      {% if prev_issue %}
+        <a href="{% url 'issue_detail' prev_issue.pub_id %}"
+           class="btn btn-sm btn-outline-secondary"
+           title="{{ prev_issue.pub_title }}">&larr; Previous issue</a>
+      {% endif %}
+      {% if next_issue %}
+        <a href="{% url 'issue_detail' next_issue.pub_id %}"
+           class="btn btn-sm btn-outline-secondary"
+           title="{{ next_issue.pub_title }}">Next issue &rarr;</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
   </div>
+
+</div>{# end flex #}
+</div>{# end col-lg-6 left #}
+
+{# ── Right column: notes + archive link ─────────────────────────────────── #}
+{% if issue.pub_note or archive_links %}
+<div class="col-lg-6">
+  {% if issue.pub_note %}
+  <h2 class="h6 text-muted">Notes</h2>
+  <div class="small mb-3">{{ issue.pub_note|safe }}</div>
+  {% endif %}
+  {% for url in archive_links %}
+    <a href="{{ url }}" target="_blank" rel="noopener"
+       class="btn btn-sm btn-outline-secondary">
+      Read on Archive.org{% if archive_links|length > 1 %} ({{ forloop.counter }}){% endif %}
+    </a>
+  {% endfor %}
 </div>
+{% endif %}
+
+</div>{# end row #}
 
 {% if not narrative and not other %}
   <p class="text-muted">No contents recorded for this issue.</p>
