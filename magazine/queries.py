@@ -846,6 +846,7 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
             YEAR(p.pub_year)  AS pub_year,
             MONTH(p.pub_year) AS pub_month,
             p.pub_ctype,
+            p.pub_frontimage,
             pub2.publisher_name,
             pc.pubc_page
         FROM pub_content pc

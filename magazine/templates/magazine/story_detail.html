@@ -126,10 +126,11 @@
 <div class="mb-4">
   <h2 class="h6 text-muted mb-2">Publications ({{ story.publications|length }})</h2>
   <div class="table-responsive">
-    <table class="table table-sm table-hover">
+    <table class="table table-sm table-hover align-middle">
       <thead class="table-light">
         <tr>
           <th>Date</th>
+          <th style="width:3rem;"></th>
           <th>Publication</th>
           <th>Publisher</th>
           <th>Type</th>
@@ -146,6 +147,18 @@
               {{ pub.formatted_date }}
             {% endif %}
           </td>
+          <td>
+            {% if pub.pub_frontimage %}
+              <img src="{{ pub.pub_frontimage }}"
+                   alt="Cover"
+                   class="pub-thumb rounded"
+                   style="height:36px; width:auto; cursor:zoom-in;"
+                   data-fullsrc="{{ pub.pub_frontimage }}"
+                   data-title="{{ pub.pub_title }}"
+                   data-bs-toggle="modal"
+                   data-bs-target="#pubCoverModal">
+            {% endif %}
+          </td>
           <td>{{ pub.pub_title }}</td>
           <td class="text-muted small">{{ pub.publisher_name|default:"" }}</td>
           <td class="text-muted small">{{ pub.type_label }}</td>
@@ -156,6 +169,33 @@
     </table>
   </div>
 </div>
+
+{# Shared cover modal for publications list #}
+<div class="modal fade" id="pubCoverModal" tabindex="-1" aria-label="Cover image" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0 text-center position-relative">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
+                data-bs-dismiss="modal" aria-label="Close"></button>
+        <img id="pubCoverModalImg" src="" alt="" class="img-fluid rounded shadow">
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var modal = document.getElementById('pubCoverModal');
+  if (!modal) return;
+  modal.addEventListener('show.bs.modal', function (e) {
+    var thumb = e.relatedTarget;
+    document.getElementById('pubCoverModalImg').src = thumb.dataset.fullsrc;
+    document.getElementById('pubCoverModalImg').alt = thumb.dataset.title;
+  });
+});
+</script>
 {% endblock %}
