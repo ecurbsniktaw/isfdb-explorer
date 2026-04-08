@@ -932,6 +932,44 @@ def get_book_contents(cursor, pub_id: int) -> list:
     return rows
 
 
+def get_book_reviews(cursor, title_id: int) -> list:
+    """
+    Return reviews of a title via the title_relationships table.
+
+    Each row has: review_id, yr, reviewer (name), reviewer_ids,
+    pub_id (earliest pub), pub_title, pub_ctype, is_magazine.
+    ca_status=1 filters to the reviewer only (ca_status=3 is the reviewed author).
+    """
+    cursor.execute("""
+        SELECT
+            tr.review_id,
+            YEAR(t.title_copyright)                                         AS yr,
+            GROUP_CONCAT(DISTINCT a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & ') AS reviewer,
+            GROUP_CONCAT(DISTINCT a.author_id        ORDER BY ca.ca_id SEPARATOR ',')   AS reviewer_ids,
+            MIN(p.pub_id)    AS pub_id,
+            MIN(p.pub_title) AS pub_title,
+            MIN(p.pub_ctype) AS pub_ctype,
+            MIN(t_pub.title_id) AS book_title_id
+        FROM title_relationships tr
+        JOIN titles t               ON t.title_id   = tr.review_id
+        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id AND ca.ca_status = 1
+        LEFT JOIN authors a          ON a.author_id  = ca.author_id
+        LEFT JOIN pub_content pc     ON pc.title_id  = t.title_id
+        LEFT JOIN pubs p             ON p.pub_id     = pc.pub_id
+        LEFT JOIN pub_content pc_pub ON pc_pub.pub_id = p.pub_id
+        LEFT JOIN titles t_pub       ON t_pub.title_id = pc_pub.title_id
+                                    AND t_pub.title_ttype = p.pub_ctype
+        WHERE tr.title_id = %s
+        GROUP BY tr.review_id, t.title_copyright
+        ORDER BY t.title_copyright, tr.review_id
+    """, (title_id,))
+    rows = cursor.fetchall()
+    for row in rows:
+        row["reviewer_list"] = _make_author_list(row.get("reviewer"), row.get("reviewer_ids"))
+        row["is_magazine"]   = row.get("pub_ctype") == "MAGAZINE"
+    return rows
+
+
 def get_book_editions(cursor, title_id: int, exclude_pub_id: int) -> list:
     """
     Return all English-language editions of a title except the one already
