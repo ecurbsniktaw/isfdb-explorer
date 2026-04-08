@@ -39,45 +39,39 @@
     <table class="table table-sm table-borderless w-auto mt-3">
       <tbody>
         {% if book.formatted_date %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">First published</th>
-          <td>{{ book.formatted_date }}</td>
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">First published</th>
+          <td class="py-1">{{ book.formatted_date }}</td>
         </tr>
         {% endif %}
         {% if book.publisher_name %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Publisher</th>
-          <td>{{ book.publisher_name }}</td>
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Publisher</th>
+          <td class="py-1">{{ book.publisher_name }}</td>
         </tr>
         {% endif %}
         {% if book.format_label %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Format</th>
-          <td>{{ book.format_label }}</td>
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Format</th>
+          <td class="py-1">{{ book.format_label }}</td>
         </tr>
         {% endif %}
         {% if book.type_label %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Type</th>
-          <td>{{ book.type_label }}</td>
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Type</th>
+          <td class="py-1">{{ book.type_label }}</td>
         </tr>
         {% endif %}
         {% if book.pub_catalog %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Catalog ID</th>
-          <td>{{ book.pub_catalog }}</td>
-        </tr>
-        {% endif %}
-        {% if book.pub_isbn %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">ISBN</th>
-          <td>{{ book.pub_isbn }}</td>
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Catalog ID</th>
+          <td class="py-1">{{ book.pub_catalog }}</td>
         </tr>
         {% endif %}
         {% if book.cover_artist_list %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Cover art</th>
-          <td>
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Cover art</th>
+          <td class="py-1">
             {% for a in book.cover_artist_list %}
               {% if not forloop.first %} &amp; {% endif %}
               {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
@@ -86,9 +80,21 @@
         </tr>
         {% endif %}
         {% if book.pub_pages %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Pages</th>
-          <td>{{ book.pub_pages }}</td>
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Pages</th>
+          <td class="py-1">{{ book.pub_pages }}</td>
+        </tr>
+        {% endif %}
+        {% if book.pub_price %}
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Price</th>
+          <td class="py-1">{{ book.pub_price }}</td>
+        </tr>
+        {% endif %}
+        {% if book.pub_isbn %}
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">ISBN</th>
+          <td class="py-1">{{ book.pub_isbn }}</td>
         </tr>
         {% endif %}
       </tbody>

@@ -630,6 +630,7 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
             MONTH(p.pub_year)  AS pub_month,
             p.pub_catalog,
             p.pub_isbn,
+            p.pub_price,
             p.pub_ptype,
             p.pub_pages,
             p.pub_frontimage,
@@ -679,7 +680,7 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
           AND lang.lang_code = 'eng'
           AND YEAR(p.pub_year) > 0
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
-                 p.pub_catalog, p.pub_isbn, p.pub_ptype, p.pub_pages, p.pub_frontimage,
+                 p.pub_catalog, p.pub_isbn, p.pub_price, p.pub_ptype, p.pub_pages, p.pub_frontimage,
                  pub.publisher_name, n.note_note, tn.note_note, t.title_id, t.title_title, t.title_ttype
         ORDER BY p.pub_year, p.pub_id
         LIMIT 1
