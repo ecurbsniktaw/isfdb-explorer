@@ -5,7 +5,7 @@ from django.http import Http404
 from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links, get_adjacent_issues,
     get_author_fiction, get_author_detail, get_author_works, get_author_books,
-    get_book_detail, get_book_editions, get_story_detail, find_titles,
+    get_book_detail, get_book_editions, get_book_contents, get_story_detail, find_titles,
     get_magazine_issues_by_name,
     get_all_magazines, get_magazine_issues, search_magazines,
     find_authors,
@@ -345,10 +345,13 @@ def book_detail(request, title_id):
         book = get_book_detail(cursor, title_id)
         if not book:
             raise Http404(f"No book found for title_id={title_id}")
-        editions = get_book_editions(cursor, title_id, book["pub_id"])
+        editions  = get_book_editions(cursor, title_id, book["pub_id"])
+        contents  = get_book_contents(cursor, book["pub_id"])
     finally:
         cursor.close()
-    return render(request, "magazine/book_detail.html", {"book": book, "editions": editions})
+    return render(request, "magazine/book_detail.html", {
+        "book": book, "editions": editions, "contents": contents,
+    })
 
 
 def find_authors_view(request):

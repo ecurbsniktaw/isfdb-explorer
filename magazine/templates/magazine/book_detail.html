@@ -242,6 +242,59 @@
   </div>
 </div>
 
+{% if contents %}
+<div class="mt-4 accordion" id="contentsAccordion">
+  <div class="accordion-item border-0">
+    <h2 class="accordion-header h5 mb-0">
+      <button class="accordion-button collapsed ps-0 bg-transparent shadow-none fw-semibold"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#contentsPanel"
+              aria-expanded="false"
+              aria-controls="contentsPanel">
+        Table of Contents ({{ contents|length }})
+      </button>
+    </h2>
+    <div id="contentsPanel" class="accordion-collapse collapse"
+         data-bs-parent="#contentsAccordion">
+      <div class="accordion-body px-0 pt-2">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Page</th>
+                <th>Title</th>
+                <th>Author(s)</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in contents %}
+              <tr>
+                <td class="text-muted small">{{ item.pubc_page|default:"" }}</td>
+                <td>
+                  <a href="{% url 'story_detail' item.title_id %}" class="text-decoration-none">{{ item.title_title }}</a>
+                </td>
+                <td class="text-muted small">
+                  {% for a in item.author_list %}
+                    {% if not forloop.first %} &amp; {% endif %}
+                    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none text-muted">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                  {% endfor %}
+                </td>
+                <td class="text-muted small">
+                  {{ item.length_label|default:item.type_label }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {# Shared modal for edition cover images #}
 <div class="modal fade" id="editionCoverModal" tabindex="-1" aria-label="Cover image" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">

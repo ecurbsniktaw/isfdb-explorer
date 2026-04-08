@@ -876,6 +876,62 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
     return row
 
 
+_TOC_TYPES = (
+    "SHORTFICTION", "NOVEL", "SERIAL", "POEM",
+    "ESSAY", "INTERVIEW", "REVIEW", "NONFICTION", "CHAPBOOK",
+)
+
+
+def get_book_contents(cursor, pub_id: int) -> list:
+    """
+    Return the table of contents for a book (collection, anthology, omnibus, etc.).
+
+    Excludes the top-level title matching the book itself (same ttype as pub_ctype)
+    and all art/editorial entries.  Returns rows ordered by page number.
+    """
+    # Get the pub_ctype so we can exclude the title that is the book itself
+    cursor.execute("SELECT pub_ctype FROM pubs WHERE pub_id = %s", (pub_id,))
+    row = cursor.fetchone()
+    if not row:
+        return []
+    pub_ctype = row["pub_ctype"]
+
+    type_placeholders = ", ".join(["%s"] * len(_TOC_TYPES))
+    cursor.execute(f"""
+        SELECT
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            t.title_storylen,
+            pc.pubc_page,
+            GROUP_CONCAT(
+                a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                a.author_id ORDER BY ca.ca_id SEPARATOR ','
+            ) AS author_ids
+        FROM pub_content pc
+        JOIN titles t            ON t.title_id  = pc.title_id
+        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
+        LEFT JOIN authors a       ON a.author_id  = ca.author_id
+        WHERE pc.pub_id = %s
+          AND t.title_ttype IN ({type_placeholders})
+          AND t.title_ttype != %s
+        GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen, pc.pubc_page
+        ORDER BY
+            CASE WHEN pc.pubc_page REGEXP '^[0-9]+$'
+                 THEN LPAD(pc.pubc_page, 6, '0')
+                 ELSE pc.pubc_page END,
+            t.title_title
+    """, (pub_id, *_TOC_TYPES, pub_ctype))
+    rows = cursor.fetchall()
+    for row in rows:
+        row["type_label"]   = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["length_label"] = _STORY_LENGTH_LABELS.get(row.get("title_storylen") or "", "")
+        row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
+    return rows
+
+
 def get_book_editions(cursor, title_id: int, exclude_pub_id: int) -> list:
     """
     Return all English-language editions of a title except the one already
