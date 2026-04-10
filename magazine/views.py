@@ -12,8 +12,9 @@ from .queries import (
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     get_all_award_types, search_award_types, get_award_detail,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
-    get_series_letters, get_series_by_letter, search_series,
+    get_series_letters, get_series_by_letter, search_series, search_pub_series,
     get_series_detail, get_series_by_author,
+    get_pub_series_detail,
     _MAJOR_SERIES_IDS, _MAJOR_SERIES_INFO,
     format_date, NARRATIVE_TYPES,
 )
@@ -502,20 +503,24 @@ def series_list(request):
             # Return matching authors for the user to choose from
             author_matches  = find_authors(cursor, query)
             displayed       = []
+            pub_series_hits = []
             total_shown     = 0
             total_letter    = None
         elif query:
             author_matches  = []
             displayed       = search_series(cursor, query)
+            pub_series_hits = search_pub_series(cursor, query)
             total_shown     = len(displayed)
             total_letter    = None
         elif letter:
             author_matches  = []
             displayed, total_letter = get_series_by_letter(cursor, letter, _SERIES_LIST_LIMIT)
+            pub_series_hits = []
             total_shown     = len(displayed)
         else:
             author_matches  = []
             displayed       = []
+            pub_series_hits = []
             total_shown     = 0
             total_letter    = None
     finally:
@@ -527,16 +532,17 @@ def series_list(request):
     ]
 
     return render(request, "magazine/series_list.html", {
-        "query":         query,
-        "search_type":   search_type,
-        "letter":        letter,
-        "letters":       letters,
+        "query":          query,
+        "search_type":    search_type,
+        "letter":         letter,
+        "letters":        letters,
         "author_matches": author_matches,
-        "displayed":     displayed,
-        "total_shown":   total_shown,
-        "total_letter":  total_letter,
-        "limit":         _SERIES_LIST_LIMIT,
-        "major_series":  major_series,
+        "displayed":      displayed,
+        "pub_series_hits": pub_series_hits,
+        "total_shown":    total_shown,
+        "total_letter":   total_letter,
+        "limit":          _SERIES_LIST_LIMIT,
+        "major_series":   major_series,
     })
 
 
@@ -567,6 +573,18 @@ def series_detail(request, series_id):
     if not series:
         raise Http404(f"No series with id={series_id}")
     return render(request, "magazine/series_detail.html", {"series": series})
+
+
+def pub_series_detail(request, pub_series_id):
+    """All titles in a single publication series."""
+    cursor = _dict_cursor()
+    try:
+        pub_series = get_pub_series_detail(cursor, pub_series_id)
+    finally:
+        cursor.close()
+    if not pub_series:
+        raise Http404(f"No publication series with id={pub_series_id}")
+    return render(request, "magazine/pub_series_detail.html", {"pub_series": pub_series})
 
 
 def about(request):

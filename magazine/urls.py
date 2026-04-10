@@ -23,5 +23,6 @@ urlpatterns = [
     path("series/", views.series_list, name="series_list"),
     path("series/author/<int:author_id>/", views.series_by_author, name="series_by_author"),
     path("series/<int:series_id>/", views.series_detail, name="series_detail"),
+    path("pubseries/<int:pub_series_id>/", views.pub_series_detail, name="pub_series_detail"),
     path("about/", views.about, name="about"),
 ]

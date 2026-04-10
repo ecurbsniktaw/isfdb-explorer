@@ -1555,6 +1555,83 @@ def search_series(cursor, query: str) -> list:
     return cursor.fetchall()
 
 
+def search_pub_series(cursor, query: str) -> list:
+    """Return publication series whose name contains the query string."""
+    cursor.execute("""
+        SELECT ps.pub_series_id, ps.pub_series_name,
+               COUNT(DISTINCT p.pub_id) AS pub_count
+        FROM pub_series ps
+        JOIN pubs p ON p.pub_series_id = ps.pub_series_id
+        WHERE ps.pub_series_name LIKE %s
+        GROUP BY ps.pub_series_id, ps.pub_series_name
+        ORDER BY ps.pub_series_name
+        LIMIT 100
+    """, (f"%{query}%",))
+    return cursor.fetchall()
+
+
+def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
+    """
+    Return pub_series metadata and its unique titles (deduplicated editions),
+    ordered by series number then title.
+    """
+    cursor.execute("""
+        SELECT pub_series_id, pub_series_name
+        FROM pub_series
+        WHERE pub_series_id = %s
+    """, (pub_series_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+
+    # Some pubs link to variant title records (title_parent != 0) rather than the
+    # canonical title.  We resolve the canonical via a LEFT JOIN to the parent
+    # title (tc), then group by (canonical_title_id, series_num) so every
+    # numbered slot appears and authors are pulled from the right record.
+    cursor.execute("""
+        SELECT
+            canon_id  AS title_id,
+            MAX(canon_title)  AS title_title,
+            MAX(canon_ttype)  AS title_ttype,
+            series_num,
+            GROUP_CONCAT(
+                DISTINCT author_canonical ORDER BY author_canonical SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT author_id ORDER BY author_canonical SEPARATOR ','
+            ) AS author_ids
+        FROM (
+            SELECT
+                p.pub_series_num                          AS series_num,
+                COALESCE(tc.title_id,    t.title_id)    AS canon_id,
+                COALESCE(tc.title_title, t.title_title) AS canon_title,
+                COALESCE(tc.title_ttype, t.title_ttype) AS canon_ttype,
+                a.author_canonical,
+                a.author_id
+            FROM pubs p
+            JOIN pub_content pc ON pc.pub_id  = p.pub_id
+            JOIN titles t       ON t.title_id = pc.title_id
+            LEFT JOIN titles tc ON tc.title_id = t.title_parent AND t.title_parent != 0
+            LEFT JOIN canonical_author ca
+                   ON ca.title_id = COALESCE(tc.title_id, t.title_id) AND ca.ca_status = 1
+            LEFT JOIN authors a ON a.author_id = ca.author_id
+            WHERE p.pub_series_id = %s
+              AND COALESCE(tc.title_ttype, t.title_ttype)
+                    IN ('NOVEL','COLLECTION','ANTHOLOGY','OMNIBUS',
+                        'CHAPBOOK','NONFICTION','SHORTFICTION')
+        ) sub
+        GROUP BY canon_id, series_num
+        ORDER BY series_num + 0, series_num, MAX(canon_title)
+    """, (pub_series_id,))
+    titles = cursor.fetchall()
+    for t in titles:
+        t["type_label"]  = TITLE_TYPE_LABELS.get(t["title_ttype"], t["title_ttype"] or "")
+        t["author_list"] = _make_author_list(t.get("authors"), t.get("author_ids"))
+
+    row["titles"] = titles
+    return row
+
+
 def get_series_by_author(cursor, author_id: int) -> tuple:
     """
     Return (author_name, series_list) for a given author.

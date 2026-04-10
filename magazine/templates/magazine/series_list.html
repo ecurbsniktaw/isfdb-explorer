@@ -65,12 +65,13 @@
 
 {# ── Series name search results ──────────────────────────────────────────── #}
 {% if query and search_type != "author" %}
-  {% if displayed %}
-    <p class="text-muted mb-3">
-      {{ total_shown }} series matching <strong>{{ query }}</strong>
-      {% if total_shown >= 300 %} (showing first 300){% endif %}
+  {% if displayed or pub_series_hits %}
+    {% if displayed %}
+    <h2 class="h6 text-muted text-uppercase mb-2 mt-3">Title Series</h2>
+    <p class="text-muted small mb-2">
+      {{ total_shown }} series matching <strong>{{ query }}</strong>{% if total_shown >= 300 %} (showing first 300){% endif %}
     </p>
-    <ul class="list-group mb-5" style="max-width:600px;">
+    <ul class="list-group mb-4" style="max-width:600px;">
       {% for s in displayed %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
         <a href="{% url 'series_detail' s.series_id %}" class="text-decoration-none">{{ s.series_title }}</a>
@@ -78,6 +79,21 @@
       </li>
       {% endfor %}
     </ul>
+    {% endif %}
+    {% if pub_series_hits %}
+    <h2 class="h6 text-muted text-uppercase mb-2 mt-3">Publication Series</h2>
+    <p class="text-muted small mb-2">
+      {{ pub_series_hits|length }} publication series matching <strong>{{ query }}</strong>
+    </p>
+    <ul class="list-group mb-5" style="max-width:600px;">
+      {% for s in pub_series_hits %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="{% url 'pub_series_detail' s.pub_series_id %}" class="text-decoration-none">{{ s.pub_series_name }}</a>
+        <span class="badge text-bg-secondary rounded-pill">{{ s.pub_count }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
   {% else %}
     <p class="text-muted mb-4">No series found matching <strong>{{ query }}</strong>.</p>
   {% endif %}
