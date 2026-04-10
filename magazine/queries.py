@@ -1651,18 +1651,20 @@ def get_series_detail(cursor, series_id: int) -> dict | None:
 # Awards
 # ---------------------------------------------------------------------------
 
-_MAJOR_AWARD_IDS = [13, 7, 23, 27, 28, 31, 32, 35, 61, 44]
+_MAJOR_AWARD_IDS = [13, 9, 7, 23, 27, 28, 31, 32, 46, 35, 41, 44]
 
 _MAJOR_AWARD_NAMES = {
     13: "Arthur C. Clarke Award",
+    9:  "British Science Fiction Award",
     7:  "British Fantasy Award",
     23: "Hugo Award",
     27: "John W. Campbell Award / Astounding Award",
     28: "Locus Poll Award",
     31: "Nebula Award",
     32: "Philip K. Dick Award",
+    46: "Ray Bradbury Award",
     35: "Rhysling Award",
-    61: "Seiun Award",
+    41: "Theodore Sturgeon Memorial Award",
     44: "World Fantasy Award",
 }
 
