@@ -1487,11 +1487,21 @@ def _series_sort_key_sql() -> str:
                   ELSE s.series_title END"""
 
 
-def get_series_letters(cursor) -> list:
+# All 26 letters are present in the series database.  Hard-coded to avoid an
+# 11-second full-table scan on every Series page load.  If the database is ever
+# replaced, re-run get_series_letters_from_db() (below) to verify/update this.
+_SERIES_LETTERS = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+
+def get_series_letters(cursor) -> list:  # noqa: ARG001
+    """Return the pre-computed list of A-Z letters for the series browser."""
+    return _SERIES_LETTERS
+
+
+def get_series_letters_from_db(cursor) -> list:
     """
-    Return the sorted list of first letters (A-Z) for which browsable series
-    exist (with at least _SERIES_MIN_TITLES titles).
-    Leading 'The ' and 'A ' articles are stripped when determining the letter.
+    Recompute the series letters from the database.  Run this after a database
+    upgrade to check whether _SERIES_LETTERS needs updating.
     """
     sort_key = _series_sort_key_sql()
     cursor.execute(f"""
