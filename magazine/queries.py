@@ -1475,51 +1475,65 @@ _SERIES_TITLE_TYPES = (
 )
 
 
+_SERIES_MIN_TITLES = 5
+
+
+def _series_sort_key_sql() -> str:
+    """SQL CASE expression that strips leading 'The ' and 'A ' articles."""
+    return """CASE WHEN UPPER(s.series_title) LIKE 'THE %%'
+                  THEN SUBSTRING(s.series_title, 5)
+                  WHEN UPPER(s.series_title) LIKE 'A %%'
+                  THEN SUBSTRING(s.series_title, 3)
+                  ELSE s.series_title END"""
+
+
 def get_series_letters(cursor) -> list:
     """
-    Return the sorted list of first letters (A-Z) for which browsable series exist.
-    'The ' prefix is stripped when determining the letter, matching the view logic.
+    Return the sorted list of first letters (A-Z) for which browsable series
+    exist (with at least _SERIES_MIN_TITLES titles).
+    Leading 'The ' and 'A ' articles are stripped when determining the letter.
     """
-    cursor.execute("""
-        SELECT DISTINCT
-            UPPER(LEFT(
-                CASE WHEN UPPER(s.series_title) LIKE 'THE %%'
-                     THEN SUBSTRING(s.series_title, 5)
-                     ELSE s.series_title END,
-                1
-            )) AS letter
+    sort_key = _series_sort_key_sql()
+    cursor.execute(f"""
+        SELECT DISTINCT UPPER(LEFT({sort_key}, 1)) AS letter
         FROM series s
         JOIN titles t ON t.series_id = s.series_id AND t.title_parent = 0
         WHERE s.series_title NOT LIKE '%%&#%%'
           AND s.series_title REGEXP '^[A-Za-z]'
-        HAVING letter REGEXP '^[A-Z]$'
+        GROUP BY s.series_id, s.series_title
+        HAVING COUNT(t.title_id) >= %s
+           AND UPPER(LEFT({sort_key}, 1)) REGEXP '^[A-Z]$'
         ORDER BY letter
-    """)
-    return [row["letter"] for row in cursor.fetchall()]
+    """, (_SERIES_MIN_TITLES,))
+    return sorted({row["letter"] for row in cursor.fetchall()})
 
 
 def get_series_by_letter(cursor, letter: str, limit: int = 300) -> tuple:
     """
     Return (rows, total) for series whose effective first letter matches `letter`
-    ('The ' prefix stripped).  Returns at most `limit` rows.
+    (leading 'The ' and 'A ' articles stripped), with at least _SERIES_MIN_TITLES
+    titles.
+
+    WHERE uses LIKE prefix patterns so MySQL can use the index on series_title.
+    HAVING verifies the exact effective letter to handle edge cases (e.g. 'A X%'
+    series must not appear under letter A).
+    Returns at most `limit` rows.
     """
-    # The CASE strips 'The ' so "The Dark Tower" sorts/filters under D.
-    cursor.execute("""
+    L = letter.upper()
+    sort_key = _series_sort_key_sql()
+    cursor.execute(f"""
         SELECT s.series_id, s.series_title, COUNT(t.title_id) AS title_count
         FROM series s
         JOIN titles t ON t.series_id = s.series_id AND t.title_parent = 0
         WHERE s.series_title NOT LIKE '%%&#%%'
+          AND (s.series_title LIKE %s
+            OR s.series_title LIKE %s
+            OR s.series_title LIKE %s)
         GROUP BY s.series_id, s.series_title
-        HAVING title_count >= 2
-          AND UPPER(LEFT(
-                CASE WHEN UPPER(series_title) LIKE 'THE %%'
-                     THEN SUBSTRING(series_title, 5)
-                     ELSE series_title END,
-                1)) = %s
-        ORDER BY CASE WHEN UPPER(series_title) LIKE 'THE %%'
-                      THEN SUBSTRING(series_title, 5)
-                      ELSE series_title END
-    """, (letter.upper(),))
+        HAVING title_count >= %s
+           AND UPPER(LEFT({sort_key}, 1)) = %s
+        ORDER BY {sort_key}
+    """, (f"{L}%", f"The {L}%", f"A {L}%", _SERIES_MIN_TITLES, L))
     rows = cursor.fetchall()
     total = len(rows)
     return rows[:limit], total
@@ -1534,7 +1548,7 @@ def search_series(cursor, query: str) -> list:
         WHERE s.series_title NOT LIKE '%%&#%%'
           AND s.series_title LIKE %s
         GROUP BY s.series_id, s.series_title
-        HAVING title_count >= 2
+        HAVING title_count >= 1
         ORDER BY s.series_title
         LIMIT 300
     """, (f"%{query}%",))
