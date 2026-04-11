@@ -1,0 +1,41 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}{{ magazines.0.mag_name }} — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'magazine_list' %}">Magazines</a></li>
+    <li class="breadcrumb-item active">{{ magazines.0.mag_name }}</li>
+  </ol>
+</nav>
+
+<h1 class="h3 mb-4">{{ magazines.0.mag_name }}</h1>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+  {% for m in magazines %}
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title mb-1">
+          <a href="{% url 'magazine_issues_by_name' %}?name={{ m.mag_name|urlencode }}"
+             class="text-decoration-none stretched-link">
+            {{ m.mag_name }}
+          </a>
+        </h6>
+        {% if m.first_year %}
+        <p class="card-text small text-muted mb-0">
+          {{ m.first_year }}{% if m.last_year and m.last_year != m.first_year %}–{{ m.last_year }}{% endif %}
+        </p>
+        {% endif %}
+      </div>
+      <div class="card-footer text-muted small">
+        {{ m.issue_count }} issue{{ m.issue_count|pluralize }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

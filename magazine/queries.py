@@ -1116,6 +1116,32 @@ def search_magazines(cursor, query: str) -> list:
     return cursor.fetchall()
 
 
+def get_magazine_group_info(cursor, names: list) -> list:
+    """
+    Return issue count and year range for each of the given exact magazine
+    names, preserving the order of `names`.
+    """
+    if not names:
+        return []
+    placeholders = ", ".join(["%s"] * len(names))
+    cursor.execute(f"""
+        SELECT
+            SUBSTRING_INDEX(pub_title, ',', 1)  AS mag_name,
+            COUNT(*)                             AS issue_count,
+            MIN(CASE WHEN YEAR(pub_year) > 0 AND YEAR(pub_year) < 8888
+                     THEN YEAR(pub_year) END)    AS first_year,
+            MAX(CASE WHEN YEAR(pub_year) > 0 AND YEAR(pub_year) < 8888
+                     THEN YEAR(pub_year) END)    AS last_year
+        FROM pubs
+        WHERE pub_ctype = 'MAGAZINE'
+        GROUP BY SUBSTRING_INDEX(pub_title, ',', 1)
+        HAVING mag_name IN ({placeholders})
+    """, names)
+    rows = {r["mag_name"]: r for r in cursor.fetchall()}
+    # Return in the caller-specified order, skipping any names not in the DB
+    return [rows[n] for n in names if n in rows]
+
+
 def get_magazine_issues_by_name(cursor, mag_name: str) -> list:
     """
     Return all issues whose pub_title starts with mag_name followed by a comma,

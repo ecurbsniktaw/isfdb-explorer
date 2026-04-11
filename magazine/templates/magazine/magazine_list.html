@@ -2,6 +2,13 @@
 
 {% block title %}Magazines — ISFDB Explorer{% endblock %}
 
+{% block extra_css %}
+<style>
+.mag-card { transition: box-shadow .15s; }
+.mag-card:hover { box-shadow: 0 .25rem .75rem rgba(0,0,0,.15) !important; background-color: #f8f9fa; }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <h1 class="h3 mb-1">Magazines</h1>
@@ -19,6 +26,26 @@
   </div>
 </form>
 
+{# Selected Magazines cards — hidden during search #}
+{% if not query %}
+<h2 class="h5 mb-3">Selected Magazines</h2>
+<div class="row g-3 mb-5">
+  {% for m in selected_magazines %}
+  <div class="col-md-4 col-sm-6">
+    <a href="{% if m.url %}{{ m.url }}{% else %}{% url 'magazine_list' %}?q={{ m.q|urlencode }}{% endif %}"
+       class="text-decoration-none">
+      <div class="card h-100 shadow-sm mag-card">
+        <div class="card-body">
+          <div class="fs-6 fw-semibold">{{ m.name }}</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+<h2 class="h5 mb-2">Browse All Magazines</h2>
+{% endif %}
+
 {% if query %}
   <p class="text-muted small mb-3">
     {{ magazines|length }} result{{ magazines|length|pluralize }} for <strong>{{ query }}</strong>
@@ -33,11 +60,14 @@
       </a>
     {% endfor %}
   </div>
+  {% if letter %}
   <p class="text-muted small mb-3">
     Showing {{ magazines|length }} magazine{{ magazines|length|pluralize }} starting with <strong>{{ letter }}</strong>
   </p>
+  {% endif %}
 {% endif %}
 
+{% if magazines %}
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
   {% for m in magazines %}
   <div class="col">
@@ -62,5 +92,6 @@
   </div>
   {% endfor %}
 </div>
+{% endif %}
 
 {% endblock %}

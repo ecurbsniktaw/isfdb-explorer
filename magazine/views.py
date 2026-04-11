@@ -6,7 +6,7 @@ from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links, get_adjacent_issues,
     get_author_fiction, get_author_detail, get_author_works, get_author_books,
     get_book_detail, get_book_editions, get_book_contents, get_book_reviews, get_story_detail, find_titles,
-    get_magazine_issues_by_name,
+    get_magazine_issues_by_name, get_magazine_group_info,
     get_all_magazines, get_magazine_issues, search_magazines,
     find_authors,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
@@ -225,12 +225,54 @@ def author_works(request, author_id):
     })
 
 
+# Magazine groups: curated lists of exact title variants shown as an
+# intermediate card page before the user picks a specific run.
+_MAGAZINE_GROUPS = {
+    "astounding": [
+        "Astounding Stories of Super-Science",
+        "Astounding Stories",
+        "Astounding Science-Fiction",
+        "Astounding Science Fiction",
+        "Astounding/Analog Science Fact & Fiction",
+    ],
+    "fsf": [
+        "The Magazine of Fantasy & Science Fiction",
+        "The Magazine of Fantasy and Science Fiction",
+    ],
+    "galaxy": [
+        "Galaxy",
+        "Galaxy Magazine",
+        "Galaxy Science Fiction",
+        "Galaxy Science Fiction Magazine",
+    ],
+    "unknown": [
+        "Unknown",
+        "Unknown Worlds",
+    ],
+}
+
+_SELECTED_MAGAZINES = [
+    {"name": "Amazing Stories",                           "url": "/magazines/browse/?name=Amazing+Stories"},
+    {"name": "Astounding Science Fiction",                "url": "/magazines/group/astounding/"},
+    {"name": "Analog Science Fiction",                    "q":   "analog"},
+    {"name": "The Magazine of Fantasy & Science Fiction", "url": "/magazines/group/fsf/"},
+    {"name": "Galaxy Science Fiction",                    "url": "/magazines/group/galaxy/"},
+    {"name": "Planet Stories",                            "url": "/magazines/browse/?name=Planet+Stories"},
+    {"name": "Startling Stories",                         "url": "/magazines/browse/?name=Startling+Stories"},
+    {"name": "Thrilling Wonder Stories",                  "url": "/magazines/browse/?name=Thrilling+Wonder+Stories"},
+    {"name": "Unknown Worlds",                            "url": "/magazines/group/unknown/"},
+    {"name": "Weird Tales",                               "url": "/magazines/browse/?name=Weird+Tales"},
+    {"name": "Worlds of If",                              "url": "/magazines/browse/?name=Worlds+of+If"},
+    {"name": "Worlds of Tomorrow",                        "url": "/magazines/browse/?name=Worlds+of+Tomorrow"},
+]
+
+
 def magazine_list(request):
     """Card grid of magazines — searchable, or browsed by first letter."""
     query  = request.GET.get("q", "").strip()
-    letter = request.GET.get("letter", "A").upper()
+    letter = request.GET.get("letter", "").upper()
     if len(letter) != 1 or not letter.isalpha():
-        letter = "A"
+        letter = ""
 
     cursor = _dict_cursor()
     try:
@@ -252,14 +294,31 @@ def magazine_list(request):
     letters_with_mags = sorted({_first_letter(m["mag_name"]) for m in all_mags if _first_letter(m["mag_name"]) != "#"})
 
     if magazines is None:
-        magazines = [m for m in all_mags if _first_letter(m["mag_name"]) == letter]
+        magazines = [m for m in all_mags if _first_letter(m["mag_name"]) == letter] if letter else []
 
     return render(request, "magazine/magazine_list.html", {
-        "magazines":         magazines,
-        "letter":            letter if not query else None,
-        "letters_with_mags": letters_with_mags,
-        "total_all":         len(all_mags),
-        "query":             query,
+        "magazines":          magazines,
+        "letter":             letter if not query else None,
+        "letters_with_mags":  letters_with_mags,
+        "total_all":          len(all_mags),
+        "query":              query,
+        "selected_magazines": _SELECTED_MAGAZINES,
+    })
+
+
+def magazine_group(request, group_slug):
+    """Intermediate page showing cards for a curated group of magazine title variants."""
+    names = _MAGAZINE_GROUPS.get(group_slug)
+    if not names:
+        raise Http404(f"No magazine group '{group_slug}'")
+    cursor = _dict_cursor()
+    try:
+        magazines = get_magazine_group_info(cursor, names)
+    finally:
+        cursor.close()
+    return render(request, "magazine/magazine_group.html", {
+        "magazines": magazines,
+        "group_slug": group_slug,
     })
 
 
