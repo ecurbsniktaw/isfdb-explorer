@@ -696,14 +696,20 @@ def contact(request):
                 f"Message:\n{form['message']}\n\n"
                 f"From: {form['email']}"
             )
-            send_mail(
-                subject="ISFDB Explorer — contact form",
-                message=body,
-                from_email=django_settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[django_settings.CONTACT_RECIPIENT],
-                fail_silently=False,
-            )
-            success = True
+            try:
+                send_mail(
+                    subject="ISFDB Explorer — contact form",
+                    message=body,
+                    from_email=django_settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[django_settings.CONTACT_RECIPIENT],
+                    fail_silently=False,
+                )
+                success = True
+            except Exception as exc:
+                errors["email"] = (
+                    f"Sorry, the message could not be sent ({type(exc).__name__}). "
+                    "Please try again later."
+                )
 
     # Generate a fresh arithmetic challenge for GET or after failed POST
     if not success:

@@ -113,6 +113,7 @@ EMAIL_PORT     = 587
 EMAIL_USE_TLS  = True
 EMAIL_HOST_USER     = ''
 EMAIL_HOST_PASSWORD = ''
+EMAIL_TIMEOUT  = 10   # seconds before giving up on SMTP connection
 DEFAULT_FROM_EMAIL  = 'ISFDB Explorer <noreply@sfinfo.org>'
 CONTACT_RECIPIENT   = 'bruce.watkins.1947@gmail.com'
 
