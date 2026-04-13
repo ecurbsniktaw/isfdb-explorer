@@ -1657,7 +1657,7 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
                         'CHAPBOOK','NONFICTION','SHORTFICTION')
         ) sub
         GROUP BY canon_id, series_num
-        ORDER BY series_num + 0, series_num, MAX(canon_title)
+        ORDER BY LENGTH(series_num), series_num, MAX(canon_title)
     """, (pub_series_id,))
     titles = cursor.fetchall()
     for t in titles:
