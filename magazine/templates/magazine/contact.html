@@ -1,0 +1,61 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Contact — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-3">Contact</h1>
+
+{% if success %}
+<div class="alert alert-success" style="max-width:600px;">
+  Thank you — your message has been sent.
+</div>
+{% else %}
+
+<p class="mb-4" style="max-width:600px;">
+  If you have any questions or comments about our web site, or if you have found
+  something that does not work correctly, please let us know.
+</p>
+
+<form method="post" action="{% url 'contact' %}" style="max-width:600px;">
+  {% csrf_token %}
+  <input type="hidden" name="captcha_signed" value="{{ captcha_signed }}">
+
+  <div class="mb-3">
+    <label for="message" class="form-label fw-semibold">Comment or question <span class="text-danger">*</span></label>
+    <textarea id="message" name="message" rows="5"
+              class="form-control {% if errors.message %}is-invalid{% endif %}"
+              >{{ form.message }}</textarea>
+    {% if errors.message %}
+    <div class="invalid-feedback">{{ errors.message }}</div>
+    {% endif %}
+  </div>
+
+  <div class="mb-3">
+    <label for="email" class="form-label fw-semibold">Your email address <span class="text-danger">*</span></label>
+    <input type="email" id="email" name="email" value="{{ form.email }}"
+           class="form-control {% if errors.email %}is-invalid{% endif %}"
+           style="max-width:320px;">
+    {% if errors.email %}
+    <div class="invalid-feedback">{{ errors.email }}</div>
+    {% endif %}
+  </div>
+
+  <div class="mb-4">
+    <label for="captcha_answer" class="form-label fw-semibold">
+      {{ captcha_question }} <span class="text-danger">*</span>
+    </label>
+    <input type="text" id="captcha_answer" name="captcha_answer"
+           class="form-control {% if errors.captcha %}is-invalid{% endif %}"
+           style="max-width:100px;" autocomplete="off">
+    {% if errors.captcha %}
+    <div class="invalid-feedback">{{ errors.captcha }}</div>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="btn btn-primary">Send message</button>
+</form>
+
+{% endif %}
+
+{% endblock %}

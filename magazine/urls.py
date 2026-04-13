@@ -26,4 +26,5 @@ urlpatterns = [
     path("series/<int:series_id>/", views.series_detail, name="series_detail"),
     path("pubseries/<int:pub_series_id>/", views.pub_series_detail, name="pub_series_detail"),
     path("about/", views.about, name="about"),
+    path("contact/", views.contact, name="contact"),
 ]

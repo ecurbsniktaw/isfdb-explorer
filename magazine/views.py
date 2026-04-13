@@ -1,3 +1,8 @@
+import random
+
+from django.conf import settings as django_settings
+from django.core.mail import send_mail
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.db import connection
 from django.shortcuts import render, redirect
 from django.http import Http404
@@ -649,3 +654,67 @@ def pub_series_detail(request, pub_series_id):
 def about(request):
     """About page with hardcoded database statistics (from Feb 2026 snapshot)."""
     return render(request, "magazine/about.html")
+
+
+_signer = TimestampSigner()
+
+
+def contact(request):
+    """Contact form — sends an email to the site owner on POST."""
+    success = False
+    errors  = {}
+    form    = {}
+
+    if request.method == "POST":
+        form["message"]  = request.POST.get("message", "").strip()
+        form["email"]    = request.POST.get("email", "").strip()
+        user_answer      = request.POST.get("captcha_answer", "").strip()
+        signed_answer    = request.POST.get("captcha_signed", "")
+
+        # Validate required fields
+        if not form["message"]:
+            errors["message"] = "Please enter a comment or question."
+        if not form["email"]:
+            errors["email"] = "Please enter your email address."
+        elif "@" not in form["email"]:
+            errors["email"] = "Please enter a valid email address."
+
+        # Verify arithmetic challenge (signed answer valid for 1 hour)
+        captcha_ok = False
+        try:
+            expected = _signer.unsign(signed_answer, max_age=3600)
+            captcha_ok = user_answer == expected
+        except (BadSignature, SignatureExpired):
+            pass
+        if not captcha_ok:
+            errors["captcha"] = "Incorrect answer — please try again."
+
+        if not errors:
+            body = (
+                f"Message:\n{form['message']}\n\n"
+                f"From: {form['email']}"
+            )
+            send_mail(
+                subject="ISFDB Explorer — contact form",
+                message=body,
+                from_email=django_settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[django_settings.CONTACT_RECIPIENT],
+                fail_silently=False,
+            )
+            success = True
+
+    # Generate a fresh arithmetic challenge for GET or after failed POST
+    if not success:
+        a, b = random.randint(1, 9), random.randint(1, 9)
+        captcha_question = f"What is {a} + {b}?"
+        captcha_signed   = _signer.sign(str(a + b))
+    else:
+        captcha_question = captcha_signed = ""
+
+    return render(request, "magazine/contact.html", {
+        "success":          success,
+        "errors":           errors,
+        "form":             form,
+        "captcha_question": captcha_question,
+        "captcha_signed":   captcha_signed,
+    })

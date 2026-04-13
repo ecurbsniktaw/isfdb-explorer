@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -103,6 +104,17 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email — override in local_settings.py with real credentials.
+# Use console backend locally so emails are printed to the terminal.
+EMAIL_BACKEND  = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST     = ''
+EMAIL_PORT     = 587
+EMAIL_USE_TLS  = True
+EMAIL_HOST_USER     = ''
+EMAIL_HOST_PASSWORD = ''
+DEFAULT_FROM_EMAIL  = 'ISFDB Explorer <noreply@sfinfo.org>'
+CONTACT_RECIPIENT   = 'bruce.watkins.1947@gmail.com'
 
 # Machine-specific overrides (secrets, DEBUG, ALLOWED_HOSTS, DATABASES).
 # This file is gitignored — create it on each machine separately.
