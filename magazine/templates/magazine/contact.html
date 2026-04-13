@@ -18,7 +18,6 @@
 </p>
 
 <form method="post" action="{% url 'contact' %}" style="max-width:600px;">
-  {% csrf_token %}
   <input type="hidden" name="captcha_signed" value="{{ captcha_signed }}">
 
   <div class="mb-3">

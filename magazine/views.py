@@ -6,6 +6,7 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.db import connection
 from django.shortcuts import render, redirect
 from django.http import Http404
+from django.views.decorators.csrf import csrf_exempt
 
 from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links, get_adjacent_issues,
@@ -659,6 +660,7 @@ def about(request):
 _signer = TimestampSigner()
 
 
+@csrf_exempt
 def contact(request):
     """Contact form — sends an email to the site owner on POST."""
     success = False
