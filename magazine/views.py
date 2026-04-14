@@ -707,7 +707,8 @@ def contact(request):
                 success = True
             except Exception as exc:
                 errors["email"] = (
-                    f"Sorry, the message could not be sent ({type(exc).__name__}). "
+                    f"Sorry, the message could not be sent "
+                    f"({type(exc).__name__}: {exc}). "
                     "Please try again later."
                 )
 
