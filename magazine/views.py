@@ -678,7 +678,7 @@ def contact(request):
             errors["message"] = "Please enter a comment or question."
         if not form["email"]:
             errors["email"] = "Please enter your email address."
-        elif "@" not in form["email"]:
+        elif "@" not in form["email"] or "." not in form["email"].split("@")[-1]:
             errors["email"] = "Please enter a valid email address."
 
         # Verify arithmetic challenge (signed answer valid for 1 hour)
