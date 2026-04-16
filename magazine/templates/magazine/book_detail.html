@@ -141,36 +141,52 @@
 {% endif %}
 
 {% if book.awards %}
-<div class="mb-4">
-  <h2 class="h6 text-muted mb-2">Awards</h2>
-  <table class="table table-sm w-auto">
-    <thead class="table-light">
-      <tr>
-        <th>Year</th>
-        <th>Award</th>
-        <th>Category</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for award in book.awards %}
-      <tr>
-        <td class="text-muted small">{{ award.year }}</td>
-        <td>{{ award.award_name }}</td>
-        <td class="text-muted">{{ award.category }}</td>
-        <td>
-          {% if award.level == "Winner" %}
-            <span class="badge text-bg-warning">Winner</span>
-          {% elif award.level == "Runner-up" %}
-            <span class="badge text-bg-secondary">Runner-up</span>
-          {% else %}
-            <span class="text-muted small">{{ award.level }}</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="mt-4 accordion" id="awardsAccordion">
+  <div class="accordion-item border-0">
+    <h2 class="accordion-header h5 mb-0">
+      <button class="accordion-button collapsed ps-0 bg-transparent shadow-none fw-semibold"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#awardsPanel"
+              aria-expanded="false"
+              aria-controls="awardsPanel">
+        Awards <span class="badge text-bg-secondary ms-2">{{ book.awards|length }}</span>
+      </button>
+    </h2>
+    <div id="awardsPanel" class="accordion-collapse collapse"
+         data-bs-parent="#awardsAccordion">
+      <div class="accordion-body px-0 pt-2">
+        <table class="table table-sm w-auto">
+          <thead class="table-light">
+            <tr>
+              <th>Year</th>
+              <th>Award</th>
+              <th>Category</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for award in book.awards %}
+            <tr>
+              <td class="text-muted small">{{ award.year }}</td>
+              <td>{{ award.award_name }}</td>
+              <td class="text-muted">{{ award.category }}</td>
+              <td>
+                {% if award.level == "Winner" %}
+                  <span class="badge text-bg-warning">Winner</span>
+                {% elif award.level == "Runner-up" %}
+                  <span class="badge text-bg-secondary">Runner-up</span>
+                {% else %}
+                  <span class="text-muted small">{{ award.level }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 {% endif %}
 
@@ -184,7 +200,7 @@
               data-bs-target="#editionsPanel"
               aria-expanded="false"
               aria-controls="editionsPanel">
-        Other Editions ({{ editions|length }})
+        Other Editions <span class="badge text-bg-secondary ms-2">{{ editions|length }}</span>
       </button>
     </h2>
     <div id="editionsPanel" class="accordion-collapse collapse"
@@ -252,7 +268,7 @@
               data-bs-target="#contentsPanel"
               aria-expanded="false"
               aria-controls="contentsPanel">
-        Table of Contents ({{ contents|length }})
+        Table of Contents <span class="badge text-bg-secondary ms-2">{{ contents|length }}</span>
       </button>
     </h2>
     <div id="contentsPanel" class="accordion-collapse collapse"
@@ -305,7 +321,7 @@
               data-bs-target="#reviewsPanel"
               aria-expanded="false"
               aria-controls="reviewsPanel">
-        Reviews ({{ reviews|length }})
+        Reviews <span class="badge text-bg-secondary ms-2">{{ reviews|length }}</span>
       </button>
     </h2>
     <div id="reviewsPanel" class="accordion-collapse collapse"
