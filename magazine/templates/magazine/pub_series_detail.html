@@ -36,7 +36,11 @@
       <tr>
         <td class="text-muted">{{ t.series_num|default:"" }}</td>
         <td>
-          <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title }}</a>
+          {% if t.title_ttype == "SHORTFICTION" or t.title_ttype == "POEM" %}
+            <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title }}</a>
+          {% else %}
+            <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title }}</a>
+          {% endif %}
         </td>
         <td>
           {% for auth in t.author_list %}
