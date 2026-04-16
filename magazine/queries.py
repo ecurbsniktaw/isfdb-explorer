@@ -9,6 +9,8 @@ Always use YEAR() / MONTH() for filtering — never DATE_FORMAT (the
 mysql-connector-python driver sends '%%Y' to MySQL as a literal '%Y' string).
 """
 
+from __future__ import annotations
+
 import re
 from urllib.parse import urlparse
 
