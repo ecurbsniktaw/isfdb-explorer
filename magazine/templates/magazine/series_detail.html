@@ -21,9 +21,19 @@
   <div class="col-lg-4">
     <h1 class="h2 mb-1">{{ series.series_title }}</h1>
   </div>
-  {% if series.series_note %}
+  {% if series.series_note or series.webpages %}
   <div class="col-lg-8">
-    <div class="text-muted">{{ series.series_note|safe }}</div>
+    {% if series.series_note %}
+    <div class="text-muted mb-3">{{ series.series_note|safe }}</div>
+    {% endif %}
+    {% if series.webpages %}
+    <div class="d-flex flex-wrap gap-2">
+      {% for page in series.webpages %}
+        <a href="{{ page.url }}" target="_blank" rel="noopener"
+           class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 </div>

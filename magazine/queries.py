@@ -1624,6 +1624,16 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
         return None
     row["pub_series_note"] = _rewrite_isfdb_links(row.get("pub_series_note") or "")
 
+    # External links
+    cursor.execute(
+        "SELECT url FROM webpages WHERE pub_series_id = %s ORDER BY webpage_id",
+        (pub_series_id,),
+    )
+    row["webpages"] = [
+        {"url": r["url"], "label": _webpage_label(r["url"])}
+        for r in cursor.fetchall()
+    ]
+
     # Some pubs link to variant title records (title_parent != 0) rather than the
     # canonical title.  We resolve the canonical via a LEFT JOIN to the parent
     # title (tc), then group by (canonical_title_id, series_num) so every
@@ -1723,6 +1733,16 @@ def get_series_detail(cursor, series_id: int) -> dict | None:
     if not row:
         return None
     row["series_note"] = _rewrite_isfdb_links(row.get("series_note") or "")
+
+    # External links
+    cursor.execute(
+        "SELECT url FROM webpages WHERE series_id = %s ORDER BY webpage_id",
+        (series_id,),
+    )
+    row["webpages"] = [
+        {"url": r["url"], "label": _webpage_label(r["url"])}
+        for r in cursor.fetchall()
+    ]
 
     # Titles (canonical only) ordered by series number then publication date
     type_placeholders = ", ".join(["%s"] * len(_SERIES_TITLE_TYPES))

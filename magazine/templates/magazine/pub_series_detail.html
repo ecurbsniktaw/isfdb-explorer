@@ -17,9 +17,19 @@
     <h1 class="h2 mb-1">{{ pub_series.pub_series_name }}</h1>
     <p class="text-muted mb-0">Publication series</p>
   </div>
-  {% if pub_series.pub_series_note %}
+  {% if pub_series.pub_series_note or pub_series.webpages %}
   <div class="col-lg-8">
-    <div class="text-muted">{{ pub_series.pub_series_note|safe }}</div>
+    {% if pub_series.pub_series_note %}
+    <div class="text-muted mb-3">{{ pub_series.pub_series_note|safe }}</div>
+    {% endif %}
+    {% if pub_series.webpages %}
+    <div class="d-flex flex-wrap gap-2">
+      {% for page in pub_series.webpages %}
+        <a href="{{ page.url }}" target="_blank" rel="noopener"
+           class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 </div>
