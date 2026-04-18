@@ -12,11 +12,17 @@
   </ol>
 </nav>
 
-<h1 class="h2 mb-1">{{ pub_series.pub_series_name }}</h1>
-<p class="text-muted mb-2">Publication series</p>
-{% if pub_series.pub_series_note %}
-<div class="text-muted mb-4" style="max-width:720px;">{{ pub_series.pub_series_note|safe }}</div>
-{% endif %}
+<div class="row g-4 mb-4">
+  <div class="col-lg-4">
+    <h1 class="h2 mb-1">{{ pub_series.pub_series_name }}</h1>
+    <p class="text-muted mb-0">Publication series</p>
+  </div>
+  {% if pub_series.pub_series_note %}
+  <div class="col-lg-8">
+    <div class="text-muted">{{ pub_series.pub_series_note|safe }}</div>
+  </div>
+  {% endif %}
+</div>
 
 {# ── Titles ──────────────────────────────────────────────────────────────── #}
 {% if pub_series.titles %}
