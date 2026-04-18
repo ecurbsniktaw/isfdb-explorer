@@ -1614,13 +1614,15 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
     ordered by series number then title.
     """
     cursor.execute("""
-        SELECT pub_series_id, pub_series_name
-        FROM pub_series
-        WHERE pub_series_id = %s
+        SELECT ps.pub_series_id, ps.pub_series_name, n.note_note AS pub_series_note
+        FROM pub_series ps
+        LEFT JOIN notes n ON n.note_id = ps.pub_series_note_id
+        WHERE ps.pub_series_id = %s
     """, (pub_series_id,))
     row = cursor.fetchone()
     if not row:
         return None
+    row["pub_series_note"] = _rewrite_isfdb_links(row.get("pub_series_note") or "")
 
     # Some pubs link to variant title records (title_parent != 0) rather than the
     # canonical title.  We resolve the canonical via a LEFT JOIN to the parent

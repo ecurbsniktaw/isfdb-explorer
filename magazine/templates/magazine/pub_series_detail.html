@@ -13,7 +13,10 @@
 </nav>
 
 <h1 class="h2 mb-1">{{ pub_series.pub_series_name }}</h1>
-<p class="text-muted mb-4">Publication series</p>
+<p class="text-muted mb-2">Publication series</p>
+{% if pub_series.pub_series_note %}
+<div class="text-muted mb-4" style="max-width:720px;">{{ pub_series.pub_series_note|safe }}</div>
+{% endif %}
 
 {# ── Titles ──────────────────────────────────────────────────────────────── #}
 {% if pub_series.titles %}
