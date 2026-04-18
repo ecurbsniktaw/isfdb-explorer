@@ -17,11 +17,16 @@
   </ol>
 </nav>
 
-<h1 class="h2 mb-1">{{ series.series_title }}</h1>
-
-{% if series.series_note %}
-<div class="text-muted mb-3" style="max-width:720px;">{{ series.series_note|safe }}</div>
-{% endif %}
+<div class="row g-4 mb-2">
+  <div class="col-lg-4">
+    <h1 class="h2 mb-1">{{ series.series_title }}</h1>
+  </div>
+  {% if series.series_note %}
+  <div class="col-lg-8">
+    <div class="text-muted">{{ series.series_note|safe }}</div>
+  </div>
+  {% endif %}
+</div>
 
 {# ── Titles ──────────────────────────────────────────────────────────────── #}
 {% if series.titles %}
