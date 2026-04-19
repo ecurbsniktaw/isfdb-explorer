@@ -1397,6 +1397,90 @@ def get_author_detail(cursor, author_id: int) -> dict | None:
     return author
 
 
+def get_author_art(cursor, author_id: int, art_type: str) -> list:
+    """
+    Return art works (COVERART or INTERIORART) by a specific author, deduplicated
+    by title_id and ordered by earliest pub year then title.
+
+    Each row has: title_id, title_title, pub_id, pub_year (int), pub_month (int),
+    pub_title, pub_ctype, pub_frontimage, formatted_date, is_magazine,
+    book_title_id (title_id of the book for non-magazine pubs, for linking).
+    """
+    query = """
+        SELECT
+            t.title_id,
+            t.title_title,
+            CAST(RIGHT(MIN(CONCAT(
+                LPAD(YEAR(p.pub_year), 4, '0'),
+                LPAD(MONTH(p.pub_year), 2, '0'),
+                LPAD(p.pub_id, 10, '0')
+            )), 10) AS UNSIGNED)           AS pub_id,
+            CAST(LEFT(MIN(CONCAT(
+                LPAD(YEAR(p.pub_year), 4, '0'),
+                LPAD(MONTH(p.pub_year), 2, '0'),
+                LPAD(p.pub_id, 10, '0')
+            )), 4) AS UNSIGNED)            AS pub_year,
+            CAST(SUBSTRING(MIN(CONCAT(
+                LPAD(YEAR(p.pub_year), 4, '0'),
+                LPAD(MONTH(p.pub_year), 2, '0'),
+                LPAD(p.pub_id, 10, '0')
+            )), 5, 2) AS UNSIGNED)         AS pub_month
+        FROM pubs p
+        JOIN pub_content pc  ON pc.pub_id   = p.pub_id
+        JOIN titles t        ON t.title_id  = pc.title_id
+        JOIN canonical_author ca ON ca.title_id = t.title_id
+                                 AND ca.author_id = %s
+        WHERE t.title_ttype = %s
+          AND t.title_parent = 0
+          AND YEAR(p.pub_year) > 0
+        GROUP BY t.title_id, t.title_title
+        ORDER BY pub_year, pub_month, t.title_title
+    """
+    cursor.execute(query, (author_id, art_type))
+    rows = cursor.fetchall()
+    if not rows:
+        return rows
+
+    # Bulk-fetch pub details for the earliest pub_id of each title
+    pub_ids = [row["pub_id"] for row in rows]
+    placeholders = ", ".join(["%s"] * len(pub_ids))
+    cursor.execute(
+        f"SELECT pub_id, pub_title, pub_ctype, pub_frontimage "
+        f"FROM pubs WHERE pub_id IN ({placeholders})",
+        pub_ids,
+    )
+    pub_map = {r["pub_id"]: r for r in cursor.fetchall()}
+
+    # For non-magazine pubs, look up the book title_id so we can link to book_detail
+    non_mag_pub_ids = [
+        pid for pid in pub_ids
+        if pub_map.get(pid, {}).get("pub_ctype") != "MAGAZINE"
+    ]
+    book_title_map = {}
+    if non_mag_pub_ids:
+        nm_placeholders = ", ".join(["%s"] * len(non_mag_pub_ids))
+        cursor.execute(f"""
+            SELECT pc.pub_id, t.title_id
+            FROM pub_content pc
+            JOIN titles t  ON t.title_id  = pc.title_id
+            JOIN pubs p    ON p.pub_id    = pc.pub_id
+                          AND t.title_ttype = p.pub_ctype
+            WHERE pc.pub_id IN ({nm_placeholders})
+        """, non_mag_pub_ids)
+        book_title_map = {r["pub_id"]: r["title_id"] for r in cursor.fetchall()}
+
+    for row in rows:
+        pub = pub_map.get(row["pub_id"], {})
+        row["pub_title"]      = pub.get("pub_title", "")
+        row["pub_ctype"]      = pub.get("pub_ctype", "")
+        row["pub_frontimage"] = pub.get("pub_frontimage") or ""
+        row["formatted_date"] = format_date(row["pub_year"], row["pub_month"])
+        row["is_magazine"]    = pub.get("pub_ctype") == "MAGAZINE"
+        row["book_title_id"]  = book_title_map.get(row["pub_id"])
+
+    return rows
+
+
 def get_random_author_id(cursor) -> int | None:
     """Return a random author_id from authors who have at least one title."""
     cursor.execute("""

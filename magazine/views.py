@@ -14,7 +14,7 @@ from .queries import (
     get_book_detail, get_book_editions, get_book_contents, get_book_reviews, get_story_detail, find_titles,
     get_magazine_issues_by_name, get_magazine_group_info,
     get_all_magazines, get_magazine_issues, search_magazines,
-    find_authors,
+    find_authors, get_author_art,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     get_all_award_types, search_award_types, get_award_detail,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
@@ -186,13 +186,18 @@ def author_detail(request, author_id):
     cursor = _dict_cursor()
     try:
         author = get_author_detail(cursor, author_id)
+        if not author:
+            raise Http404(f"No author with id={author_id}")
+        cover_art    = get_author_art(cursor, author_id, "COVERART")
+        interior_art = get_author_art(cursor, author_id, "INTERIORART")
     finally:
         cursor.close()
 
-    if not author:
-        raise Http404(f"No author with id={author_id}")
-
-    return render(request, "magazine/author_detail.html", {"author": author})
+    return render(request, "magazine/author_detail.html", {
+        "author":       author,
+        "cover_art":    cover_art,
+        "interior_art": interior_art,
+    })
 
 
 def author_books(request, author_id):
