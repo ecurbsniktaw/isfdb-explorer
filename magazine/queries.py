@@ -1499,6 +1499,20 @@ def get_author_art(cursor, author_id: int, art_type: str) -> list:
     return rows
 
 
+def author_has_series(cursor, author_id: int) -> bool:
+    """Return True if the author has at least one series entry."""
+    cursor.execute("""
+        SELECT 1
+        FROM series s
+        JOIN titles t            ON t.series_id  = s.series_id
+                                AND t.title_parent = 0
+        JOIN canonical_author ca ON ca.title_id  = t.title_id
+        WHERE ca.author_id = %s
+        LIMIT 1
+    """, (author_id,))
+    return cursor.fetchone() is not None
+
+
 def get_random_author_id(cursor) -> int | None:
     """Return a random author_id from authors who have at least one title."""
     cursor.execute("""
