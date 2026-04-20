@@ -44,6 +44,21 @@
           <td class="py-1">{{ book.formatted_date }}</td>
         </tr>
         {% endif %}
+        {% if book.series %}
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Series</th>
+          <td class="py-1">
+            {% if book.series.parent_title %}
+              <a href="{% url 'series_detail' book.series.parent_id %}" class="text-decoration-none">{{ book.series.parent_title }}</a>
+              &rsaquo;
+            {% endif %}
+            <a href="{% url 'series_detail' book.series.series_id %}" class="text-decoration-none">{{ book.series.series_title }}</a>
+            {% if book.title_seriesnum %}
+              #{{ book.title_seriesnum }}{% if book.title_seriesnum_2 %}.{{ book.title_seriesnum_2 }}{% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% endif %}
         {% if book.publisher_name %}
         <tr style="line-height:1.3;">
           <th class="text-muted fw-normal pe-4 py-1">Publisher</th>

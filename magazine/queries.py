@@ -642,6 +642,9 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
             t.title_id,
             t.title_title,
             t.title_ttype,
+            t.series_id,
+            t.title_seriesnum,
+            t.title_seriesnum_2,
             GROUP_CONCAT(
                 DISTINCT a_all.author_canonical
                 ORDER BY ca_all.ca_id
@@ -683,7 +686,9 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
           AND YEAR(p.pub_year) > 0
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
                  p.pub_catalog, p.pub_isbn, p.pub_price, p.pub_ptype, p.pub_pages, p.pub_frontimage,
-                 pub.publisher_name, n.note_note, tn.note_note, t.title_id, t.title_title, t.title_ttype
+                 pub.publisher_name, n.note_note, tn.note_note,
+                 t.title_id, t.title_title, t.title_ttype,
+                 t.series_id, t.title_seriesnum, t.title_seriesnum_2
         ORDER BY p.pub_year, p.pub_id
         LIMIT 1
     """
@@ -699,6 +704,19 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
     row["cover_artist_list"] = _make_author_list(row.get("cover_artist"), row.get("cover_artist_ids"))
     row["pub_note"]          = _rewrite_isfdb_links(row.get("pub_note") or "")
     row["title_note"]        = _rewrite_isfdb_links(row.get("title_note") or "")
+
+    # Series
+    if row.get("series_id"):
+        cursor.execute("""
+            SELECT s.series_id, s.series_title, s.series_parent,
+                   sp.series_id AS parent_id, sp.series_title AS parent_title
+            FROM series s
+            LEFT JOIN series sp ON sp.series_id = s.series_parent
+            WHERE s.series_id = %s
+        """, (row["series_id"],))
+        row["series"] = cursor.fetchone()
+    else:
+        row["series"] = None
 
     # External links
     cursor.execute("SELECT url FROM webpages WHERE title_id = %s ORDER BY webpage_id", (title_id,))
