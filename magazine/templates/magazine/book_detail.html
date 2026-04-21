@@ -116,8 +116,8 @@
     </table>
   </div>
 
-  {# ── Right column: Notes / Awards / Reviews accordions ─────────────────── #}
-  {% if book.title_note or book.pub_note or book.awards or reviews %}
+  {# ── Right column: Notes / Awards / Reviews accordions + external links ── #}
+  {% if book.title_note or book.pub_note or book.awards or reviews or book.webpages %}
   <div class="col-lg-8">
 
     {% if book.title_note or book.pub_note %}
@@ -247,6 +247,15 @@
     </div>
     {% endif %}
 
+    {% if book.webpages %}
+    <div class="d-flex flex-wrap gap-2 mt-2">
+      {% for page in book.webpages %}
+        <a href="{{ page.url }}" target="_blank" rel="noopener"
+           class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
   </div>
   {% endif %}
 
@@ -264,18 +273,6 @@
              class="img-fluid rounded shadow">
       </div>
     </div>
-  </div>
-</div>
-{% endif %}
-
-{% if book.webpages %}
-<div class="mb-4">
-  <h2 class="h6 text-muted mb-2">External Links</h2>
-  <div class="d-flex flex-wrap gap-2">
-    {% for page in book.webpages %}
-      <a href="{{ page.url }}" target="_blank" rel="noopener"
-         class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
-    {% endfor %}
   </div>
 </div>
 {% endif %}
