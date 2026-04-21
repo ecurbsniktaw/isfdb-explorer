@@ -116,12 +116,137 @@
     </table>
   </div>
 
-  {# ── Right column: notes ────────────────────────────────────────────────── #}
-  {% if book.title_note or book.pub_note %}
+  {# ── Right column: Notes / Awards / Reviews accordions ─────────────────── #}
+  {% if book.title_note or book.pub_note or book.awards or reviews %}
   <div class="col-lg-8">
-    <h2 class="h6 text-muted">Notes</h2>
-    {% if book.title_note %}<p class="mb-2">{{ book.title_note|safe }}</p>{% endif %}
-    {% if book.pub_note %}<p class="mb-0 text-muted small">{{ book.pub_note|safe }}</p>{% endif %}
+
+    {% if book.title_note or book.pub_note %}
+    <div class="accordion mb-2" id="notesAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#notesPanel"
+                  aria-expanded="false"
+                  aria-controls="notesPanel">
+            Notes
+          </button>
+        </h2>
+        <div id="notesPanel" class="accordion-collapse collapse"
+             data-bs-parent="#notesAccordion">
+          <div class="accordion-body px-0 pt-2">
+            {% if book.title_note %}<p class="mb-2">{{ book.title_note|safe }}</p>{% endif %}
+            {% if book.pub_note %}<p class="mb-0 text-muted small">{{ book.pub_note|safe }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if book.awards %}
+    <div class="accordion mb-2" id="awardsAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#awardsPanel"
+                  aria-expanded="false"
+                  aria-controls="awardsPanel">
+            Awards <span class="badge text-bg-secondary ms-2">{{ book.awards|length }}</span>
+          </button>
+        </h2>
+        <div id="awardsPanel" class="accordion-collapse collapse"
+             data-bs-parent="#awardsAccordion">
+          <div class="accordion-body px-0 pt-2">
+            <table class="table table-sm w-auto">
+              <thead class="table-light">
+                <tr>
+                  <th>Year</th>
+                  <th>Award</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for award in book.awards %}
+                <tr>
+                  <td class="text-muted small">{{ award.year }}</td>
+                  <td>{{ award.award_name }}</td>
+                  <td class="text-muted">{{ award.category }}</td>
+                  <td>
+                    {% if award.level == "Winner" %}
+                      <span class="badge text-bg-warning">Winner</span>
+                    {% elif award.level == "Runner-up" %}
+                      <span class="badge text-bg-secondary">Runner-up</span>
+                    {% else %}
+                      <span class="text-muted small">{{ award.level }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if reviews %}
+    <div class="accordion mb-2" id="reviewsAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#reviewsPanel"
+                  aria-expanded="false"
+                  aria-controls="reviewsPanel">
+            Reviews <span class="badge text-bg-secondary ms-2">{{ reviews|length }}</span>
+          </button>
+        </h2>
+        <div id="reviewsPanel" class="accordion-collapse collapse"
+             data-bs-parent="#reviewsAccordion">
+          <div class="accordion-body px-0 pt-2">
+            <table class="table table-sm table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Year</th>
+                  <th>Reviewer</th>
+                  <th>Publication</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in reviews %}
+                <tr>
+                  <td class="text-muted small">{{ r.yr|default:"" }}</td>
+                  <td>
+                    {% for a in r.reviewer_list %}
+                      {% if not forloop.first %} &amp; {% endif %}
+                      {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                    {% empty %}uncredited{% endfor %}
+                  </td>
+                  <td class="text-muted small">
+                    {% if r.is_magazine and r.pub_id %}
+                      <a href="{% url 'issue_detail' r.pub_id %}" class="text-decoration-none">{{ r.pub_title }}</a>
+                    {% elif r.book_title_id %}
+                      <a href="{% url 'book_detail' r.book_title_id %}" class="text-decoration-none">{{ r.pub_title }}</a>
+                    {% else %}
+                      {{ r.pub_title|default:"" }}
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
   </div>
   {% endif %}
 
@@ -155,50 +280,53 @@
 </div>
 {% endif %}
 
-{% if book.awards %}
-<div class="mt-4 accordion" id="awardsAccordion">
+{% if contents %}
+<div class="mt-4 accordion" id="contentsAccordion">
   <div class="accordion-item border-0">
     <h2 class="accordion-header h5 mb-0">
       <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
               type="button"
               data-bs-toggle="collapse"
-              data-bs-target="#awardsPanel"
+              data-bs-target="#contentsPanel"
               aria-expanded="false"
-              aria-controls="awardsPanel">
-        Awards <span class="badge text-bg-secondary ms-2">{{ book.awards|length }}</span>
+              aria-controls="contentsPanel">
+        Table of Contents <span class="badge text-bg-secondary ms-2">{{ contents|length }}</span>
       </button>
     </h2>
-    <div id="awardsPanel" class="accordion-collapse collapse"
-         data-bs-parent="#awardsAccordion">
+    <div id="contentsPanel" class="accordion-collapse collapse"
+         data-bs-parent="#contentsAccordion">
       <div class="accordion-body px-0 pt-2">
-        <table class="table table-sm w-auto">
-          <thead class="table-light">
-            <tr>
-              <th>Year</th>
-              <th>Award</th>
-              <th>Category</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for award in book.awards %}
-            <tr>
-              <td class="text-muted small">{{ award.year }}</td>
-              <td>{{ award.award_name }}</td>
-              <td class="text-muted">{{ award.category }}</td>
-              <td>
-                {% if award.level == "Winner" %}
-                  <span class="badge text-bg-warning">Winner</span>
-                {% elif award.level == "Runner-up" %}
-                  <span class="badge text-bg-secondary">Runner-up</span>
-                {% else %}
-                  <span class="text-muted small">{{ award.level }}</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Page</th>
+                <th>Title</th>
+                <th>Author(s)</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in contents %}
+              <tr>
+                <td class="text-muted small">{{ item.pubc_page|default:"" }}</td>
+                <td>
+                  <a href="{% url 'story_detail' item.title_id %}" class="text-decoration-none">{{ item.title_title }}</a>
+                </td>
+                <td class="text-muted small">
+                  {% for a in item.author_list %}
+                    {% if not forloop.first %} &amp; {% endif %}
+                    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none text-muted">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                  {% endfor %}
+                </td>
+                <td class="text-muted small">
+                  {{ item.length_label|default:item.type_label }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -272,112 +400,6 @@
     </div>
   </div>
 </div>
-
-{% if contents %}
-<div class="mt-4 accordion" id="contentsAccordion">
-  <div class="accordion-item border-0">
-    <h2 class="accordion-header h5 mb-0">
-      <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#contentsPanel"
-              aria-expanded="false"
-              aria-controls="contentsPanel">
-        Table of Contents <span class="badge text-bg-secondary ms-2">{{ contents|length }}</span>
-      </button>
-    </h2>
-    <div id="contentsPanel" class="accordion-collapse collapse"
-         data-bs-parent="#contentsAccordion">
-      <div class="accordion-body px-0 pt-2">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Page</th>
-                <th>Title</th>
-                <th>Author(s)</th>
-                <th>Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in contents %}
-              <tr>
-                <td class="text-muted small">{{ item.pubc_page|default:"" }}</td>
-                <td>
-                  <a href="{% url 'story_detail' item.title_id %}" class="text-decoration-none">{{ item.title_title }}</a>
-                </td>
-                <td class="text-muted small">
-                  {% for a in item.author_list %}
-                    {% if not forloop.first %} &amp; {% endif %}
-                    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none text-muted">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
-                  {% endfor %}
-                </td>
-                <td class="text-muted small">
-                  {{ item.length_label|default:item.type_label }}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-{% if reviews %}
-<div class="mt-4 accordion" id="reviewsAccordion">
-  <div class="accordion-item border-0">
-    <h2 class="accordion-header h5 mb-0">
-      <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#reviewsPanel"
-              aria-expanded="false"
-              aria-controls="reviewsPanel">
-        Reviews <span class="badge text-bg-secondary ms-2">{{ reviews|length }}</span>
-      </button>
-    </h2>
-    <div id="reviewsPanel" class="accordion-collapse collapse"
-         data-bs-parent="#reviewsAccordion">
-      <div class="accordion-body px-0 pt-2">
-        <table class="table table-sm table-hover align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Year</th>
-              <th>Reviewer</th>
-              <th>Publication</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for r in reviews %}
-            <tr>
-              <td class="text-muted small">{{ r.yr|default:"" }}</td>
-              <td>
-                {% for a in r.reviewer_list %}
-                  {% if not forloop.first %} &amp; {% endif %}
-                  {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
-                {% empty %}uncredited{% endfor %}
-              </td>
-              <td class="text-muted small">
-                {% if r.is_magazine and r.pub_id %}
-                  <a href="{% url 'issue_detail' r.pub_id %}" class="text-decoration-none">{{ r.pub_title }}</a>
-                {% elif r.book_title_id %}
-                  <a href="{% url 'book_detail' r.book_title_id %}" class="text-decoration-none">{{ r.pub_title }}</a>
-                {% else %}
-                  {{ r.pub_title|default:"" }}
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
 
 {# Shared modal for edition cover images #}
 <div class="modal fade" id="editionCoverModal" tabindex="-1" aria-label="Cover image" aria-hidden="true">
