@@ -115,12 +115,28 @@
 </div>{# end flex #}
 </div>{# end col-lg-6 left #}
 
-{# ── Right column: notes + archive link ─────────────────────────────────── #}
+{# ── Right column: notes accordion + archive link ────────────────────────── #}
 {% if issue.pub_note or archive_links %}
 <div class="col-lg-6">
   {% if issue.pub_note %}
-  <h2 class="h6 text-muted">Notes</h2>
-  <div class="small mb-3">{{ issue.pub_note|safe }}</div>
+  <div class="accordion mb-3" id="notesAccordion">
+    <div class="accordion-item border-0">
+      <h2 class="accordion-header h5 mb-0">
+        <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#notesPanel"
+                aria-expanded="false"
+                aria-controls="notesPanel">
+          Notes
+        </button>
+      </h2>
+      <div id="notesPanel" class="accordion-collapse collapse"
+           data-bs-parent="#notesAccordion">
+        <div class="accordion-body px-0 pt-1 small">{{ issue.pub_note|safe }}</div>
+      </div>
+    </div>
+  </div>
   {% endif %}
   {% for url in archive_links %}
     <a href="{{ url }}" target="_blank" rel="noopener"
@@ -137,114 +153,123 @@
   <p class="text-muted">No contents recorded for this issue.</p>
 {% else %}
 
-  {# ── Narrative content ─────────────────────────────────────────────── #}
+  {# ── Contents accordion ───────────────────────────────────────────────── #}
   {% if narrative %}
-  <h2 class="h5 mb-2">Contents</h2>
-  <div class="table-responsive mb-4">
-    <table class="table table-sm table-hover toc-table">
-      <thead class="table-light">
-        <tr>
-          <th style="width:5%">Page</th>
-          <th style="width:12%">Type</th>
-          <th style="width:10%">Kind</th>
-          <th style="width:43%">Title</th>
-          <th>Author(s)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in narrative %}
-        <tr>
-          <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
-          <td>
-            <span class="badge text-bg-secondary badge-type fw-normal">
-              {{ row.type_label }}
-            </span>
-          </td>
-          <td class="text-muted small">{{ row.kind }}</td>
-          <td>
-            {% if row.title_id %}
-              <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
-            {% else %}
-              {{ row.title_title }}
-            {% endif %}
-          </td>
-          <td class="text-muted">
-            {% for a in row.author_list %}
-              {% if not forloop.first %} &amp; {% endif %}
-              {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
-            {% empty %}uncredited{% endfor %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="mt-2 accordion" id="contentsAccordion">
+    <div class="accordion-item border-0">
+      <h2 class="accordion-header h5 mb-0">
+        <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#contentsPanel"
+                aria-expanded="false"
+                aria-controls="contentsPanel">
+          Contents <span class="badge text-bg-secondary ms-2">{{ narrative|length }}</span>
+        </button>
+      </h2>
+      <div id="contentsPanel" class="accordion-collapse collapse"
+           data-bs-parent="#contentsAccordion">
+        <div class="accordion-body px-0 pt-2">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover toc-table">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:5%">Page</th>
+                  <th style="width:12%">Type</th>
+                  <th style="width:10%">Kind</th>
+                  <th style="width:43%">Title</th>
+                  <th>Author(s)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in narrative %}
+                <tr>
+                  <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
+                  <td>
+                    <span class="badge text-bg-secondary badge-type fw-normal">
+                      {{ row.type_label }}
+                    </span>
+                  </td>
+                  <td class="text-muted small">{{ row.kind }}</td>
+                  <td>
+                    {% if row.title_id %}
+                      <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
+                    {% else %}
+                      {{ row.title_title }}
+                    {% endif %}
+                  </td>
+                  <td class="text-muted">
+                    {% for a in row.author_list %}
+                      {% if not forloop.first %} &amp; {% endif %}
+                      {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                    {% empty %}uncredited{% endfor %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   {% endif %}
 
-  {# ── Art / Editorial (collapsible) ────────────────────────────────── #}
+  {# ── Art & Editorial accordion ─────────────────────────────────────────── #}
   {% if other %}
-  <div class="mb-2">
-    <button id="toggleOther"
-            class="btn btn-sm btn-outline-secondary"
-            type="button"
-            aria-expanded="false"
-            aria-controls="otherContent">
-      Show art &amp; editorial ({{ other|length }} entries)
-    </button>
-  </div>
-  <div class="collapse" id="otherContent">
-    <div class="table-responsive mb-4">
-      <table class="table table-sm table-hover toc-table">
-        <thead class="table-light">
-          <tr>
-            <th style="width:5%">Page</th>
-            <th style="width:12%">Type</th>
-            <th style="width:10%">Kind</th>
-            <th style="width:43%">Title</th>
-            <th>Author(s)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in other %}
-          <tr>
-            <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
-            <td>
-              <span class="badge text-bg-light text-dark border badge-type fw-normal">
-                {{ row.type_label }}
-              </span>
-            </td>
-            <td class="text-muted small">{{ row.kind }}</td>
-            <td>{{ row.title_title }}</td>
-            <td class="text-muted">
-            {% for a in row.author_list %}
-              {% if not forloop.first %} &amp; {% endif %}
-              {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
-            {% empty %}uncredited{% endfor %}
-          </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="mt-2 accordion" id="otherAccordion">
+    <div class="accordion-item border-0">
+      <h2 class="accordion-header h5 mb-0">
+        <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#otherPanel"
+                aria-expanded="false"
+                aria-controls="otherPanel">
+          Art &amp; Editorial <span class="badge text-bg-secondary ms-2">{{ other|length }}</span>
+        </button>
+      </h2>
+      <div id="otherPanel" class="accordion-collapse collapse"
+           data-bs-parent="#otherAccordion">
+        <div class="accordion-body px-0 pt-2">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover toc-table">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:5%">Page</th>
+                  <th style="width:12%">Type</th>
+                  <th style="width:10%">Kind</th>
+                  <th style="width:43%">Title</th>
+                  <th>Author(s)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in other %}
+                <tr>
+                  <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
+                  <td>
+                    <span class="badge text-bg-light text-dark border badge-type fw-normal">
+                      {{ row.type_label }}
+                    </span>
+                  </td>
+                  <td class="text-muted small">{{ row.kind }}</td>
+                  <td>{{ row.title_title }}</td>
+                  <td class="text-muted">
+                    {% for a in row.author_list %}
+                      {% if not forloop.first %} &amp; {% endif %}
+                      {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                    {% empty %}uncredited{% endfor %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   {% endif %}
 
 {% endif %}
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  (function () {
-    var btn    = document.getElementById('toggleOther');
-    var panel  = document.getElementById('otherContent');
-    if (!btn || !panel) return;
-
-    btn.addEventListener('click', function () {
-      var expanded = panel.classList.toggle('show');
-      btn.setAttribute('aria-expanded', expanded);
-      btn.textContent = (expanded ? 'Hide' : 'Show') +
-                        ' art & editorial ({{ other|length }} entries)';
-    });
-  })();
-</script>
 {% endblock %}
