@@ -61,89 +61,127 @@
     </table>
   </div>
 
-  {# ── Right column: synopsis and notes ──────────────────────────────────── #}
-  {% if story.synopsis or story.title_note %}
+  {# ── Right column: synopsis / notes / awards / external links ──────────── #}
+  {% if story.synopsis or story.title_note or story.awards or story.webpages %}
   <div class="col-lg-8">
+
     {% if story.synopsis %}
-    <div class="mb-3">
-      <h2 class="h6 text-muted">Synopsis</h2>
-      <p class="mb-0">{{ story.synopsis }}</p>
+    <div class="accordion mb-2" id="synopsisAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#synopsisPanel"
+                  aria-expanded="false"
+                  aria-controls="synopsisPanel">
+            Synopsis
+          </button>
+        </h2>
+        <div id="synopsisPanel" class="accordion-collapse collapse"
+             data-bs-parent="#synopsisAccordion">
+          <div class="accordion-body px-0 pt-1">{{ story.synopsis }}</div>
+        </div>
+      </div>
     </div>
     {% endif %}
+
     {% if story.title_note %}
-    <div class="mb-0">
-      <h2 class="h6 text-muted">Notes</h2>
-      <p class="mb-0">{{ story.title_note|safe }}</p>
+    <div class="accordion mb-2" id="notesAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#notesPanel"
+                  aria-expanded="false"
+                  aria-controls="notesPanel">
+            Notes
+          </button>
+        </h2>
+        <div id="notesPanel" class="accordion-collapse collapse"
+             data-bs-parent="#notesAccordion">
+          <div class="accordion-body px-0 pt-1">{{ story.title_note|safe }}</div>
+        </div>
+      </div>
     </div>
     {% endif %}
+
+    {% if story.awards %}
+    <div class="accordion mb-2" id="awardsAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#awardsPanel"
+                  aria-expanded="false"
+                  aria-controls="awardsPanel">
+            Awards <span class="badge text-bg-secondary ms-2">{{ story.awards|length }}</span>
+          </button>
+        </h2>
+        <div id="awardsPanel" class="accordion-collapse collapse"
+             data-bs-parent="#awardsAccordion">
+          <div class="accordion-body px-0 pt-1">
+            <table class="table table-sm mb-0">
+              <thead class="table-light">
+                <tr><th>Year</th><th>Award</th><th>Category</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                {% for award in story.awards %}
+                <tr>
+                  <td class="text-muted small">{{ award.year }}</td>
+                  <td>{{ award.award_name }}</td>
+                  <td class="text-muted">{{ award.category }}</td>
+                  <td>
+                    {% if award.level == "Winner" %}
+                      <span class="badge text-bg-warning">Winner</span>
+                    {% elif award.level == "Runner-up" %}
+                      <span class="badge text-bg-secondary">Runner-up</span>
+                    {% else %}
+                      <span class="text-muted small">{{ award.level }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if story.webpages %}
+    <div class="d-flex flex-wrap gap-2 mt-2">
+      {% for page in story.webpages %}
+        <a href="{{ page.url }}" target="_blank" rel="noopener"
+           class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
   </div>
   {% endif %}
 
 </div>
 
-{% if story.webpages %}
-<div class="mb-4">
-  <h2 class="h6 text-muted mb-2">External Links</h2>
-  <div class="d-flex flex-wrap gap-2">
-    {% for page in story.webpages %}
-      <a href="{{ page.url }}" target="_blank" rel="noopener"
-         class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-{% if story.awards %}
-<div class="accordion mb-3" id="awardsAccordion">
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed" type="button"
-              data-bs-toggle="collapse" data-bs-target="#awardsBody">
-        Awards <span class="badge text-bg-secondary ms-2">{{ story.awards|length }}</span>
-      </button>
-    </h2>
-    <div id="awardsBody" class="accordion-collapse collapse">
-      <div class="accordion-body p-0">
-        <table class="table table-sm mb-0">
-          <thead class="table-light">
-            <tr><th>Year</th><th>Award</th><th>Category</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            {% for award in story.awards %}
-            <tr>
-              <td class="text-muted small">{{ award.year }}</td>
-              <td>{{ award.award_name }}</td>
-              <td class="text-muted">{{ award.category }}</td>
-              <td>
-                {% if award.level == "Winner" %}
-                  <span class="badge text-bg-warning">Winner</span>
-                {% elif award.level == "Runner-up" %}
-                  <span class="badge text-bg-secondary">Runner-up</span>
-                {% else %}
-                  <span class="text-muted small">{{ award.level }}</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
-
 {% if story.publications %}
 <div class="accordion mb-3" id="publicationsAccordion">
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed" type="button"
-              data-bs-toggle="collapse" data-bs-target="#publicationsBody">
+  <div class="accordion-item border-0">
+    <h2 class="accordion-header h5 mb-0">
+      <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#publicationsBody"
+              aria-expanded="false"
+              aria-controls="publicationsBody">
         Publications <span class="badge text-bg-secondary ms-2">{{ story.publications|length }}</span>
       </button>
     </h2>
-    <div id="publicationsBody" class="accordion-collapse collapse">
-      <div class="accordion-body p-0">
+    <div id="publicationsBody" class="accordion-collapse collapse"
+         data-bs-parent="#publicationsAccordion">
+      <div class="accordion-body px-0 pt-2">
         <div class="table-responsive">
           <table class="table table-sm table-hover align-middle mb-0">
             <thead class="table-light">
