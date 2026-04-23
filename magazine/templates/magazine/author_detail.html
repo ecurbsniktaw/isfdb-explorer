@@ -51,8 +51,8 @@
       {% endif %}
       {% if author.author_deathdate %}
         &ndash; {{ author.author_deathdate|date:"F j, Y" }}{% if author.age_at_death %} (aged {{ author.age_at_death }}){% endif %}
-      {% elif author.author_birthdate %}
-        &ndash; present
+      {% elif author.author_birthdate and author.current_age %}
+        (age {{ author.current_age }})
       {% endif %}
     </p>
     {% endif %}

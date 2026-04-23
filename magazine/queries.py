@@ -11,6 +11,7 @@ mysql-connector-python driver sends '%%Y' to MySQL as a literal '%Y' string).
 
 from __future__ import annotations
 
+import datetime
 import re
 from urllib.parse import urlparse
 
@@ -1373,8 +1374,17 @@ def get_author_detail(cursor, author_id: int) -> dict | None:
         if (death.month, death.day) < (birth.month, birth.day):
             age -= 1
         author["age_at_death"] = age
+        author["current_age"]  = None
+    elif birth and not death:
+        today = datetime.date.today()
+        age = today.year - birth.year
+        if (today.month, today.day) < (birth.month, birth.day):
+            age -= 1
+        author["age_at_death"] = None
+        author["current_age"]  = age
     else:
         author["age_at_death"] = None
+        author["current_age"]  = None
 
     # Is this record itself a pen name? If so, surface the canonical author.
     cursor.execute("""
