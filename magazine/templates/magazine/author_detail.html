@@ -8,90 +8,115 @@
   <a href="javascript:history.back()" class="text-decoration-none">&larr; Back</a>
 </div>
 
-{# ── Header: photo + key facts ───────────────────────────────────────────── #}
+{# ── Header: photo + key facts (left) / biography accordion (right) ──────── #}
 <div class="row g-4 mb-4">
 
-  {% if author.author_image %}
-  <div class="col-auto">
-    <a href="#" data-bs-toggle="modal" data-bs-target="#authorImageModal" style="display:block;">
-      <img src="{{ author.author_image }}"
-           alt="{{ author.author_canonical }}"
-           class="rounded shadow-sm"
-           style="max-width:160px; max-height:200px; object-fit:cover; cursor:zoom-in;">
-    </a>
-  </div>
+  <div class="col-lg-4">
+    <div class="d-flex gap-3 align-items-start">
 
-  <div class="modal fade" id="authorImageModal" tabindex="-1" aria-label="Author photo" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-transparent border-0">
-        <div class="modal-body p-0 text-center">
-          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
-                  data-bs-dismiss="modal" aria-label="Close"></button>
+      {% if author.author_image %}
+      <div class="flex-shrink-0">
+        <a href="#" data-bs-toggle="modal" data-bs-target="#authorImageModal" style="display:block;">
           <img src="{{ author.author_image }}"
                alt="{{ author.author_canonical }}"
-               class="img-fluid rounded shadow">
+               class="rounded shadow-sm"
+               style="max-width:160px; max-height:200px; object-fit:cover; cursor:zoom-in;">
+        </a>
+      </div>
+      {% endif %}
+
+      <div>
+        <h1 class="h2 mb-1">{{ author.author_canonical }}</h1>
+
+        {% if author.author_legalname %}
+          <p class="text-muted mb-1 small">{{ author.author_legalname }}</p>
+        {% endif %}
+
+        {# Dates #}
+        {% if author.author_birthdate or author.author_deathdate %}
+        <p class="mb-1">
+          {% if author.author_birthdate %}
+            {{ author.author_birthdate|date:"F j, Y" }}
+          {% endif %}
+          {% if author.author_deathdate %}
+            &ndash; {{ author.author_deathdate|date:"F j, Y" }}{% if author.age_at_death %} (aged {{ author.age_at_death }}){% endif %}
+          {% elif author.author_birthdate and author.current_age %}
+            (age {{ author.current_age }})
+          {% endif %}
+        </p>
+        {% endif %}
+
+        {% if author.author_birthplace %}
+          <p class="text-muted mb-1"><strong>Birth place:</strong> {{ author.author_birthplace }}</p>
+        {% endif %}
+
+        {% if author.debut_year %}
+          <p class="text-muted mb-1 small">
+            <a href="{% url 'author_works' author.author_id %}" class="text-decoration-none">Browse magazine works</a>
+            (first published {{ author.debut_year }})
+          </p>
+        {% endif %}
+        <p class="text-muted mb-1 small">
+          <a href="{% url 'author_books' author.author_id %}" class="text-decoration-none">Browse books</a>
+        </p>
+        {% if has_series %}
+        <p class="text-muted mb-1 small">
+          <a href="{% url 'series_by_author' author.author_id %}" class="text-decoration-none">Browse series</a>
+        </p>
+        {% endif %}
+
+        {# If this record is itself a pen name, link to the canonical author #}
+        {% if author.real_author %}
+          <p class="mb-1 small">
+            Pseudonym of
+            <a href="{% url 'author_detail' author.real_author.author_id %}">
+              {{ author.real_author.author_canonical }}
+            </a>
+          </p>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  {% if author.author_note %}
+  <div class="col-lg-8">
+    <div class="accordion" id="biographyAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#biographyPanel"
+                  aria-expanded="false"
+                  aria-controls="biographyPanel">
+            Biography
+          </button>
+        </h2>
+        <div id="biographyPanel" class="accordion-collapse collapse"
+             data-bs-parent="#biographyAccordion">
+          <div class="accordion-body px-0 pt-1">{{ author.author_note|safe }}</div>
         </div>
       </div>
     </div>
   </div>
   {% endif %}
 
-  <div class="col">
-    <h1 class="h2 mb-1">{{ author.author_canonical }}</h1>
-
-    {% if author.author_legalname %}
-      <p class="text-muted mb-1 small">{{ author.author_legalname }}</p>
-    {% endif %}
-
-    {# Dates #}
-    {% if author.author_birthdate or author.author_deathdate %}
-    <p class="mb-1">
-      {% if author.author_birthdate %}
-        {{ author.author_birthdate|date:"F j, Y" }}
-      {% endif %}
-      {% if author.author_deathdate %}
-        &ndash; {{ author.author_deathdate|date:"F j, Y" }}{% if author.age_at_death %} (aged {{ author.age_at_death }}){% endif %}
-      {% elif author.author_birthdate and author.current_age %}
-        (age {{ author.current_age }})
-      {% endif %}
-    </p>
-    {% endif %}
-
-    {% if author.author_birthplace %}
-      <p class="text-muted mb-1"><strong>Birth place:</strong> {{ author.author_birthplace }}</p>
-    {% endif %}
-
-    {% if author.debut_year %}
-      <p class="text-muted mb-1 small">
-        <a href="{% url 'author_works' author.author_id %}" class="text-decoration-none">Browse magazine works</a>
-        (first published {{ author.debut_year }})
-      </p>
-    {% endif %}
-    <p class="text-muted mb-1 small">
-      <a href="{% url 'author_books' author.author_id %}" class="text-decoration-none">Browse books</a>
-    </p>
-    {% if has_series %}
-    <p class="text-muted mb-1 small">
-      <a href="{% url 'series_by_author' author.author_id %}" class="text-decoration-none">Browse series</a>
-    </p>
-    {% endif %}
-
-    {# If this record is itself a pen name, link to the canonical author #}
-    {% if author.real_author %}
-      <p class="mb-1 small">
-        Pseudonym of
-        <a href="{% url 'author_detail' author.real_author.author_id %}">
-          {{ author.real_author.author_canonical }}
-        </a>
-      </p>
-    {% endif %}
-  </div>
 </div>
 
-{# ── Biographical note ────────────────────────────────────────────────────── #}
-{% if author.author_note %}
-<div class="mb-4">
-  <p class="mb-0">{{ author.author_note|safe }}</p>
+{% if author.author_image %}
+<div class="modal fade" id="authorImageModal" tabindex="-1" aria-label="Author photo" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0 text-center">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
+                data-bs-dismiss="modal" aria-label="Close"></button>
+        <img src="{{ author.author_image }}"
+             alt="{{ author.author_canonical }}"
+             class="img-fluid rounded shadow">
+      </div>
+    </div>
+  </div>
 </div>
 {% endif %}
 
