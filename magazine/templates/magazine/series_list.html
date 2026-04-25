@@ -12,7 +12,8 @@
 
 {% block content %}
 
-<h1 class="h3 mb-4">Series</h1>
+<h1 class="h3 mb-1">Series</h1>
+<p class="text-muted mb-4">{{ total_series }} series tracked in the database</p>
 
 {# ── Search form ────────────────────────────────────────────────────────── #}
 <form method="get" action="{% url 'series_list' %}" class="mb-4">

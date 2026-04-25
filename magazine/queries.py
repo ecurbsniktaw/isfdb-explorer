@@ -1647,6 +1647,15 @@ def _series_sort_key_sql() -> str:
 _SERIES_LETTERS = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 
+def get_series_count(cursor) -> int:
+    """Return the total number of series in the database (excluding HTML-entity names)."""
+    cursor.execute(
+        "SELECT COUNT(*) AS cnt FROM series WHERE series_title NOT LIKE '%%&#%%'"
+    )
+    row = cursor.fetchone()
+    return row["cnt"] if row else 0
+
+
 def get_series_letters(cursor) -> list:  # noqa: ARG001
     """Return the pre-computed list of A-Z letters for the series browser."""
     return _SERIES_LETTERS

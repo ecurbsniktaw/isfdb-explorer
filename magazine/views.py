@@ -18,7 +18,7 @@ from .queries import (
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     get_all_award_types, search_award_types, get_award_detail,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
-    get_series_letters, get_series_by_letter, search_series, search_pub_series,
+    get_series_letters, get_series_count, get_series_by_letter, search_series, search_pub_series,
     get_series_detail, get_series_by_author,
     get_pub_series_detail,
     _MAJOR_SERIES_IDS, _MAJOR_SERIES_INFO,
@@ -571,7 +571,8 @@ def series_list(request):
 
     cursor = _dict_cursor()
     try:
-        letters = get_series_letters(cursor)
+        letters      = get_series_letters(cursor)
+        total_series = get_series_count(cursor)
         if query and search_type == "author":
             # Return matching authors for the user to choose from
             author_matches  = find_authors(cursor, query)
@@ -616,6 +617,7 @@ def series_list(request):
         "total_letter":   total_letter,
         "limit":          _SERIES_LIST_LIMIT,
         "major_series":   major_series,
+        "total_series":   f"{total_series:,}",
     })
 
 
