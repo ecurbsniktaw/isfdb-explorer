@@ -4,7 +4,8 @@
 
 {% block content %}
 
-<h1 class="h3 mb-4">Awards</h1>
+<h1 class="h3 mb-1">Awards</h1>
+<p class="text-muted mb-4">{{ total_awards }} award types tracked in the database</p>
 
 {# ── Search form ────────────────────────────────────────────────────────── #}
 <form method="get" action="{% url 'award_list' %}" class="mb-4">

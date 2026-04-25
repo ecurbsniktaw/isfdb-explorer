@@ -540,6 +540,7 @@ def award_list(request):
         "letters":      letters,
         "displayed":    displayed,
         "major_awards": major_awards,
+        "total_awards": len(all_awards),
     })
 
 
