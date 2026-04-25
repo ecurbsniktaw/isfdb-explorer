@@ -313,7 +313,7 @@ def magazine_list(request):
         "magazines":          magazines,
         "letter":             letter if not query else None,
         "letters_with_mags":  letters_with_mags,
-        "total_all":          len(all_mags),
+        "total_all":          f"{len(all_mags):,}",
         "query":              query,
         "selected_magazines": _SELECTED_MAGAZINES,
     })
