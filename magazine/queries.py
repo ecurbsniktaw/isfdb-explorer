@@ -1295,6 +1295,15 @@ def find_titles(cursor, title: str, match_type: str = "exact",
     return rows
 
 
+def get_author_count(cursor) -> int:
+    """Return the total number of authors/artists in the database (excluding HTML-entity names)."""
+    cursor.execute(
+        "SELECT COUNT(*) AS cnt FROM authors WHERE author_canonical NOT LIKE '%%&#%%'"
+    )
+    row = cursor.fetchone()
+    return row["cnt"] if row else 0
+
+
 def find_authors(cursor, name: str, search_type: str = "full") -> list:
     """
     Return authors whose canonical name matches the given string.

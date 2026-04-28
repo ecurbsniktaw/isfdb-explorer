@@ -14,7 +14,7 @@ from .queries import (
     get_book_detail, get_book_editions, get_book_contents, get_book_reviews, get_story_detail, find_titles,
     get_magazine_issues_by_name, get_magazine_group_info,
     get_all_magazines, get_magazine_issues, search_magazines,
-    find_authors, get_author_art, author_has_series,
+    find_authors, get_author_count, get_author_art, author_has_series,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     get_all_award_types, search_award_types, get_award_detail,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
@@ -264,6 +264,35 @@ _MAGAZINE_GROUPS = {
     ],
 }
 
+# 24 highlighted authors shown on the Authors page, in display order.
+# IDs verified against the local ISFDB database.
+_SELECTED_AUTHORS = [
+    ("Poul Anderson",        3),
+    ("Isaac Asimov",         5),
+    ("Ray Bradbury",       194),
+    ("Edgar Rice Burroughs", 143),
+    ("Octavia E. Butler",  186),
+    ("Arthur C. Clarke",    17),
+    ("Samuel R. Delany",    22),
+    ("Philip K. Dick",      23),
+    ("Robert A. Heinlein",  29),
+    ("Ursula K. Le Guin",   37),
+    ("Larry Niven",         42),
+    ("Andre Norton",       209),
+    ("Edgar Allan Poe",    622),
+    ("Joanna Russ",        222),
+    ("Clifford D. Simak",   55),
+    ("E. E. Smith",      85681),
+    ("Cordwainer Smith",   101),
+    ("Olaf Stapledon",      81),
+    ("Theodore Sturgeon",   56),
+    ("J. R. R. Tolkien",  302),
+    ("A. E. van Vogt",      58),
+    ("Jules Verne",        159),
+    ("Kurt Vonnegut",    77861),
+    ("H. G. Wells",         65),
+]
+
 _SELECTED_MAGAZINES = [
     {"name": "Amazing Stories",                           "url": "/magazines/browse/?name=Amazing+Stories"},
     {"name": "Astounding Science Fiction",                "url": "/magazines/group/astounding/"},
@@ -428,25 +457,29 @@ def book_detail(request, title_id):
     })
 
 
-def find_authors_view(request):
-    """Search for authors by name and display a list of matches."""
+def author_list(request):
+    """Authors page: count, dual search forms, and selected author cards."""
     query       = request.GET.get("q", "").strip()
     search_type = request.GET.get("search_type", "full")
     if search_type not in ("full", "last"):
         search_type = "full"
-    context = {"query": query, "search_type": search_type}
 
-    if query:
-        cursor = _dict_cursor()
-        try:
-            authors = find_authors(cursor, query, search_type)
-        finally:
-            cursor.close()
-        context["authors"] = authors
-        context["total"] = len(authors)
-        context["total_with_works"] = sum(1 for a in authors if a.get("title_count"))
+    cursor = _dict_cursor()
+    try:
+        total_authors = get_author_count(cursor)
+        authors = find_authors(cursor, query, search_type) if query else []
+    finally:
+        cursor.close()
 
-    return render(request, "magazine/find_authors.html", context)
+    return render(request, "magazine/author_list.html", {
+        "query":            query,
+        "search_type":      search_type,
+        "authors":          authors,
+        "total":            len(authors),
+        "total_with_works": sum(1 for a in authors if a.get("title_count")),
+        "total_authors":    f"{total_authors:,}",
+        "selected_authors": _SELECTED_AUTHORS,
+    })
 
 
 def random_item(request, kind):

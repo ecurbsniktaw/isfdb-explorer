@@ -1,0 +1,182 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Authors — ISFDB Explorer{% endblock %}
+
+{% block extra_css %}
+<style>
+.author-card { transition: box-shadow .15s; }
+.author-card:hover { box-shadow: 0 .25rem .75rem rgba(0,0,0,.15) !important; background-color: #f8f9fa; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-1">Authors</h1>
+<p class="text-muted mb-4">{{ total_authors }} Authors/Artists in the database</p>
+
+{# ── Dual search forms ───────────────────────────────────────────────────── #}
+<div class="row g-4 mb-4">
+
+  {# Left: Find Author #}
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5 card-title mb-3">Find Author</h2>
+        <form method="get" action="{% url 'author_list' %}">
+          <div class="input-group mb-2">
+            <input type="text"
+                   name="q"
+                   value="{{ query }}"
+                   class="form-control"
+                   placeholder="Author name…"
+                   autofocus>
+            <button class="btn btn-primary" type="submit">Search</button>
+            {% if query %}
+              <a href="{% url 'author_list' %}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="search_type" id="search-full"
+                     value="full" {% if search_type != "last" %}checked{% endif %}>
+              <label class="form-check-label" for="search-full">Full name</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="search_type" id="search-last"
+                     value="last" {% if search_type == "last" %}checked{% endif %}>
+              <label class="form-check-label" for="search-last">Last name only</label>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {# Right: Author Fiction Search #}
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5 card-title mb-3">Author Fiction Search</h2>
+        <form method="get" action="{% url 'author_search' %}">
+          <div class="mb-3">
+            <label for="magazine" class="form-label fw-semibold">Magazine name</label>
+            <input type="text"
+                   id="magazine"
+                   name="magazine"
+                   class="form-control"
+                   placeholder="e.g. Astounding">
+            <div class="form-text">Partial match, case-insensitive</div>
+          </div>
+          <div class="mb-3">
+            <label for="author" class="form-label fw-semibold">Author name</label>
+            <input type="text"
+                   id="author"
+                   name="author"
+                   class="form-control"
+                   placeholder="e.g. Asimov">
+            <div class="form-text">Partial match against canonical author name</div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Search</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{# ── Find Author results ─────────────────────────────────────────────────── #}
+{% if query %}
+  {% if authors %}
+    <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+      <p class="text-muted mb-0" id="result-count"></p>
+      {% if total_with_works < total %}
+      <div class="btn-group btn-group-sm" role="group">
+        <button type="button" class="btn btn-outline-secondary active" id="btn-with-works" onclick="filterAuthors(true)">With works</button>
+        <button type="button" class="btn btn-outline-secondary" id="btn-all" onclick="filterAuthors(false)">All {{ total }}</button>
+      </div>
+      {% endif %}
+    </div>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm table-hover" id="author-table">
+        <thead class="table-light">
+          <tr>
+            <th style="width:35%">Name</th>
+            <th style="width:30%">Legal Name</th>
+            <th style="width:12%">Born</th>
+            <th style="width:12%">Died</th>
+            <th style="width:11%">Works</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in authors %}
+          <tr data-has-works="{{ a.title_count|default:0 }}">
+            <td>
+              <a href="{% url 'author_detail' a.author_id %}" class="text-decoration-none">
+                {{ a.author_canonical }}
+              </a>
+            </td>
+            <td class="text-muted small">
+              {% if a.author_legalname and a.author_legalname != a.author_canonical %}
+                {{ a.author_legalname }}
+              {% endif %}
+            </td>
+            <td class="text-muted small">{{ a.birth_year|default:"" }}</td>
+            <td class="text-muted small">{{ a.death_year|default:"" }}</td>
+            <td class="text-muted small">{{ a.title_count|default:"" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted mb-4">No authors found matching <strong>{{ query }}</strong>.</p>
+  {% endif %}
+{% endif %}
+
+{# ── Selected Authors ────────────────────────────────────────────────────── #}
+<h2 class="h5 mb-3">Selected Authors</h2>
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mb-4">
+  {% for name, author_id in selected_authors %}
+  <div class="col">
+    <a href="{% url 'author_detail' author_id %}" class="text-decoration-none text-dark">
+      <div class="card author-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <span class="fw-semibold">{{ name }}</span>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if authors %}
+<script>
+(function () {
+  const qVal = "{{ query|escapejs }}";
+
+  function filterAuthors(onlyWithWorks) {
+    const rows = document.querySelectorAll('#author-table tbody tr');
+    let visible = 0;
+    rows.forEach(r => {
+      const hasWorks = parseInt(r.dataset.hasWorks, 10) > 0;
+      const show = !onlyWithWorks || hasWorks;
+      r.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    document.getElementById('result-count').textContent =
+      visible + ' author' + (visible === 1 ? '' : 's') + ' matching “' + qVal + '”';
+    const btnWith = document.getElementById('btn-with-works');
+    const btnAll  = document.getElementById('btn-all');
+    if (btnWith) btnWith.classList.toggle('active', onlyWithWorks);
+    if (btnAll)  btnAll.classList.toggle('active', !onlyWithWorks);
+  }
+
+  filterAuthors(true);
+  window.filterAuthors = filterAuthors;
+})();
+</script>
+{% endif %}
+{% endblock %}
