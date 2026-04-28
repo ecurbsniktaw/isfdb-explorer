@@ -282,7 +282,7 @@ _SELECTED_AUTHORS = [
     ("Edgar Allan Poe",    622),
     ("Joanna Russ",        222),
     ("Clifford D. Simak",   55),
-    ("E. E. Smith",      85681),
+    ("Edward E. Smith",     67),
     ("Cordwainer Smith",   101),
     ("Olaf Stapledon",      81),
     ("Theodore Sturgeon",   56),
