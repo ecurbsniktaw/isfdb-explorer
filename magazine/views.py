@@ -289,7 +289,7 @@ _SELECTED_AUTHORS = [
     ("J. R. R. Tolkien",  302),
     ("A. E. van Vogt",      58),
     ("Jules Verne",        159),
-    ("Kurt Vonnegut",    77861),
+    ("Kurt Vonnegut, Jr.", 62),
     ("H. G. Wells",         65),
 ]
 
