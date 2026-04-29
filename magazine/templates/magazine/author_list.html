@@ -21,7 +21,7 @@
   <div class="col-lg-6">
     <div class="card shadow-sm h-100">
       <div class="card-body">
-        <h2 class="h5 card-title mb-3">Find Author</h2>
+        <h2 class="h5 card-title mb-3">Find an author</h2>
         <form method="get" action="{% url 'author_list' %}">
           <div class="input-group mb-2">
             <input type="text"
@@ -39,12 +39,12 @@
             <div class="form-check">
               <input class="form-check-input" type="radio" name="search_type" id="search-full"
                      value="full" {% if search_type != "last" %}checked{% endif %}>
-              <label class="form-check-label" for="search-full">Full name</label>
+              <label class="form-check-label" for="search-full">Search Full name</label>
             </div>
             <div class="form-check">
               <input class="form-check-input" type="radio" name="search_type" id="search-last"
                      value="last" {% if search_type == "last" %}checked{% endif %}>
-              <label class="form-check-label" for="search-last">Last name only</label>
+              <label class="form-check-label" for="search-last">Search Last name only</label>
             </div>
           </div>
         </form>
@@ -56,7 +56,7 @@
   <div class="col-lg-6">
     <div class="card shadow-sm h-100">
       <div class="card-body">
-        <h2 class="h5 card-title mb-3">Author Fiction Search</h2>
+        <h2 class="h5 card-title mb-3">Find fiction published by an author in a magazine</h2>
         <form method="get" action="{% url 'author_search' %}">
           <div class="mb-3">
             <!-- <label for="magazine" class="form-label fw-semibold">Magazine name</label> -->
