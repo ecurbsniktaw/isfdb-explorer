@@ -64,20 +64,75 @@
     </div>
   </div>
 
-  {# Right column: browse links + biography accordion #}
+  {# Right column: browse links + accordions #}
   <div class="col-lg-8">
     <div class="d-flex flex-wrap gap-2 mb-3">
-      {% if author.debut_year %}
-        <a href="{% url 'author_works' author.author_id %}" class="btn btn-sm btn-outline-secondary">Browse magazine works</a>
-      {% endif %}
       <a href="{% url 'author_books' author.author_id %}" class="btn btn-sm btn-outline-secondary">Browse books</a>
       {% if has_series %}
         <a href="{% url 'series_by_author' author.author_id %}" class="btn btn-sm btn-outline-secondary">Browse series</a>
       {% endif %}
     </div>
 
+    {% if mag_works %}
+    <div class="accordion mb-2" id="magWorksAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-0 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#magWorksPanel"
+                  aria-expanded="false"
+                  aria-controls="magWorksPanel">
+            Magazine Works <span class="badge text-bg-secondary ms-2">{{ mag_works|length }}</span>
+          </button>
+        </h2>
+        <div id="magWorksPanel" class="accordion-collapse collapse"
+             data-bs-parent="#magWorksAccordion">
+          <div class="accordion-body px-0 pt-2">
+            <p class="text-muted small mb-2" id="works-count-label">{{ mag_works|length }} work{{ mag_works|length|pluralize }} in English-language magazines</p>
+            <div id="works-type-filter" class="mb-2"></div>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover toc-table" id="works-table">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:14%">Date</th>
+                    <th style="width:10%">Page</th>
+                    <th style="width:12%">Type</th>
+                    <th style="width:37%">Title</th>
+                    <th>Magazine</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in mag_works %}
+                  <tr data-type="{{ row.type_label }}">
+                    <td>
+                      <a href="{% url 'issue_detail' row.pub_id %}" class="text-decoration-none">{{ row.formatted_date }}</a>
+                    </td>
+                    <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
+                    <td>
+                      <span class="badge text-bg-secondary badge-type fw-normal">{{ row.type_label }}</span>
+                    </td>
+                    <td>
+                      {% if row.title_id %}
+                        <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
+                      {% else %}
+                        {{ row.title_title }}
+                      {% endif %}
+                    </td>
+                    <td class="text-muted small">{{ row.pub_title }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     {% if author.author_note %}
-    <div class="accordion" id="biographyAccordion">
+    <div class="accordion mb-2" id="biographyAccordion">
       <div class="accordion-item border-0">
         <h2 class="accordion-header h5 mb-0">
           <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
@@ -282,6 +337,56 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if mag_works %}
+<script>
+(function () {
+  const total = {{ mag_works|length }};
+  const suffix = 'work' + (total === 1 ? '' : 's') + ' in English-language magazines';
+  const rows = Array.from(document.querySelectorAll('#works-table tbody tr[data-type]'));
+  const countLabel = document.getElementById('works-count-label');
+  const filterDiv  = document.getElementById('works-type-filter');
+  if (!rows.length || !filterDiv) return;
+
+  const seen = new Set(), types = [];
+  rows.forEach(r => { const t = r.dataset.type; if (!seen.has(t)) { seen.add(t); types.push(t); } });
+  if (types.length < 2) return;
+
+  const group = document.createElement('div');
+  group.className = 'btn-group flex-wrap';
+  group.setAttribute('role', 'group');
+
+  function makeBtn(label, active) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-sm ' + (active ? 'btn-secondary' : 'btn-outline-secondary');
+    btn.textContent = label;
+    btn.dataset.filter = label;
+    return btn;
+  }
+
+  group.appendChild(makeBtn('All', true));
+  types.forEach(t => group.appendChild(makeBtn(t, false)));
+  filterDiv.appendChild(group);
+
+  function applyFilter(selected) {
+    let visible = 0;
+    rows.forEach(r => {
+      const show = selected === 'All' || r.dataset.type === selected;
+      r.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    group.querySelectorAll('button').forEach(btn => {
+      btn.className = 'btn btn-sm ' + (btn.dataset.filter === selected ? 'btn-secondary' : 'btn-outline-secondary');
+    });
+    countLabel.textContent = selected === 'All'
+      ? total + ' ' + suffix
+      : visible + ' ' + selected.toLowerCase() + (visible === 1 ? '' : 's') + ' in English-language magazines';
+  }
+
+  group.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') applyFilter(e.target.dataset.filter); });
+})();
+</script>
+{% endif %}
 {% if cover_art %}
 <script>
 document.querySelectorAll('.art-thumb').forEach(function(img) {
