@@ -190,9 +190,9 @@ def author_detail(request, author_id):
             raise Http404(f"No author with id={author_id}")
         mag_works    = get_author_works(cursor, author_id)
         books        = get_author_books(cursor, author_id)
+        _, series    = get_series_by_author(cursor, author_id)
         cover_art    = get_author_art(cursor, author_id, "COVERART")
         interior_art = get_author_art(cursor, author_id, "INTERIORART")
-        has_series   = author_has_series(cursor, author_id)
     finally:
         cursor.close()
 
@@ -200,9 +200,9 @@ def author_detail(request, author_id):
         "author":       author,
         "mag_works":    mag_works,
         "books":        books,
+        "series":       series,
         "cover_art":    cover_art,
         "interior_art": interior_art,
-        "has_series":   has_series,
     })
 
 
