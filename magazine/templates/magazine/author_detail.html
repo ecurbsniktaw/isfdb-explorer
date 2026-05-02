@@ -228,6 +228,36 @@
       </div>
     </div>
     {% endif %}
+
+    {% if author.pseudonyms %}
+    <div class="accordion mb-2" id="penNamesAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#penNamesPanel"
+                  aria-expanded="false"
+                  aria-controls="penNamesPanel">
+            Pen Names <span class="badge text-bg-secondary ms-2">{{ author.pseudonyms|length }}</span>
+          </button>
+        </h2>
+        <div id="penNamesPanel" class="accordion-collapse collapse"
+             data-bs-parent="#penNamesAccordion">
+          <div class="accordion-body px-2 pt-2">
+            <p class="mb-0">
+              {% for p in author.pseudonyms %}
+                {% if not forloop.first %}&middot; {% endif %}
+                <a href="{% url 'author_detail' p.author_id %}" class="text-decoration-none">
+                  {{ p.author_canonical }}
+                </a>
+              {% endfor %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
 </div>
@@ -248,35 +278,17 @@
 </div>
 {% endif %}
 
-{# ── Pen names ────────────────────────────────────────────────────────────── #}
-{% if author.pseudonyms %}
-<div class="mb-4">
-  <h2 class="h5 mb-2">Pen Names</h2>
-  <p class="mb-0">
-    {% for p in author.pseudonyms %}
-      {% if not forloop.first %}&middot; {% endif %}
-      <a href="{% url 'author_detail' p.author_id %}" class="text-decoration-none">
-        {{ p.author_canonical }}
-      </a>
-    {% endfor %}
-  </p>
-</div>
-{% endif %}
-
 {# ── External links ────────────────────────────────────────────────────────── #}
 {% if author.webpages %}
-<div class="mb-4">
-  <h2 class="h5 mb-2">External Links</h2>
-  <div class="d-flex flex-wrap gap-2">
-    {% for page in author.webpages %}
-      <a href="{{ page.url }}"
-         target="_blank"
-         rel="noopener"
-         class="btn btn-sm btn-outline-secondary">
-        {{ page.label }}
-      </a>
-    {% endfor %}
-  </div>
+<div class="mb-4 d-flex flex-wrap gap-2 justify-content-center">
+  {% for page in author.webpages %}
+    <a href="{{ page.url }}"
+       target="_blank"
+       rel="noopener"
+       class="btn btn-sm btn-outline-secondary">
+      {{ page.label }}
+    </a>
+  {% endfor %}
 </div>
 {% endif %}
 
