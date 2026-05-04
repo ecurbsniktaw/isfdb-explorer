@@ -2067,3 +2067,38 @@ def get_award_detail(cursor, award_type_id: int) -> dict | None:
         for yr in years
     ]
     return award_type
+
+
+def get_author_awards(cursor, author_id: int) -> list:
+    """Return all award entries for titles by this author, in chronological order."""
+    cursor.execute("""
+        SELECT YEAR(a.award_year)  AS award_year,
+               at2.award_type_id,
+               at2.award_type_name,
+               ac.award_cat_name,
+               a.award_level,
+               t.title_title,
+               t.title_id
+        FROM canonical_author ca
+        JOIN titles t        ON t.title_id       = ca.title_id
+        JOIN title_awards ta ON ta.title_id       = t.title_id
+        JOIN awards a        ON a.award_id        = ta.award_id
+        JOIN award_types at2 ON at2.award_type_id = a.award_type_id
+        JOIN award_cats ac   ON ac.award_cat_id   = a.award_cat_id
+        WHERE ca.author_id = %s
+          AND at2.award_type_name NOT LIKE '%%&#%%'
+        ORDER BY YEAR(a.award_year), at2.award_type_name, ac.award_cat_name
+    """, (author_id,))
+    rows = cursor.fetchall()
+    return [
+        {
+            "year":          r["award_year"] or "",
+            "award_type_id": r["award_type_id"],
+            "award_name":    r["award_type_name"],
+            "category":      r["award_cat_name"],
+            "level":         _AWARD_LEVEL_LABELS.get(str(r["award_level"] or ""), "Nominee"),
+            "title_title":   r["title_title"],
+            "title_id":      r["title_id"],
+        }
+        for r in rows
+    ]

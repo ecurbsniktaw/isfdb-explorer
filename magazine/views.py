@@ -16,7 +16,7 @@ from .queries import (
     get_all_magazines, get_magazine_issues, search_magazines,
     find_authors, get_author_count, get_author_art, author_has_series,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
-    get_all_award_types, search_award_types, get_award_detail,
+    get_all_award_types, search_award_types, get_award_detail, get_author_awards,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
     get_series_letters, get_series_count, get_series_by_letter, search_series, search_pub_series,
     get_series_detail, get_series_by_author,
@@ -188,21 +188,23 @@ def author_detail(request, author_id):
         author = get_author_detail(cursor, author_id)
         if not author:
             raise Http404(f"No author with id={author_id}")
-        mag_works    = get_author_works(cursor, author_id)
-        books        = get_author_books(cursor, author_id)
-        _, series    = get_series_by_author(cursor, author_id)
-        cover_art    = get_author_art(cursor, author_id, "COVERART")
-        interior_art = get_author_art(cursor, author_id, "INTERIORART")
+        mag_works      = get_author_works(cursor, author_id)
+        books          = get_author_books(cursor, author_id)
+        _, series      = get_series_by_author(cursor, author_id)
+        author_awards  = get_author_awards(cursor, author_id)
+        cover_art      = get_author_art(cursor, author_id, "COVERART")
+        interior_art   = get_author_art(cursor, author_id, "INTERIORART")
     finally:
         cursor.close()
 
     return render(request, "magazine/author_detail.html", {
-        "author":       author,
-        "mag_works":    mag_works,
-        "books":        books,
-        "series":       series,
-        "cover_art":    cover_art,
-        "interior_art": interior_art,
+        "author":         author,
+        "mag_works":      mag_works,
+        "books":          books,
+        "series":         series,
+        "author_awards":  author_awards,
+        "cover_art":      cover_art,
+        "interior_art":   interior_art,
     })
 
 
