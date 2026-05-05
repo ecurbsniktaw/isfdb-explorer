@@ -81,12 +81,12 @@
 {% endif %}
 
 {% for yr in year_blocks %}
-<div class="mb-4">
-  <h2 class="h5 border-bottom pb-1 mb-3">{{ yr.year }}</h2>
+<div class="mb-2">
 
   {# Winner(s) #}
   {% for e in yr.winners %}
   <div class="d-flex align-items-baseline gap-2 mb-1">
+    <span class="flex-shrink-0">{{ yr.year }}</span>
     <span class="badge text-bg-warning flex-shrink-0">Winner</span>
     <span>
       {% if e.title_id %}
