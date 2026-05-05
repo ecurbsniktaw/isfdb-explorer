@@ -1,0 +1,12 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}{{ award.award_type_name }} — ISFDB Explorer{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'new_award_list' %}" class="text-decoration-none">&larr; Awards</a>
+</div>
+
+<h1 class="h3 mb-4">{{ award.award_type_name }}</h1>
+<p class="text-muted">(New award detail page — layout coming soon.)</p>
+{% endblock %}

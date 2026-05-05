@@ -619,6 +619,18 @@ def new_award_list(request):
     })
 
 
+def new_award_detail(request, award_type_id):
+    """New award detail page — layout to be defined."""
+    cursor = _dict_cursor()
+    try:
+        award = get_award_detail(cursor, award_type_id)
+    finally:
+        cursor.close()
+    if not award:
+        raise Http404(f"No award with id={award_type_id}")
+    return render(request, "magazine/new_award_detail.html", {"award": award})
+
+
 def award_detail(request, award_type_id):
     """All entries for a single award type, grouped by year and category."""
     cursor = _dict_cursor()

@@ -21,6 +21,7 @@ urlpatterns = [
     path("random/<str:kind>/", views.random_item, name="random_item"),
     path("awards/", views.award_list, name="award_list"),
     path("new-awards/", views.new_award_list, name="new_award_list"),
+    path("new-awards/<int:award_type_id>/", views.new_award_detail, name="new_award_detail"),
     path("awards/<int:award_type_id>/", views.award_detail, name="award_detail"),
     path("series/", views.series_list, name="series_list"),
     path("series/author/<int:author_id>/", views.series_by_author, name="series_by_author"),
