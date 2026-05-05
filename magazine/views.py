@@ -17,6 +17,7 @@ from .queries import (
     find_authors, get_author_count, get_author_art, author_has_series,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     get_all_award_types, search_award_types, get_award_detail, get_author_awards,
+    get_award_type_info, get_award_categories, get_award_entries_by_category,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
     get_series_letters, get_series_count, get_series_by_letter, search_series, search_pub_series,
     get_series_detail, get_series_by_author,
@@ -620,15 +621,32 @@ def new_award_list(request):
 
 
 def new_award_detail(request, award_type_id):
-    """New award detail page — layout to be defined."""
+    """New award detail page with category filter, nominee toggle, and sort order."""
+    selected_cat     = request.GET.get("cat", "").strip()
+    include_nominees = request.GET.get("nominees", "no") == "yes"
+    sort_asc         = request.GET.get("sort", "desc") == "asc"
+
     cursor = _dict_cursor()
     try:
-        award = get_award_detail(cursor, award_type_id)
+        award = get_award_type_info(cursor, award_type_id)
+        if not award:
+            raise Http404(f"No award with id={award_type_id}")
+        categories  = get_award_categories(cursor, award_type_id)
+        year_blocks = (
+            get_award_entries_by_category(cursor, award_type_id, selected_cat, sort_asc)
+            if selected_cat else []
+        )
     finally:
         cursor.close()
-    if not award:
-        raise Http404(f"No award with id={award_type_id}")
-    return render(request, "magazine/new_award_detail.html", {"award": award})
+
+    return render(request, "magazine/new_award_detail.html", {
+        "award":            award,
+        "categories":       categories,
+        "selected_cat":     selected_cat,
+        "include_nominees": include_nominees,
+        "sort_asc":         sort_asc,
+        "year_blocks":      year_blocks,
+    })
 
 
 def award_detail(request, award_type_id):

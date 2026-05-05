@@ -2069,6 +2069,97 @@ def get_award_detail(cursor, award_type_id: int) -> dict | None:
     return award_type
 
 
+def get_award_type_info(cursor, award_type_id: int) -> dict | None:
+    """Return basic metadata for an award type (no entries)."""
+    cursor.execute("""
+        SELECT award_type_id, award_type_name, award_type_wikipedia,
+               award_type_by, award_type_for
+        FROM award_types
+        WHERE award_type_id = %s
+    """, (award_type_id,))
+    return cursor.fetchone()
+
+
+def get_award_categories(cursor, award_type_id: int) -> list:
+    """Return distinct category names for an award type, in display order."""
+    cursor.execute("""
+        SELECT DISTINCT ac.award_cat_name, MIN(ac.award_cat_order) AS cat_order
+        FROM awards a
+        JOIN award_cats ac ON ac.award_cat_id = a.award_cat_id
+        WHERE a.award_type_id = %s
+        GROUP BY ac.award_cat_name
+        ORDER BY cat_order, ac.award_cat_name
+    """, (award_type_id,))
+    return [r["award_cat_name"] for r in cursor.fetchall()]
+
+
+def get_award_entries_by_category(cursor, award_type_id: int,
+                                  category: str, sort_asc: bool) -> list:
+    """
+    Return year-blocks of entries for one award type + category.
+    Each block has keys: year, winners, runners_up, nominees.
+    """
+    order = "ASC" if sort_asc else "DESC"
+    cursor.execute(
+        f"""
+        SELECT YEAR(a.award_year) AS award_year,
+               a.award_title,
+               a.award_author,
+               a.award_level,
+               ta.title_id
+        FROM awards a
+        JOIN award_cats ac ON ac.award_cat_id = a.award_cat_id
+        LEFT JOIN title_awards ta ON ta.award_id = a.award_id
+        WHERE a.award_type_id = %s
+          AND ac.award_cat_name = %s
+        ORDER BY YEAR(a.award_year) {order}, a.award_level
+        """,
+        (award_type_id, category),
+    )
+    entries = cursor.fetchall()
+
+    # Determine which title_ids are books for correct linking
+    title_ids = [e["title_id"] for e in entries if e.get("title_id")]
+    book_ids: set = set()
+    if title_ids:
+        placeholders      = ", ".join(["%s"] * len(title_ids))
+        type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
+        cursor.execute(
+            f"SELECT title_id FROM titles WHERE title_id IN ({placeholders})"
+            f" AND title_ttype IN ({type_placeholders})",
+            (*title_ids, *BOOK_TYPES),
+        )
+        book_ids = {r["title_id"] for r in cursor.fetchall()}
+
+    # Group by year; split entries into winners / runners-up / nominees
+    from collections import OrderedDict
+    by_year: dict = OrderedDict()
+    for e in entries:
+        yr = e["award_year"] or 0
+        if yr not in by_year:
+            by_year[yr] = {"winners": [], "runners_up": [], "nominees": []}
+        level_str   = str(e["award_level"] or "")
+        level_label = _AWARD_LEVEL_LABELS.get(level_str, "Nominee")
+        entry = {
+            "title":   e["award_title"] or "",
+            "author":  e["award_author"] or "",
+            "level":   level_label,
+            "title_id": e.get("title_id"),
+            "is_book":  e.get("title_id") in book_ids if e.get("title_id") else False,
+        }
+        if level_str == "1":
+            by_year[yr]["winners"].append(entry)
+        elif level_str == "2":
+            by_year[yr]["runners_up"].append(entry)
+        else:
+            by_year[yr]["nominees"].append(entry)
+
+    return [
+        {"year": yr if yr else "Unknown", **data}
+        for yr, data in by_year.items()
+    ]
+
+
 def get_author_awards(cursor, author_id: int) -> list:
     """Return all award entries for titles by this author, in chronological order."""
     cursor.execute("""

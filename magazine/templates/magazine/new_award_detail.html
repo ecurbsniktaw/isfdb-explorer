@@ -3,10 +3,189 @@
 {% block title %}{{ award.award_type_name }} — ISFDB Explorer{% endblock %}
 
 {% block content %}
+
 <div class="mb-3">
   <a href="{% url 'new_award_list' %}" class="text-decoration-none">&larr; Awards</a>
 </div>
 
-<h1 class="h3 mb-4">{{ award.award_type_name }}</h1>
-<p class="text-muted">(New award detail page — layout coming soon.)</p>
+<h1 class="h3 mb-1">{{ award.award_type_name }}</h1>
+{% if award.award_type_by %}
+  <p class="text-muted mb-1 small">Presented by: {{ award.award_type_by }}</p>
+{% endif %}
+{% if award.award_type_for %}
+  <p class="text-muted mb-1 small">For: {{ award.award_type_for }}</p>
+{% endif %}
+{% if award.award_type_wikipedia %}
+  <div class="mb-3">
+    <a href="{{ award.award_type_wikipedia }}" target="_blank" rel="noopener"
+       class="btn btn-sm btn-outline-secondary">Wikipedia</a>
+  </div>
+{% endif %}
+
+{# ── Filter form ─────────────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <form method="get" action="">
+      <div class="row g-3 align-items-end">
+
+        <div class="col-md-5">
+          <label for="cat-select" class="form-label fw-semibold">Category</label>
+          <select id="cat-select" name="cat" class="form-select">
+            <option value="">— choose a category —</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if cat == selected_cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <div class="fw-semibold small mb-1">Nominees</div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="nominees" id="nom-no" value="no"
+                   {% if not include_nominees %}checked{% endif %}>
+            <label class="form-check-label" for="nom-no">Winners only</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="nominees" id="nom-yes" value="yes"
+                   {% if include_nominees %}checked{% endif %}>
+            <label class="form-check-label" for="nom-yes">Include nominees</label>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="fw-semibold small mb-1">Sort</div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sort" id="sort-desc" value="desc"
+                   {% if not sort_asc %}checked{% endif %}>
+            <label class="form-check-label" for="sort-desc">Year descending</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sort" id="sort-asc" value="asc"
+                   {% if sort_asc %}checked{% endif %}>
+            <label class="form-check-label" for="sort-asc">Year ascending</label>
+          </div>
+        </div>
+
+        <div class="col-md-1">
+          <button type="submit" class="btn btn-primary w-100">Show</button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ── Results ─────────────────────────────────────────────────────────────── #}
+{% if selected_cat and not year_blocks %}
+  <p class="text-muted">No entries found for <strong>{{ selected_cat }}</strong>.</p>
+{% endif %}
+
+{% for yr in year_blocks %}
+<div class="mb-4">
+  <h2 class="h5 border-bottom pb-1 mb-3">{{ yr.year }}</h2>
+
+  {# Winner(s) #}
+  {% for e in yr.winners %}
+  <div class="d-flex align-items-baseline gap-2 mb-1">
+    <span class="badge text-bg-warning flex-shrink-0">Winner</span>
+    <span>
+      {% if e.title_id %}
+        {% if e.is_book %}
+          <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title }}</a>
+        {% else %}
+          <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title }}</a>
+        {% endif %}
+      {% else %}
+        <span class="fw-semibold">{{ e.title }}</span>
+      {% endif %}
+      {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
+    </span>
+  </div>
+  {% empty %}
+  <p class="text-muted small fst-italic">No winner recorded.</p>
+  {% endfor %}
+
+  {# Runners-up accordion (only when include_nominees) #}
+  {% if include_nominees and yr.runners_up %}
+  <div class="accordion mt-2 mb-1" id="ru-acc-{{ forloop.counter }}">
+    <div class="accordion-item border-0">
+      <h2 class="accordion-header h6 mb-0">
+        <button class="accordion-button collapsed ps-2 shadow-none"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#ru-panel-{{ forloop.counter }}"
+                aria-expanded="false"
+                aria-controls="ru-panel-{{ forloop.counter }}">
+          Runners-up <span class="badge text-bg-secondary ms-2">{{ yr.runners_up|length }}</span>
+        </button>
+      </h2>
+      <div id="ru-panel-{{ forloop.counter }}" class="accordion-collapse collapse"
+           data-bs-parent="#ru-acc-{{ forloop.counter }}">
+        <div class="accordion-body px-2 pt-1 pb-1">
+          {% for e in yr.runners_up %}
+          <div class="d-flex align-items-baseline gap-2 mb-1">
+            <span class="badge text-bg-secondary flex-shrink-0">Runner-up</span>
+            <span>
+              {% if e.title_id %}
+                {% if e.is_book %}
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                {% else %}
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                {% endif %}
+              {% else %}
+                {{ e.title }}
+              {% endif %}
+              {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Nominees / Finalists accordion (only when include_nominees) #}
+  {% if include_nominees and yr.nominees %}
+  <div class="accordion mt-1" id="nom-acc-{{ forloop.counter }}">
+    <div class="accordion-item border-0">
+      <h2 class="accordion-header h6 mb-0">
+        <button class="accordion-button collapsed ps-2 shadow-none"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#nom-panel-{{ forloop.counter }}"
+                aria-expanded="false"
+                aria-controls="nom-panel-{{ forloop.counter }}">
+          Nominees <span class="badge text-bg-secondary ms-2">{{ yr.nominees|length }}</span>
+        </button>
+      </h2>
+      <div id="nom-panel-{{ forloop.counter }}" class="accordion-collapse collapse"
+           data-bs-parent="#nom-acc-{{ forloop.counter }}">
+        <div class="accordion-body px-2 pt-1 pb-1">
+          {% for e in yr.nominees %}
+          <div class="d-flex align-items-baseline gap-2 mb-1">
+            <span class="text-muted small flex-shrink-0" style="min-width:5rem;">{{ e.level }}</span>
+            <span>
+              {% if e.title_id %}
+                {% if e.is_book %}
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                {% else %}
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                {% endif %}
+              {% else %}
+                {{ e.title }}
+              {% endif %}
+              {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endfor %}
+
 {% endblock %}
