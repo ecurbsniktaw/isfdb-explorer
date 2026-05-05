@@ -583,6 +583,42 @@ def award_list(request):
     })
 
 
+def new_award_list(request):
+    """New awards page — currently a copy of award_list."""
+    query = request.GET.get("q", "").strip()
+    letter = request.GET.get("letter", "").strip().upper()
+
+    cursor = _dict_cursor()
+    try:
+        all_awards = get_all_award_types(cursor)
+    finally:
+        cursor.close()
+
+    letters = sorted({a["award_type_name"][0].upper() for a in all_awards
+                      if a["award_type_name"] and a["award_type_name"][0].isalpha()})
+
+    if query:
+        displayed = [a for a in all_awards
+                     if query.lower() in a["award_type_name"].lower()]
+    elif letter:
+        displayed = [a for a in all_awards
+                     if a["award_type_name"].upper().startswith(letter)]
+    else:
+        displayed = []
+
+    major_awards = [{"id": aid, "name": _MAJOR_AWARD_NAMES[aid]}
+                    for aid in _MAJOR_AWARD_IDS]
+
+    return render(request, "magazine/new_award_list.html", {
+        "query":        query,
+        "letter":       letter,
+        "letters":      letters,
+        "displayed":    displayed,
+        "major_awards": major_awards,
+        "total_awards": len(all_awards),
+    })
+
+
 def award_detail(request, award_type_id):
     """All entries for a single award type, grouped by year and category."""
     cursor = _dict_cursor()
