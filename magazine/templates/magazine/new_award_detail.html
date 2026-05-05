@@ -145,7 +145,47 @@
   </div>
   {% endif %}
 
-  {# Nominees / Finalists accordion (only when include_nominees) #}
+  {# Finalists accordion (only when include_nominees) #}
+  {% if include_nominees and yr.finalists %}
+  <div class="accordion mt-1" id="fin-acc-{{ forloop.counter }}">
+    <div class="accordion-item border-0">
+      <h2 class="accordion-header h6 mb-0">
+        <button class="accordion-button collapsed ps-2 shadow-none"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#fin-panel-{{ forloop.counter }}"
+                aria-expanded="false"
+                aria-controls="fin-panel-{{ forloop.counter }}">
+          Finalists <span class="badge text-bg-secondary ms-2">{{ yr.finalists|length }}</span>
+        </button>
+      </h2>
+      <div id="fin-panel-{{ forloop.counter }}" class="accordion-collapse collapse"
+           data-bs-parent="#fin-acc-{{ forloop.counter }}">
+        <div class="accordion-body px-2 pt-1 pb-1">
+          {% for e in yr.finalists %}
+          <div class="d-flex align-items-baseline gap-2 mb-1">
+            <span class="text-muted small flex-shrink-0" style="min-width:5rem;">{{ e.level }}</span>
+            <span>
+              {% if e.title_id %}
+                {% if e.is_book %}
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                {% else %}
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                {% endif %}
+              {% else %}
+                {{ e.title }}
+              {% endif %}
+              {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Nominees accordion (only when include_nominees) #}
   {% if include_nominees and yr.nominees %}
   <div class="accordion mt-1" id="nom-acc-{{ forloop.counter }}">
     <div class="accordion-item border-0">

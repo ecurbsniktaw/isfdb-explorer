@@ -2097,7 +2097,7 @@ def get_award_entries_by_category(cursor, award_type_id: int,
                                   category: str, sort_asc: bool) -> list:
     """
     Return year-blocks of entries for one award type + category.
-    Each block has keys: year, winners, runners_up, nominees.
+    Each block has keys: year, winners, runners_up, finalists, nominees.
     """
     order = "ASC" if sort_asc else "DESC"
     cursor.execute(
@@ -2137,7 +2137,7 @@ def get_award_entries_by_category(cursor, award_type_id: int,
     for e in entries:
         yr = e["award_year"] or 0
         if yr not in by_year:
-            by_year[yr] = {"winners": [], "runners_up": [], "nominees": []}
+            by_year[yr] = {"winners": [], "runners_up": [], "finalists": [], "nominees": []}
         level_str   = str(e["award_level"] or "")
         level_label = _AWARD_LEVEL_LABELS.get(level_str, "Nominee")
         entry = {
@@ -2151,6 +2151,8 @@ def get_award_entries_by_category(cursor, award_type_id: int,
             by_year[yr]["winners"].append(entry)
         elif level_str == "2":
             by_year[yr]["runners_up"].append(entry)
+        elif level_str in ("3", "4", "5"):
+            by_year[yr]["finalists"].append(entry)
         else:
             by_year[yr]["nominees"].append(entry)
 
