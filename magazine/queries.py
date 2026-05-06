@@ -2057,7 +2057,7 @@ def get_award_detail(cursor, award_type_id: int) -> dict | None:
         cat = e["category"] or ""
         level_label = _AWARD_LEVEL_LABELS.get(str(e["award_level"] or ""), "Nominee")
         by_year[yr][cat].append({
-            "title":   e["award_title"] or "",
+            "title":   html.unescape(e["award_title"] or ""),
             "author":  e["award_author"] or "",
             "level":   level_label,
             "title_id": e.get("title_id"),
@@ -2150,7 +2150,7 @@ def get_award_entries_by_category(cursor, award_type_id: int,
         level_str   = str(e["award_level"] or "")
         level_label = _AWARD_LEVEL_LABELS.get(level_str, "Nominee")
         entry = {
-            "title":   e["award_title"] or "",
+            "title":   html.unescape(e["award_title"] or ""),
             "author":  e["award_author"] or "",
             "level":   level_label,
             "title_id": e.get("title_id"),
@@ -2199,7 +2199,7 @@ def get_author_awards(cursor, author_id: int) -> list:
             "award_name":    r["award_type_name"],
             "category":      r["award_cat_name"],
             "level":         _AWARD_LEVEL_LABELS.get(str(r["award_level"] or ""), "Nominee"),
-            "title_title":   r["title_title"],
+            "title_title":   html.unescape(r["title_title"] or ""),
             "title_id":      r["title_id"],
         }
         for r in rows
