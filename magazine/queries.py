@@ -12,6 +12,7 @@ mysql-connector-python driver sends '%%Y' to MySQL as a literal '%Y' string).
 from __future__ import annotations
 
 import datetime
+import html
 import re
 from urllib.parse import urlparse
 
@@ -131,7 +132,7 @@ def _make_author_list(authors_str, author_ids_str) -> list:
         if name.strip():
             raw_id = ids[i].strip() if i < len(ids) else ""
             result.append({
-                "name": name.strip(),
+                "name": html.unescape(name.strip()),
                 "id":   int(raw_id) if raw_id.isdigit() else None,
             })
     return result
@@ -798,6 +799,7 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
     if not row:
         return None
 
+    row["title_title"]  = html.unescape(row["title_title"] or "")
     row["type_label"]   = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
     row["length_label"] = _STORY_LENGTH_LABELS.get(row.get("title_storylen") or "", "")
     row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
