@@ -2058,7 +2058,7 @@ def get_award_detail(cursor, award_type_id: int) -> dict | None:
         level_label = _AWARD_LEVEL_LABELS.get(str(e["award_level"] or ""), "Nominee")
         by_year[yr][cat].append({
             "title":   html.unescape(e["award_title"] or ""),
-            "author":  e["award_author"] or "",
+            "author":  html.unescape(e["award_author"] or ""),
             "level":   level_label,
             "title_id": e.get("title_id"),
             "is_book": e.get("title_id") in book_ids if e.get("title_id") else False,
@@ -2151,7 +2151,7 @@ def get_award_entries_by_category(cursor, award_type_id: int,
         level_label = _AWARD_LEVEL_LABELS.get(level_str, "Nominee")
         entry = {
             "title":   html.unescape(e["award_title"] or ""),
-            "author":  e["award_author"] or "",
+            "author":  html.unescape(e["award_author"] or ""),
             "level":   level_label,
             "title_id": e.get("title_id"),
             "is_book":  e.get("title_id") in book_ids if e.get("title_id") else False,
