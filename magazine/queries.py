@@ -1378,6 +1378,8 @@ def get_author_detail(cursor, author_id: int) -> dict | None:
     if not author:
         return None
 
+    author["author_canonical"] = html.unescape(author["author_canonical"] or "")
+    author["author_legalname"] = html.unescape(author["author_legalname"] or "") if author.get("author_legalname") else ""
     author["author_note"] = _clean_author_note(author.get("author_note"))
 
     birth = author.get("author_birthdate")
@@ -1406,7 +1408,10 @@ def get_author_detail(cursor, author_id: int) -> dict | None:
         JOIN authors a2 ON a2.author_id = p.author_id
         WHERE p.pseudonym = %s
     """, (author_id,))
-    author["real_author"] = cursor.fetchone()   # None when this is a canonical name
+    real = cursor.fetchone()
+    if real and real.get("author_canonical"):
+        real["author_canonical"] = html.unescape(real["author_canonical"])
+    author["real_author"] = real   # None when this is a canonical name
 
     # Pen names (this is the canonical author — fetch its pseudonyms).
     # Filter to Latin-script names only; foreign-script transliterations are noise.
