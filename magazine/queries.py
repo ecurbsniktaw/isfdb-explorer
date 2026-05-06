@@ -882,9 +882,11 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
     """, (title_id,))
     pubs = cursor.fetchall()
     for p in pubs:
-        p["formatted_date"] = format_date(p["pub_year"], p["pub_month"])
-        p["is_magazine"]    = p["pub_ctype"] == "MAGAZINE"
-        p["type_label"]     = TITLE_TYPE_LABELS.get(p["pub_ctype"], p["pub_ctype"] or "")
+        p["formatted_date"]    = format_date(p["pub_year"], p["pub_month"])
+        p["is_magazine"]       = p["pub_ctype"] == "MAGAZINE"
+        p["type_label"]        = TITLE_TYPE_LABELS.get(p["pub_ctype"], p["pub_ctype"] or "")
+        p["pub_title"]         = html.unescape(p["pub_title"] or "")
+        p["publisher_name"]    = html.unescape(p["publisher_name"] or "") if p.get("publisher_name") else ""
     row["publications"] = pubs
 
     # First publication date (earliest entry)
