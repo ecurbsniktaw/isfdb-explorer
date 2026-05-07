@@ -35,7 +35,7 @@
               <a href="{% url 'author_list' %}" class="btn btn-outline-secondary">Clear</a>
             {% endif %}
           </div>
-          <div class="d-flex gap-3">
+          <div class="d-flex gap-3 mb-3">
             <div class="form-check">
               <input class="form-check-input" type="radio" name="search_type" id="search-full"
                      value="full" {% if search_type != "last" %}checked{% endif %}>
@@ -48,6 +48,7 @@
             </div>
           </div>
         </form>
+        <a href="{% url 'random_item' 'author' %}" class="btn btn-outline-secondary btn-sm">Show a Random Author</a>
       </div>
     </div>
   </div>
