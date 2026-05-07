@@ -14,19 +14,59 @@
 <h1 class="h3 mb-1">Magazines</h1>
 <p class="text-muted mb-3">{{ total_all }} magazines in database</p>
 
-{# Search form #}
-<div class="d-flex align-items-center gap-3 flex-wrap mb-4">
-  <form method="get" action="">
-    <div class="input-group" style="max-width: 400px;">
-      <input type="text" name="q" value="{{ query }}"
-             class="form-control" placeholder="Search magazine names…" autofocus>
-      <button class="btn btn-secondary" type="submit">Search</button>
-      {% if query %}
-        <a href="{% url 'magazine_list' %}" class="btn btn-outline-secondary">Clear</a>
-      {% endif %}
+{# Search forms #}
+<div class="row g-4 mb-4">
+
+  {# Left: search by name + random #}
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5 card-title mb-3">Find a magazine</h2>
+        <form method="get" action="" class="mb-3">
+          <div class="input-group">
+            <input type="text" name="q" value="{{ query }}"
+                   class="form-control" placeholder="Search magazine names…" autofocus>
+            <button class="btn btn-secondary" type="submit">Search</button>
+            {% if query %}
+              <a href="{% url 'magazine_list' %}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+          </div>
+        </form>
+        <div class="text-center">
+          <a href="{% url 'random_item' 'issue' %}" class="btn btn-outline-secondary btn-sm">Show a Random Magazine Issue</a>
+        </div>
+      </div>
     </div>
-  </form>
-  <a href="{% url 'random_item' 'issue' %}" class="btn btn-outline-secondary btn-sm">Show a Random Magazine Issue</a>
+  </div>
+
+  {# Right: Magazine Issue Search #}
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5 card-title mb-3">Magazine issue search</h2>
+        <form method="get" action="{% url 'search' %}">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+              <label for="ml-magazine" class="form-label fw-semibold">Magazine name</label>
+              <input type="text" id="ml-magazine" name="magazine" class="form-control"
+                     placeholder="e.g. Astounding Science-Fiction">
+              <div class="form-text">Partial match, case-insensitive</div>
+            </div>
+            <div class="col-md-4">
+              <label for="ml-date" class="form-label fw-semibold">Date</label>
+              <input type="text" id="ml-date" name="date" class="form-control"
+                     placeholder="e.g. 1939-07 or 1939">
+              <div class="form-text">YYYY-MM for one issue, YYYY for a year</div>
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 {# Selected Magazines cards — hidden during search #}
