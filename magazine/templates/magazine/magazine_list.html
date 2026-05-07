@@ -15,16 +15,19 @@
 <p class="text-muted mb-3">{{ total_all }} magazines in database</p>
 
 {# Search form #}
-<form method="get" action="" class="mb-4">
-  <div class="input-group" style="max-width: 400px;">
-    <input type="text" name="q" value="{{ query }}"
-           class="form-control" placeholder="Search magazine names…" autofocus>
-    <button class="btn btn-secondary" type="submit">Search</button>
-    {% if query %}
-      <a href="{% url 'magazine_list' %}" class="btn btn-outline-secondary">Clear</a>
-    {% endif %}
-  </div>
-</form>
+<div class="d-flex align-items-center gap-3 flex-wrap mb-4">
+  <form method="get" action="">
+    <div class="input-group" style="max-width: 400px;">
+      <input type="text" name="q" value="{{ query }}"
+             class="form-control" placeholder="Search magazine names…" autofocus>
+      <button class="btn btn-secondary" type="submit">Search</button>
+      {% if query %}
+        <a href="{% url 'magazine_list' %}" class="btn btn-outline-secondary">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+  <a href="{% url 'random_item' 'issue' %}" class="btn btn-outline-secondary btn-sm">Show a Random Magazine Issue</a>
+</div>
 
 {# Selected Magazines cards — hidden during search #}
 {% if not query %}
