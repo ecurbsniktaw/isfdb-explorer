@@ -862,7 +862,9 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
         for r in cursor.fetchall()
     ]
 
-    # All publications (where and when this story appeared)
+    # All publications (where and when this story appeared).
+    # Include publications attached to variant titles (pen-name versions etc.)
+    # by also matching rows where title_parent = title_id.
     cursor.execute("""
         SELECT
             p.pub_id,
@@ -876,10 +878,13 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
         FROM pub_content pc
         JOIN pubs p ON p.pub_id = pc.pub_id
         LEFT JOIN publishers pub2 ON pub2.publisher_id = p.publisher_id
-        WHERE pc.title_id = %s
+        WHERE pc.title_id IN (
+            SELECT title_id FROM titles
+            WHERE title_id = %s OR title_parent = %s
+        )
           AND YEAR(p.pub_year) > 0
         ORDER BY p.pub_year, p.pub_id
-    """, (title_id,))
+    """, (title_id, title_id))
     pubs = cursor.fetchall()
     for p in pubs:
         p["formatted_date"]    = format_date(p["pub_year"], p["pub_month"])
