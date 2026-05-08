@@ -512,6 +512,11 @@ def random_item(request, kind):
     raise Http404(f"Could not find a random {kind}")
 
 
+def title_list(request):
+    """Titles landing page with search form and selected title cards."""
+    return render(request, "magazine/title_list.html")
+
+
 def title_search(request):
     """Search for titles by name."""
     query        = request.GET.get("q", "").strip()
