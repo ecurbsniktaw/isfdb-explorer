@@ -26,7 +26,7 @@
           <div class="input-group">
             <input type="text" name="q" value="{{ query }}"
                    class="form-control" placeholder="Search magazine names…" autofocus>
-            <button class="btn btn-secondary" type="submit">Search</button>
+            <button class="btn btn-primary" type="submit">Search</button>
             {% if query %}
               <a href="{% url 'magazine_list' %}" class="btn btn-outline-secondary">Clear</a>
             {% endif %}
@@ -46,21 +46,26 @@
         <h2 class="h5 card-title mb-3">Magazine issue search</h2>
         <form method="get" action="{% url 'search' %}">
           <div class="row g-3 align-items-end">
+
             <div class="col-md-5">
               <label for="ml-magazine" class="form-label fw-semibold">Magazine name</label>
               <input type="text" id="ml-magazine" name="magazine" class="form-control"
                      placeholder="e.g. Astounding Science-Fiction">
               <div class="form-text">Partial match, case-insensitive</div>
             </div>
+
             <div class="col-md-4">
               <label for="ml-date" class="form-label fw-semibold">Date</label>
               <input type="text" id="ml-date" name="date" class="form-control"
                      placeholder="e.g. 1939-07 or 1939">
-              <div class="form-text">YYYY-MM = 1 issue, YYYY = 1 year</div>
+              <div class="form-text">YYYY-MM: 1 issue, YYYY: 1 year</div>
             </div>
+
             <div class="col-md-3">
-              <button type="submit" class="btn btn-primary w-100">Search</button>
+              <button type="submit" class="btn btn-primary w-80">Search</button>
+              <div class="form-text">&nbsp;</div>
             </div>
+
           </div>
         </form>
       </div>
