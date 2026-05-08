@@ -1615,6 +1615,49 @@ def get_random_book_title_id(cursor) -> int | None:
     return None
 
 
+def get_random_short_fiction_id(cursor) -> int | None:
+    """
+    Return a random title_id for an English-language short-fiction title
+    (SHORTFICTION, NOVELETTE, or NOVELLA) that has at least one publication.
+    Uses the same random primary-key walk as get_random_book_title_id.
+    """
+    import random as _random
+
+    FICTION_TYPES = ("SHORTFICTION", "NOVELETTE", "NOVELLA")
+    type_placeholders = ", ".join(["%s"] * len(FICTION_TYPES))
+
+    cursor.execute("SELECT lang_id FROM languages WHERE lang_code = 'eng'")
+    lang_row = cursor.fetchone()
+    if not lang_row:
+        return None
+    lang_id = lang_row["lang_id"]
+
+    cursor.execute("SELECT MAX(title_id) AS max_id FROM titles")
+    bound_row = cursor.fetchone()
+    if not bound_row or not bound_row["max_id"]:
+        return None
+    max_id = bound_row["max_id"]
+
+    for _ in range(10):
+        rand_id = _random.randint(1, max_id)
+        op, order = (">=", "ASC") if _random.random() < 0.5 else ("<=", "DESC")
+        cursor.execute(
+            f"""SELECT t.title_id FROM titles t
+                JOIN pub_content pc ON pc.title_id = t.title_id
+                WHERE t.title_ttype   IN ({type_placeholders})
+                  AND t.title_language = %s
+                  AND t.title_id      {op} %s
+                ORDER BY t.title_id {order}
+                LIMIT 1""",
+            (*FICTION_TYPES, lang_id, rand_id),
+        )
+        row = cursor.fetchone()
+        if row:
+            return row["title_id"]
+
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Series
 # ---------------------------------------------------------------------------

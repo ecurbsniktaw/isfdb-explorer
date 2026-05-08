@@ -14,62 +14,81 @@
 <h1 class="h3 mb-1">Titles</h1>
 <p class="text-muted mb-4">2,467,006 titles in the database</p>
 
-{# ── Title search ────────────────────────────────────────────────────────── #}
-<form method="get" action="{% url 'title_search' %}" class="card shadow-sm mb-5">
-  <div class="card-body">
-    <div class="row g-3 align-items-end">
-      <div class="col">
-        <label for="tl-q" class="form-label fw-semibold">Title</label>
-        <input type="text"
-               id="tl-q"
-               name="q"
-               class="form-control"
-               placeholder="e.g. Foundation"
-               autofocus>
-        <div class="row g-4 mt-0">
-          <div class="col-auto">
-            <div class="fw-semibold small mb-1">Match</div>
-            <div class="d-flex gap-3">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="match_type"
-                       id="tl-mt-exact" value="exact" checked>
-                <label class="form-check-label" for="tl-mt-exact">Exact</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="match_type"
-                       id="tl-mt-partial" value="partial">
-                <label class="form-check-label" for="tl-mt-partial">Partial</label>
+{# ── Search + random ─────────────────────────────────────────────────────── #}
+<div class="row g-4 mb-5">
+
+  {# Left: title search form #}
+  <div class="col-lg-9">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <form method="get" action="{% url 'title_search' %}">
+          <div class="row g-3 align-items-end">
+            <div class="col">
+              <label for="tl-q" class="form-label fw-semibold">Title</label>
+              <input type="text"
+                     id="tl-q"
+                     name="q"
+                     class="form-control"
+                     placeholder="e.g. Foundation"
+                     autofocus>
+              <div class="row g-4 mt-0">
+                <div class="col-auto">
+                  <div class="fw-semibold small mb-1">Match</div>
+                  <div class="d-flex gap-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="match_type"
+                             id="tl-mt-exact" value="exact" checked>
+                      <label class="form-check-label" for="tl-mt-exact">Exact</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="match_type"
+                             id="tl-mt-partial" value="partial">
+                      <label class="form-check-label" for="tl-mt-partial">Partial</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="fw-semibold small mb-1">Type</div>
+                  <div class="d-flex gap-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="content_type"
+                             id="tl-ct-all" value="all" checked>
+                      <label class="form-check-label" for="tl-ct-all">All</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="content_type"
+                             id="tl-ct-book" value="book">
+                      <label class="form-check-label" for="tl-ct-book">Books only</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="content_type"
+                             id="tl-ct-fiction" value="fiction">
+                      <label class="form-check-label" for="tl-ct-fiction">Short fiction only</label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-auto">
-            <div class="fw-semibold small mb-1">Type</div>
-            <div class="d-flex gap-3">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="content_type"
-                       id="tl-ct-all" value="all" checked>
-                <label class="form-check-label" for="tl-ct-all">All</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="content_type"
-                       id="tl-ct-book" value="book">
-                <label class="form-check-label" for="tl-ct-book">Books only</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="content_type"
-                       id="tl-ct-fiction" value="fiction">
-                <label class="form-check-label" for="tl-ct-fiction">Short fiction only</label>
-              </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary">Search</button>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="col-auto">
-        <button type="submit" class="btn btn-primary">Search</button>
+        </form>
       </div>
     </div>
   </div>
-</form>
+
+  {# Right: random buttons #}
+  <div class="col-lg-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex flex-column justify-content-center gap-3">
+        <a href="{% url 'random_item' 'book' %}" class="btn btn-outline-secondary">Show a random book</a>
+        <a href="{% url 'random_item' 'short_fiction' %}" class="btn btn-outline-secondary">Show a random short fiction</a>
+      </div>
+    </div>
+  </div>
+
+</div>
 
 {# ── Selected Short Fiction ───────────────────────────────────────────────── #}
 <h2 class="h5 mb-3">Selected Short Fiction</h2>

@@ -16,6 +16,7 @@ from .queries import (
     get_all_magazines, get_magazine_issues, search_magazines,
     find_authors, get_author_count, get_author_art, author_has_series,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
+    get_random_short_fiction_id,
     get_all_award_types, search_award_types, get_award_detail, get_author_awards,
     get_award_type_info, get_award_categories, get_award_entries_by_category,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
@@ -507,6 +508,10 @@ def random_item(request, kind):
                 item_id = get_random_book_title_id(cursor)
                 if item_id and get_book_detail(cursor, item_id):
                     return redirect("book_detail", title_id=item_id)
+        elif kind == "short_fiction":
+            item_id = get_random_short_fiction_id(cursor)
+            if item_id:
+                return redirect("story_detail", title_id=item_id)
     finally:
         cursor.close()
     raise Http404(f"Could not find a random {kind}")
