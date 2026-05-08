@@ -93,27 +93,40 @@
 {# ── Selected Short Fiction ───────────────────────────────────────────────── #}
 <h2 class="h5 mb-3">Selected Short Fiction</h2>
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mb-5">
+
   <div class="col">
-    <div class="card title-card shadow-sm h-100">
-      <div class="card-body py-2 px-3">
-        <span class="fw-semibold text-muted">Placeholder</span>
+    <a href="{% url 'story_detail' 41186 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">The Machine Stops <span class="text-muted fw-normal">1909</span></div>
+          <div class="small"><a href="{% url 'author_detail' 1969 %}" class="text-decoration-none">E. M. Forster</a></div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
+
   <div class="col">
-    <div class="card title-card shadow-sm h-100">
-      <div class="card-body py-2 px-3">
-        <span class="fw-semibold text-muted">Placeholder</span>
+    <a href="{% url 'story_detail' 41168 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">A Martian Odyssey <span class="text-muted fw-normal">1934</span></div>
+          <div class="small"><a href="{% url 'author_detail' 64 %}" class="text-decoration-none">Stanley G. Weinbaum</a></div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
+
   <div class="col">
-    <div class="card title-card shadow-sm h-100">
-      <div class="card-body py-2 px-3">
-        <span class="fw-semibold text-muted">Placeholder</span>
+    <a href="{% url 'story_detail' 47137 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">Twilight <span class="text-muted fw-normal">1934</span></div>
+          <div class="small"><a href="{% url 'author_detail' 14 %}" class="text-decoration-none">John W. Campbell, Jr.</a></div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
+
 </div>
 
 {# ── Selected Books ───────────────────────────────────────────────────────── #}
