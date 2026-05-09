@@ -232,27 +232,40 @@
 {# ── Selected Books ───────────────────────────────────────────────────────── #}
 <h2 class="h5 mb-3">Selected Books</h2>
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mb-4">
+
   <div class="col">
-    <div class="card title-card shadow-sm h-100">
-      <div class="card-body py-2 px-3">
-        <span class="fw-semibold text-muted">Placeholder</span>
+    <a href="{% url 'book_detail' 9795 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">Frankenstein, or, The Modern Prometheus <span class="text-muted fw-normal">1818</span></div>
+          <div class="small"><a href="{% url 'author_detail' 1836 %}" class="text-decoration-none">Mary Shelley</a></div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
+
   <div class="col">
-    <div class="card title-card shadow-sm h-100">
-      <div class="card-body py-2 px-3">
-        <span class="fw-semibold text-muted">Placeholder</span>
+    <a href="{% url 'book_detail' 171223 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">From the Earth to the Moon <span class="text-muted fw-normal">1865</span></div>
+          <div class="small"><a href="{% url 'author_detail' 159 %}" class="text-decoration-none">Jules Verne</a></div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
+
   <div class="col">
-    <div class="card title-card shadow-sm h-100">
-      <div class="card-body py-2 px-3">
-        <span class="fw-semibold text-muted">Placeholder</span>
+    <a href="{% url 'story_detail' 25149 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">The Time Machine <span class="text-muted fw-normal">1895</span></div>
+          <div class="small"><a href="{% url 'author_detail' 65 %}" class="text-decoration-none">H. G. Wells</a></div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
+
 </div>
 
 {% endblock %}
