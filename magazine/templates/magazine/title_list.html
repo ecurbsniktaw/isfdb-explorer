@@ -266,6 +266,39 @@
     </a>
   </div>
 
+  <div class="col">
+    <a href="{% url 'book_detail' 21883 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">A Princess of Mars <span class="text-muted fw-normal">1912</span></div>
+          <div class="small"><a href="{% url 'author_detail' 143 %}" class="text-decoration-none">Edgar Rice Burroughs</a></div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col">
+    <a href="{% url 'book_detail' 539 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">Odd John <span class="text-muted fw-normal">1935</span></div>
+          <div class="small"><a href="{% url 'author_detail' 81 %}" class="text-decoration-none">Olaf Stapledon</a></div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col">
+    <a href="{% url 'book_detail' 17201 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">I, Robot <span class="text-muted fw-normal">1950</span></div>
+          <div class="small"><a href="{% url 'author_detail' 5 %}" class="text-decoration-none">Isaac Asimov</a></div>
+        </div>
+      </div>
+    </a>
+  </div>
+
 </div>
 
 {% endblock %}
