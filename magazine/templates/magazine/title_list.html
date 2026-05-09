@@ -332,6 +332,39 @@
     </a>
   </div>
 
+  <div class="col">
+    <a href="{% url 'book_detail' 1095 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">Stranger in a Strange Land <span class="text-muted fw-normal">1961</span></div>
+          <div class="small"><a href="{% url 'author_detail' 29 %}" class="text-decoration-none">Robert A. Heinlein</a></div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col">
+    <a href="{% url 'book_detail' 2036 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">Dune <span class="text-muted fw-normal">1965</span></div>
+          <div class="small"><a href="{% url 'author_detail' 30 %}" class="text-decoration-none">Frank Herbert</a></div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col">
+    <a href="{% url 'book_detail' 7662 %}" class="text-decoration-none text-dark">
+      <div class="card title-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">The Left Hand of Darkness <span class="text-muted fw-normal">1969</span></div>
+          <div class="small"><a href="{% url 'author_detail' 37 %}" class="text-decoration-none">Ursula K. Le Guin</a></div>
+        </div>
+      </div>
+    </a>
+  </div>
+
 </div>
 
 {% endblock %}
