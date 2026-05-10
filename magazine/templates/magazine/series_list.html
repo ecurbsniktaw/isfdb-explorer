@@ -106,13 +106,13 @@
 <div class="row g-3 mb-5">
   {% for s in major_series %}
   <div class="col-md-4 col-sm-6">
-    <a href="{% url 'series_detail' s.id %}" class="text-decoration-none">
+    <a href="{% url 'series_detail' s.id %}" class="text-decoration-none text-dark">
       <div class="card h-100 shadow-sm series-card">
         <div class="card-body">
           <div class="fs-6 fw-semibold">{{ s.name }}</div>
           <div class="author-name">
             <a href="{% url 'author_detail' s.author_id %}"
-               class="text-decoration-none text-muted"
+               class="text-decoration-none"
                onclick="event.stopPropagation()">{{ s.author }}</a>
           </div>
         </div>
