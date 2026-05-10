@@ -1673,21 +1673,21 @@ _MAJOR_SERIES_IDS = [
 ]
 
 _MAJOR_SERIES_INFO = {
-    165:   {"name": "Hitchhiker's Guide to the Galaxy",    "author": "Douglas Adams"},
-    11826: {"name": "Foundation Universe",                 "author": "Isaac Asimov"},
-    504:   {"name": "Culture",                             "author": "Iain M. Banks"},
-    11680: {"name": "Parable of the Sower / Earthseed",   "author": "Octavia E. Butler"},
-    12290: {"name": "Ender's Universe",                    "author": "Orson Scott Card"},
-    518:   {"name": "Riverworld",                          "author": "Philip José Farmer"},
-    24708: {"name": "Future History",                      "author": "Robert A. Heinlein"},
-    869:   {"name": "Dune",                                "author": "Frank Herbert"},
-    1023:  {"name": "The Dark Tower",                      "author": "Stephen King"},
-    4543:  {"name": "A Song of Ice and Fire",              "author": "George R.R. Martin"},
-    684:   {"name": "Known Space",                         "author": "Larry Niven"},
-    1154:  {"name": "Witch World Universe",                "author": "Andre Norton"},
-    875:   {"name": "Heechee",                             "author": "Frederik Pohl"},
-    13661: {"name": "Middle Earth Universe",               "author": "J.R.R. Tolkien"},
-    2294:  {"name": "Demon Princes",                       "author": "Jack Vance"},
+    165:   {"name": "Hitchhiker's Guide to the Galaxy",    "author": "Douglas Adams",       "author_id": 122},
+    11826: {"name": "Foundation Universe",                 "author": "Isaac Asimov",        "author_id": 5},
+    504:   {"name": "Culture",                             "author": "Iain M. Banks",       "author_id": 100},
+    11680: {"name": "Parable of the Sower / Earthseed",   "author": "Octavia E. Butler",   "author_id": 186},
+    12290: {"name": "Ender's Universe",                    "author": "Orson Scott Card",    "author_id": 15},
+    518:   {"name": "Riverworld",                          "author": "Philip José Farmer",  "author_id": 26},
+    24708: {"name": "Future History",                      "author": "Robert A. Heinlein",  "author_id": 29},
+    869:   {"name": "Dune",                                "author": "Frank Herbert",       "author_id": 30},
+    1023:  {"name": "The Dark Tower",                      "author": "Stephen King",        "author_id": 70},
+    4543:  {"name": "A Song of Ice and Fire",              "author": "George R. R. Martin", "author_id": 401},
+    684:   {"name": "Known Space",                         "author": "Larry Niven",         "author_id": 42},
+    1154:  {"name": "Witch World Universe",                "author": "Andre Norton",        "author_id": 209},
+    875:   {"name": "Heechee",                             "author": "Frederik Pohl",       "author_id": 820},
+    13661: {"name": "Middle Earth Universe",               "author": "J. R. R. Tolkien",   "author_id": 302},
+    2294:  {"name": "Demon Princes",                       "author": "Jack Vance",          "author_id": 136},
 }
 
 _SERIES_TITLE_TYPES = (
