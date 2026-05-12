@@ -8,6 +8,27 @@
   <a href="javascript:history.back()" class="text-decoration-none">&larr; Back</a>
 </div>
 
+<script>
+function authorPhotoMissing(img) {
+  img.onerror = null;
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200">' +
+    '<rect width="160" height="200" fill="#dee2e6" rx="6"/>' +
+    '<circle cx="80" cy="75" r="36" fill="#adb5bd"/>' +
+    '<path d="M8,200 Q8,136 80,136 Q152,136 152,200 Z" fill="#adb5bd"/>' +
+    '</svg>';
+  img.src = 'data:image/svg+xml,' + encodeURIComponent(svg);
+  img.alt = 'No photo available';
+  img.style.cursor = 'default';
+  var link = img.closest('a');
+  if (link) {
+    link.removeAttribute('data-bs-toggle');
+    link.removeAttribute('data-bs-target');
+    link.removeAttribute('href');
+    link.style.pointerEvents = 'none';
+  }
+}
+</script>
+
 {# ── Header: photo + key facts (left) / biography accordion (right) ──────── #}
 <div class="row g-4 mb-4">
 
@@ -588,24 +609,4 @@ document.querySelectorAll('.art-thumb').forEach(function(img) {
 });
 </script>
 {% endif %}
-<script>
-function authorPhotoMissing(img) {
-  img.onerror = null;
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200">' +
-    '<rect width="160" height="200" fill="#dee2e6" rx="6"/>' +
-    '<circle cx="80" cy="75" r="36" fill="#adb5bd"/>' +
-    '<path d="M8,200 Q8,136 80,136 Q152,136 152,200 Z" fill="#adb5bd"/>' +
-    '</svg>';
-  img.src = 'data:image/svg+xml,' + encodeURIComponent(svg);
-  img.alt = 'No photo available';
-  img.style.cursor = 'default';
-  var link = img.closest('a');
-  if (link) {
-    link.removeAttribute('data-bs-toggle');
-    link.removeAttribute('data-bs-target');
-    link.removeAttribute('href');
-    link.style.pointerEvents = 'none';
-  }
-}
-</script>
 {% endblock %}
