@@ -1313,6 +1313,49 @@ def get_author_count(cursor) -> int:
     return row["cnt"] if row else 0
 
 
+def find_artists(cursor, name: str, search_type: str = "full") -> list:
+    """
+    Return authors who have at least one COVERART or INTERIORART credit and
+    whose canonical name matches the given string.
+
+    search_type:
+        'full' — match anywhere in the full name (default)
+        'last' — match against the last word of the name only
+
+    Returns a list of dicts with keys:
+        author_id, author_canonical, author_legalname,
+        birth_year (int|None), death_year (int|None), art_count (int)
+    Ordered alphabetically by author_canonical.
+    """
+    clean = name.replace(".", "")
+    if search_type == "last":
+        where = "REPLACE(SUBSTRING_INDEX(a.author_canonical, ' ', -1), '.', '') LIKE %s"
+        param = f"%{clean}%"
+    else:
+        where = "REPLACE(a.author_canonical, '.', '') LIKE %s"
+        param = f"%{clean}%"
+
+    cursor.execute(f"""
+        SELECT
+            a.author_id,
+            a.author_canonical,
+            a.author_legalname,
+            YEAR(a.author_birthdate) AS birth_year,
+            YEAR(a.author_deathdate) AS death_year,
+            COUNT(t.title_id) AS art_count
+        FROM authors a
+        JOIN canonical_author ca ON ca.author_id = a.author_id
+        JOIN titles t ON t.title_id = ca.title_id
+            AND t.title_ttype IN ('COVERART', 'INTERIORART')
+        WHERE {where}
+          AND a.author_canonical NOT LIKE '%%&#%%'
+        GROUP BY a.author_id, a.author_canonical, a.author_legalname,
+                 a.author_birthdate, a.author_deathdate
+        ORDER BY a.author_canonical
+    """, (param,))
+    return cursor.fetchall()
+
+
 def find_authors(cursor, name: str, search_type: str = "full") -> list:
     """
     Return authors whose canonical name matches the given string.

@@ -1,0 +1,124 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Artists — ISFDB Explorer{% endblock %}
+
+{% block extra_css %}
+<style>
+.artist-card { transition: box-shadow .15s; }
+.artist-card:hover { box-shadow: 0 .25rem .75rem rgba(0,0,0,.15) !important; background-color: #f8f9fa; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-1">Artists</h1>
+<p class="text-muted mb-4">57,919 Artists in the database</p>
+
+{# ── Search form ─────────────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h2 class="h5 card-title mb-3">Find an artist</h2>
+    <form method="get" action="{% url 'artist_list' %}">
+      <div class="input-group mb-2">
+        <input type="text"
+               name="q"
+               value="{{ query }}"
+               class="form-control"
+               placeholder="Artist name…"
+               autofocus>
+        <button class="btn btn-primary" type="submit">Search</button>
+        {% if query %}
+          <a href="{% url 'artist_list' %}" class="btn btn-outline-secondary">Clear</a>
+        {% endif %}
+      </div>
+      <div class="d-flex gap-3">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="search_type" id="search-full"
+                 value="full" {% if search_type != "last" %}checked{% endif %}>
+          <label class="form-check-label" for="search-full">Search full name</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="search_type" id="search-last"
+                 value="last" {% if search_type == "last" %}checked{% endif %}>
+          <label class="form-check-label" for="search-last">Search last name only</label>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ── Search results ──────────────────────────────────────────────────────── #}
+{% if query %}
+  {% if artists %}
+    <p class="text-muted mb-3" id="result-count"></p>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm table-hover" id="artist-table">
+        <thead class="table-light">
+          <tr>
+            <th style="width:40%">Name</th>
+            <th style="width:30%">Legal Name</th>
+            <th style="width:12%">Born</th>
+            <th style="width:12%">Died</th>
+            <th style="width:6%">Works</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in artists %}
+          <tr>
+            <td>
+              <a href="{% url 'author_detail' a.author_id %}" class="text-decoration-none">
+                {{ a.author_canonical }}
+              </a>
+            </td>
+            <td class="text-muted small">
+              {% if a.author_legalname and a.author_legalname != a.author_canonical %}
+                {{ a.author_legalname }}
+              {% endif %}
+            </td>
+            <td class="text-muted small">{{ a.birth_year|default:"" }}</td>
+            <td class="text-muted small">{{ a.death_year|default:"" }}</td>
+            <td class="text-muted small">{{ a.art_count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted mb-4">No artists found matching <strong>{{ query }}</strong>.</p>
+  {% endif %}
+{% endif %}
+
+{# ── Selected Artists ────────────────────────────────────────────────────── #}
+<h2 class="h5 mb-3">Selected Artists</h2>
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mb-4">
+  {% for name, artist_id in selected_artists %}
+  <div class="col">
+    {% if artist_id %}
+    <a href="{% url 'author_detail' artist_id %}" class="text-decoration-none text-dark">
+    {% endif %}
+      <div class="card artist-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <span class="fw-semibold">{{ name }}</span>
+        </div>
+      </div>
+    {% if artist_id %}
+    </a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if artists %}
+<script>
+(function () {
+  const qVal = "{{ query|escapejs }}";
+  const total = {{ total }};
+  document.getElementById('result-count').textContent =
+    total + ' artist' + (total === 1 ? '' : 's') + ' matching "' + qVal + '"';
+})();
+</script>
+{% endif %}
+{% endblock %}

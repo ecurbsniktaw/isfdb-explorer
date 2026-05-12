@@ -14,7 +14,7 @@ from .queries import (
     get_book_detail, get_book_editions, get_book_contents, get_book_reviews, get_story_detail, find_titles,
     get_magazine_issues_by_name, get_magazine_group_info,
     get_all_magazines, get_magazine_issues, search_magazines,
-    find_authors, get_author_count, get_author_art, author_has_series,
+    find_authors, find_artists, get_author_count, get_author_art, author_has_series,
     get_random_author_id, get_random_issue_id, get_random_book_title_id,
     get_random_short_fiction_id,
     get_all_award_types, search_award_types, get_award_detail, get_author_awards,
@@ -487,6 +487,35 @@ def author_list(request):
         "total_with_works": sum(1 for a in authors if a.get("title_count")),
         "total_authors":    f"{total_authors:,}",
         "selected_authors": _SELECTED_AUTHORS,
+    })
+
+
+_SELECTED_ARTISTS = [
+    ("Placeholder Artist 1", 0),
+    ("Placeholder Artist 2", 0),
+    ("Placeholder Artist 3", 0),
+]
+
+
+def artist_list(request):
+    """Artists page: count, search form, and selected artist cards."""
+    query       = request.GET.get("q", "").strip()
+    search_type = request.GET.get("search_type", "full")
+    if search_type not in ("full", "last"):
+        search_type = "full"
+
+    cursor = _dict_cursor()
+    try:
+        artists = find_artists(cursor, query, search_type) if query else []
+    finally:
+        cursor.close()
+
+    return render(request, "magazine/artist_list.html", {
+        "query":            query,
+        "search_type":      search_type,
+        "artists":          artists,
+        "total":            len(artists),
+        "selected_artists": _SELECTED_ARTISTS,
     })
 
 
