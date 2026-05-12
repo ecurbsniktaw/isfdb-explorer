@@ -491,9 +491,18 @@ def author_list(request):
 
 
 _SELECTED_ARTISTS = [
-    ("Placeholder Artist 1", 0),
-    ("Placeholder Artist 2", 0),
-    ("Placeholder Artist 3", 0),
+    ("Frank R. Paul",      731,   "1884–1963"),
+    ("Alex Schomburg",     1306,  "1905–1998"),
+    ("Hannes Bok",         609,   "1914–1964"),
+    ("Richard Powers",     3508,  "1921–1996"),
+    ("Frank Kelly Freas",  488,   "1922–2005"),
+    ("Ed Emshwiller",      550,   "1925–1990"),
+    ("Frank Frazetta",     1825,  "1928–2010"),
+    ("Jack Gaughan",       1805,  "1930–1985"),
+    ("John Berkey",        22975, "1932–2008"),
+    ("John Schoenherr",    1393,  "1935–2010"),
+    ("H. R. Giger",        21090, "1940–2014"),
+    ("Michael Whelan",     1804,  "1950–"),
 ]
 
 

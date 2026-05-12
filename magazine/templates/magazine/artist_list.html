@@ -91,7 +91,7 @@
 {# ── Selected Artists ────────────────────────────────────────────────────── #}
 <h2 class="h5 mb-3">Selected Artists</h2>
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mb-4">
-  {% for name, artist_id in selected_artists %}
+  {% for name, artist_id, dates in selected_artists %}
   <div class="col">
     {% if artist_id %}
     <a href="{% url 'author_detail' artist_id %}" class="text-decoration-none text-dark">
@@ -99,6 +99,7 @@
       <div class="card artist-card shadow-sm h-100">
         <div class="card-body py-2 px-3">
           <span class="fw-semibold">{{ name }}</span>
+          {% if dates %}<br><small class="text-muted">{{ dates }}</small>{% endif %}
         </div>
       </div>
     {% if artist_id %}
