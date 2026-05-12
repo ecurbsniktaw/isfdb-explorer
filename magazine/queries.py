@@ -1313,7 +1313,8 @@ def get_author_count(cursor) -> int:
     return row["cnt"] if row else 0
 
 
-def find_artists(cursor, name: str, search_type: str = "full") -> list:
+def find_artists(cursor, name: str, search_type: str = "full",
+                 scope: str = "artists") -> list:
     """
     Return authors who have at least one COVERART or INTERIORART credit and
     whose canonical name matches the given string.
@@ -1321,6 +1322,11 @@ def find_artists(cursor, name: str, search_type: str = "full") -> list:
     search_type:
         'full' — match anywhere in the full name (default)
         'last' — match against the last word of the name only
+
+    scope:
+        'artists' — pure artists only: exclude anyone who also has non-art
+                    title credits (SHORTFICTION, NOVEL, ESSAY, etc.)  [default]
+        'all'     — anyone with at least one art credit, including writers
 
     Returns a list of dicts with keys:
         author_id, author_canonical, author_legalname,
@@ -1334,6 +1340,16 @@ def find_artists(cursor, name: str, search_type: str = "full") -> list:
     else:
         where = "REPLACE(a.author_canonical, '.', '') LIKE %s"
         param = f"%{clean}%"
+
+    pure_clause = ""
+    if scope == "artists":
+        pure_clause = """
+          AND NOT EXISTS (
+              SELECT 1 FROM canonical_author ca2
+              JOIN titles t2 ON t2.title_id = ca2.title_id
+                  AND t2.title_ttype NOT IN ('COVERART', 'INTERIORART')
+              WHERE ca2.author_id = a.author_id
+          )"""
 
     cursor.execute(f"""
         SELECT
@@ -1349,6 +1365,7 @@ def find_artists(cursor, name: str, search_type: str = "full") -> list:
             AND t.title_ttype IN ('COVERART', 'INTERIORART')
         WHERE {where}
           AND a.author_canonical NOT LIKE '%%&#%%'
+          {pure_clause}
         GROUP BY a.author_id, a.author_canonical, a.author_legalname,
                  a.author_birthdate, a.author_deathdate
         ORDER BY a.author_canonical

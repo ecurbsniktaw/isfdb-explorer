@@ -510,18 +510,22 @@ def artist_list(request):
     """Artists page: count, search form, and selected artist cards."""
     query       = request.GET.get("q", "").strip()
     search_type = request.GET.get("search_type", "full")
+    scope       = request.GET.get("scope", "artists")
     if search_type not in ("full", "last"):
         search_type = "full"
+    if scope not in ("artists", "all"):
+        scope = "artists"
 
     cursor = _dict_cursor()
     try:
-        artists = find_artists(cursor, query, search_type) if query else []
+        artists = find_artists(cursor, query, search_type, scope) if query else []
     finally:
         cursor.close()
 
     return render(request, "magazine/artist_list.html", {
         "query":            query,
         "search_type":      search_type,
+        "scope":            scope,
         "artists":          artists,
         "total":            len(artists),
         "selected_artists": _SELECTED_ARTISTS,

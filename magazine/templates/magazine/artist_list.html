@@ -31,7 +31,7 @@
           <a href="{% url 'artist_list' %}" class="btn btn-outline-secondary">Clear</a>
         {% endif %}
       </div>
-      <div class="d-flex gap-3">
+      <div class="d-flex gap-3 mb-2">
         <div class="form-check">
           <input class="form-check-input" type="radio" name="search_type" id="search-full"
                  value="full" {% if search_type != "last" %}checked{% endif %}>
@@ -41,6 +41,18 @@
           <input class="form-check-input" type="radio" name="search_type" id="search-last"
                  value="last" {% if search_type == "last" %}checked{% endif %}>
           <label class="form-check-label" for="search-last">Search last name only</label>
+        </div>
+      </div>
+      <div class="d-flex gap-3">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="scope" id="scope-artists"
+                 value="artists" {% if scope != "all" %}checked{% endif %}>
+          <label class="form-check-label" for="scope-artists">Artists only</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="scope" id="scope-all"
+                 value="all" {% if scope == "all" %}checked{% endif %}>
+          <label class="form-check-label" for="scope-all">Include writers with art works</label>
         </div>
       </div>
     </form>
