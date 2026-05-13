@@ -256,6 +256,32 @@
     </div>
     {% endif %}
 
+    <div class="mt-3">
+      <button class="btn btn-sm btn-outline-primary"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#findCopyPanel"
+              aria-expanded="false"
+              aria-controls="findCopyPanel">
+        Find a Copy
+      </button>
+      <div class="collapse mt-2" id="findCopyPanel">
+        <div class="card card-body py-2 px-3">
+          {% if book.pub_isbn %}
+          <p class="small text-muted mb-2">Searching by ISBN: <code>{{ book.pub_isbn }}</code></p>
+          {% else %}
+          <p class="small text-muted mb-2">No ISBN on record — searching by title and author.</p>
+          {% endif %}
+          <div class="d-flex flex-wrap gap-2">
+            {% for link in find_copy_links %}
+              <a href="{{ link.url }}" target="_blank" rel="noopener"
+                 class="btn btn-sm btn-outline-secondary">{{ link.label }}</a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
   {% endif %}
 

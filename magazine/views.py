@@ -1,4 +1,5 @@
 import random
+from urllib.parse import quote_plus
 
 from django.conf import settings as django_settings
 from django.core.mail import send_mail
@@ -448,6 +449,30 @@ def magazine_issues(request, mag_code):
     })
 
 
+def _find_copy_links(book):
+    """Build bookseller/library search links for a book, preferring ISBN."""
+    isbn    = (book.get("pub_isbn") or "").strip()
+    title   = quote_plus(book.get("title_title") or "")
+    authors = quote_plus(book.get("authors") or "")
+    if isbn:
+        return [
+            {"label": "AbeBooks",     "url": f"https://www.abebooks.com/servlet/SearchResults?isbn={isbn}"},
+            {"label": "Amazon",       "url": f"https://www.amazon.com/s?k={isbn}"},
+            {"label": "ThriftBooks",  "url": f"https://www.thriftbooks.com/browse/?b.search={isbn}"},
+            {"label": "WorldCat",     "url": f"https://www.worldcat.org/isbn/{isbn}"},
+            {"label": "Open Library", "url": f"https://openlibrary.org/isbn/{isbn}"},
+        ]
+    else:
+        q = f"{title}+{authors}"
+        return [
+            {"label": "AbeBooks",     "url": f"https://www.abebooks.com/servlet/SearchResults?an={authors}&tn={title}"},
+            {"label": "Amazon",       "url": f"https://www.amazon.com/s?k={q}"},
+            {"label": "ThriftBooks",  "url": f"https://www.thriftbooks.com/browse/?b.search={q}"},
+            {"label": "WorldCat",     "url": f"https://www.worldcat.org/search?q={q}"},
+            {"label": "Open Library", "url": f"https://openlibrary.org/search?q={q}"},
+        ]
+
+
 def book_detail(request, title_id):
     """First-edition details for a single book title."""
     cursor = _dict_cursor()
@@ -462,6 +487,7 @@ def book_detail(request, title_id):
         cursor.close()
     return render(request, "magazine/book_detail.html", {
         "book": book, "editions": editions, "contents": contents, "reviews": reviews,
+        "find_copy_links": _find_copy_links(book),
     })
 
 
