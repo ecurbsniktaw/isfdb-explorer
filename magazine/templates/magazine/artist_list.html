@@ -96,11 +96,10 @@
       </table>
     </div>
   {% else %}
-    <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      alert('No artists found matching "{{ query|escapejs }}".');
-    });
-    </script>
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      No artists found matching <strong>{{ query }}</strong>.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
   {% endif %}
 {% endif %}
 
