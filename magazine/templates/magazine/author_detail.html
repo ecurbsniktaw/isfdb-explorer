@@ -18,6 +18,8 @@ function authorPhotoMissing(img) {
     '</svg>';
   img.src = 'data:image/svg+xml,' + encodeURIComponent(svg);
   img.alt = 'No photo available';
+  img.style.width = '160px';
+  img.style.height = '200px';
   img.style.cursor = 'default';
   var link = img.closest('a');
   if (link) {
@@ -35,7 +37,7 @@ function authorPhotoMissing(img) {
   <div class="col-lg-4">
     <div class="d-flex gap-3 align-items-start">
 
-      {% if author.author_image %}
+      <!-- {% if author.author_image %} -->
       <div class="flex-shrink-0">
         <a href="#" data-bs-toggle="modal" data-bs-target="#authorImageModal" style="display:block;">
           <img src="{{ author.author_image }}"
@@ -45,7 +47,7 @@ function authorPhotoMissing(img) {
                onerror="authorPhotoMissing(this)">
         </a>
       </div>
-      {% endif %}
+      <!-- {% endif %} -->
 
       <div>
         <h1 class="h2 mb-1">{{ author.author_canonical }}</h1>
