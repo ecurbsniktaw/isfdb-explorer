@@ -96,7 +96,11 @@
       </table>
     </div>
   {% else %}
-    <p class="text-muted mb-4">No artists found matching <strong>{{ query }}</strong>.</p>
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      alert('No artists found matching "{{ query|escapejs }}".');
+    });
+    </script>
   {% endif %}
 {% endif %}
 
