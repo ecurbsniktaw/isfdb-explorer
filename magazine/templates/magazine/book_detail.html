@@ -272,7 +272,7 @@
           {% else %}
           <p class="small text-muted mb-2">No ISBN on record — searching by title and author.</p>
           {% endif %}
-          <div class="d-flex flex-wrap gap-2">
+          <div class="d-flex flex-wrap gap-2 justify-content-center">
             {% for link in find_copy_links %}
               <a href="{{ link.url }}" target="_blank" rel="noopener"
                  class="btn btn-sm btn-outline-secondary">{{ link.label }}</a>
