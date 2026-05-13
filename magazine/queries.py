@@ -1319,6 +1319,10 @@ def find_artists(cursor, name: str, search_type: str = "full",
     Return authors who have at least one COVERART or INTERIORART credit and
     whose canonical name matches the given string.
 
+    Uses a two-phase approach to avoid slow correlated subqueries:
+      Phase 1 — LIKE scan on the authors table alone (no joins).
+      Phase 2 — targeted art/other-credit aggregation for only the matched IDs.
+
     search_type:
         'full' — match anywhere in the full name (default)
         'last' — match against the last word of the name only
@@ -1335,42 +1339,57 @@ def find_artists(cursor, name: str, search_type: str = "full",
     """
     clean = name.replace(".", "")
     if search_type == "last":
-        where = "REPLACE(SUBSTRING_INDEX(a.author_canonical, ' ', -1), '.', '') LIKE %s"
+        where = "REPLACE(SUBSTRING_INDEX(author_canonical, ' ', -1), '.', '') LIKE %s"
         param = f"%{clean}%"
     else:
-        where = "REPLACE(a.author_canonical, '.', '') LIKE %s"
+        where = "REPLACE(author_canonical, '.', '') LIKE %s"
         param = f"%{clean}%"
 
-    pure_clause = ""
-    if scope == "artists":
-        pure_clause = """
-          AND NOT EXISTS (
-              SELECT 1 FROM canonical_author ca2
-              JOIN titles t2 ON t2.title_id = ca2.title_id
-                  AND t2.title_ttype NOT IN ('COVERART', 'INTERIORART')
-              WHERE ca2.author_id = a.author_id
-          )"""
-
+    # Phase 1: cheap name scan — no joins, just the authors table
     cursor.execute(f"""
-        SELECT
-            a.author_id,
-            a.author_canonical,
-            a.author_legalname,
-            YEAR(a.author_birthdate) AS birth_year,
-            YEAR(a.author_deathdate) AS death_year,
-            COUNT(t.title_id) AS art_count
-        FROM authors a
-        JOIN canonical_author ca ON ca.author_id = a.author_id
-        JOIN titles t ON t.title_id = ca.title_id
-            AND t.title_ttype IN ('COVERART', 'INTERIORART')
+        SELECT author_id, author_canonical, author_legalname,
+               YEAR(author_birthdate) AS birth_year,
+               YEAR(author_deathdate) AS death_year
+        FROM authors
         WHERE {where}
-          AND a.author_canonical NOT LIKE '%%&#%%'
-          {pure_clause}
-        GROUP BY a.author_id, a.author_canonical, a.author_legalname,
-                 a.author_birthdate, a.author_deathdate
-        ORDER BY a.author_canonical
+          AND author_canonical NOT LIKE '%%&#%%'
+        ORDER BY author_canonical
     """, (param,))
-    return cursor.fetchall()
+    candidates = cursor.fetchall()
+
+    if not candidates:
+        return []
+
+    # Phase 2: count art / non-art credits for only those candidate IDs
+    ids = [r["author_id"] for r in candidates]
+    placeholders = ",".join(["%s"] * len(ids))
+    cursor.execute(f"""
+        SELECT ca.author_id,
+               SUM(t.title_ttype IN ('COVERART', 'INTERIORART'))     AS art_count,
+               SUM(t.title_ttype NOT IN ('COVERART', 'INTERIORART')) AS other_count
+        FROM canonical_author ca
+        JOIN titles t ON t.title_id = ca.title_id
+        WHERE ca.author_id IN ({placeholders})
+        GROUP BY ca.author_id
+    """, ids)
+    counts = {r["author_id"]: r for r in cursor.fetchall()}
+
+    # Merge and filter
+    results = []
+    for c in candidates:
+        aid = c["author_id"]
+        row = counts.get(aid)
+        if row is None:
+            continue                          # no title credits at all
+        art_count   = row["art_count"]   or 0
+        other_count = row["other_count"] or 0
+        if art_count == 0:
+            continue                          # no art credits
+        if scope == "artists" and other_count > 0:
+            continue                          # has non-art credits → not pure artist
+        results.append({**c, "art_count": art_count})
+
+    return results
 
 
 def find_authors(cursor, name: str, search_type: str = "full") -> list:
