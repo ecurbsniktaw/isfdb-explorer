@@ -248,7 +248,7 @@
     {% endif %}
 
     {% if book.webpages %}
-    <div class="d-flex flex-wrap gap-2 mt-2">
+    <div class="d-flex flex-wrap gap-2 mt-2 justify-content-center">
       {% for page in book.webpages %}
         <a href="{{ page.url }}" target="_blank" rel="noopener"
            class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
@@ -256,7 +256,7 @@
     </div>
     {% endif %}
 
-    <div class="mt-3">
+    <div class="mt-3 text-center">
       <button class="btn btn-sm btn-outline-primary"
               type="button"
               data-bs-toggle="collapse"
