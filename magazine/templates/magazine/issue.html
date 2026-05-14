@@ -96,7 +96,7 @@
 
     {# ── Prev / Next navigation ─────────────────────────────────────────── #}
     {% if prev_issue or next_issue %}
-    <div class="d-flex gap-2 mb-2">
+    <div class="d-flex gap-2 mb-2 justify-content-center">
       {% if prev_issue %}
         <a href="{% url 'issue_detail' prev_issue.pub_id %}"
            class="btn btn-sm btn-outline-secondary"
