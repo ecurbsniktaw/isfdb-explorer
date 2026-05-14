@@ -197,13 +197,7 @@
             <tbody>
               {% for pub in story.publications %}
               <tr>
-                <td>
-                  {% if pub.is_magazine %}
-                    <a href="{% url 'issue_detail' pub.pub_id %}" class="text-decoration-none">{{ pub.formatted_date }}</a>
-                  {% else %}
-                    {{ pub.formatted_date }}
-                  {% endif %}
-                </td>
+                <td>{{ pub.formatted_date }}</td>
                 <td>
                   {% if pub.pub_frontimage %}
                     <img src="{{ pub.pub_frontimage }}"
@@ -217,7 +211,9 @@
                   {% endif %}
                 </td>
                 <td>
-                  {% if pub.book_title_id %}
+                  {% if pub.is_magazine %}
+                    <a href="{% url 'issue_detail' pub.pub_id %}" class="text-decoration-none">{{ pub.pub_title }}</a>
+                  {% elif pub.book_title_id %}
                     <a href="{% url 'book_detail' pub.book_title_id %}" class="text-decoration-none">{{ pub.pub_title }}</a>
                   {% else %}
                     {{ pub.pub_title }}
