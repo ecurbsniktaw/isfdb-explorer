@@ -133,17 +133,21 @@
       </h2>
       <div id="notesPanel" class="accordion-collapse collapse"
            data-bs-parent="#notesAccordion">
-        <div class="accordion-body px-0 pt-1 small">{{ issue.pub_note|safe }}</div>
+        <div class="accordion-body px-2 pt-1 small">{{ issue.pub_note|safe }}</div>
       </div>
     </div>
   </div>
   {% endif %}
-  {% for url in archive_links %}
-    <a href="{{ url }}" target="_blank" rel="noopener"
-       class="btn btn-sm btn-outline-secondary">
-      Read on Archive.org{% if archive_links|length > 1 %} ({{ forloop.counter }}){% endif %}
-    </a>
-  {% endfor %}
+  {% if archive_links %}
+  <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+    {% for url in archive_links %}
+      <a href="{{ url }}" target="_blank" rel="noopener"
+         class="btn btn-sm btn-outline-secondary">
+        Read on Archive.org{% if archive_links|length > 1 %} ({{ forloop.counter }}){% endif %}
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 
