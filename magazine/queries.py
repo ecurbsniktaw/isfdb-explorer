@@ -874,7 +874,14 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
             p.pub_ctype,
             p.pub_frontimage,
             pub2.publisher_name,
-            pc.pubc_page
+            pc.pubc_page,
+            CASE WHEN p.pub_ctype != 'MAGAZINE' THEN (
+                SELECT pc2.title_id FROM pub_content pc2
+                JOIN titles t2 ON t2.title_id = pc2.title_id
+                WHERE pc2.pub_id = p.pub_id
+                  AND t2.title_ttype = p.pub_ctype
+                LIMIT 1
+            ) ELSE NULL END AS book_title_id
         FROM pub_content pc
         JOIN pubs p ON p.pub_id = pc.pub_id
         LEFT JOIN publishers pub2 ON pub2.publisher_id = p.publisher_id

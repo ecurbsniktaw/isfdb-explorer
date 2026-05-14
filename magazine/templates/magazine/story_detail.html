@@ -216,7 +216,13 @@
                          data-bs-target="#pubCoverModal">
                   {% endif %}
                 </td>
-                <td>{{ pub.pub_title }}</td>
+                <td>
+                  {% if pub.book_title_id %}
+                    <a href="{% url 'book_detail' pub.book_title_id %}" class="text-decoration-none">{{ pub.pub_title }}</a>
+                  {% else %}
+                    {{ pub.pub_title }}
+                  {% endif %}
+                </td>
                 <td class="text-muted small">{{ pub.publisher_name|default:"" }}</td>
                 <td class="text-muted small">{{ pub.type_label }}</td>
                 <td class="text-muted small">{{ pub.pubc_page|default:"" }}</td>
