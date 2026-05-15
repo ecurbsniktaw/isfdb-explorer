@@ -1,0 +1,17 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Page Not Found — ISFDB Explorer{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-1 text-muted fw-light">404</h1>
+  <h2 class="h4 mb-3">Page not found</h2>
+  <p class="text-muted mb-4">
+    Sorry, the page you were looking for doesn't exist or has been removed.
+  </p>
+  <div class="d-flex gap-2 justify-content-center">
+    <a href="javascript:history.back()" class="btn btn-outline-secondary">&larr; Go back</a>
+    <a href="{% url 'home' %}" class="btn btn-primary">Home</a>
+  </div>
+</div>
+{% endblock %}
