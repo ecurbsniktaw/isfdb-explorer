@@ -12,7 +12,54 @@
 {% block content %}
 
 <h1 class="h3 mb-1">Titles</h1>
-<p class="text-muted mb-4">2,467,006 titles in the database</p>
+<p class="text-muted mb-4">
+  2,467,006 titles in the database
+  <button type="button"
+          class="btn btn-sm btn-link p-0 ms-1 align-baseline"
+          data-bs-toggle="modal"
+          data-bs-target="#titleStatsModal"
+          title="Show breakdown by type"
+          style="font-size:1rem; line-height:1;">&#x3F;</button>
+</p>
+
+<div class="modal fade" id="titleStatsModal" tabindex="-1" aria-labelledby="titleStatsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="titleStatsModalLabel">Titles by type</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Total (all types)</span>
+            <span class="badge text-bg-secondary rounded-pill">2,467,006</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>&nbsp;&nbsp;— Novels</span>
+            <span class="badge text-bg-secondary rounded-pill">265,751</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>&nbsp;&nbsp;— Short fiction</span>
+            <span class="badge text-bg-secondary rounded-pill">724,409</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>&nbsp;&nbsp;— Collections</span>
+            <span class="badge text-bg-secondary rounded-pill">36,103</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>&nbsp;&nbsp;— Anthologies</span>
+            <span class="badge text-bg-secondary rounded-pill">28,352</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>&nbsp;&nbsp;— Nonfiction</span>
+            <span class="badge text-bg-secondary rounded-pill">19,096</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
 
 {# ── Search + random ─────────────────────────────────────────────────────── #}
 <div class="row g-4 mb-5">
