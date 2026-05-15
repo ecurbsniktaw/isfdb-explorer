@@ -30,8 +30,8 @@
     </div>
   </div>
   <div class="input-group" style="max-width:480px;">
-    <input type="text" name="q" value="{{ query }}" class="form-control"
-           placeholder="{% if search_type == 'author' %}Search author name…{% else %}Search series name…{% endif %}"
+    <input type="text" name="q" value="{{ query }}" class="form-control" id="series-search-input"
+           placeholder="{% if search_type == 'author' %}Search for series by an author…{% else %}Search by series name…{% endif %}"
            autofocus>
     <button class="btn btn-primary" type="submit">Search</button>
     {% if query or letter %}
@@ -161,4 +161,22 @@
 {% endif %}
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var input = document.getElementById('series-search-input');
+  var radios = document.querySelectorAll('input[name="search_type"]');
+  var placeholders = {
+    'series': 'Search by series name…',
+    'author': 'Search for series by an author…'
+  };
+  radios.forEach(function (r) {
+    r.addEventListener('change', function () {
+      input.placeholder = placeholders[r.value] || placeholders['series'];
+    });
+  });
+})();
+</script>
 {% endblock %}
