@@ -380,13 +380,14 @@ def get_contents(cursor, pub_id: int) -> list:
         row["kind"]         = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
         row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
 
-        # Enrich each author entry with real-author info when the credited name is a pen name
+        # Enrich each author entry with real-author info when the credited name is a pen name.
+        # "The Editor" is a generic placeholder, not a true pen name — skip it.
         real_names = (row.get("real_authors") or "").split("|")
         real_ids   = (row.get("real_author_ids") or "").split("|")
         for i, entry in enumerate(row["author_list"]):
             rname = real_names[i].strip() if i < len(real_names) else ""
             rid   = real_ids[i].strip()   if i < len(real_ids)   else ""
-            if rname:
+            if rname and entry["name"] != "The Editor":
                 entry["real_name"] = html.unescape(rname)
                 first_id = rid.split(",")[0]
                 entry["real_id"] = int(first_id) if first_id.isdigit() else None
