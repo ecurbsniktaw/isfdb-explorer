@@ -368,6 +368,7 @@ def get_contents(cursor, pub_id: int) -> list:
             END,
             t.title_title
     """
+    cursor.execute("SET SESSION group_concat_max_len = 65536")
     cursor.execute(query, (pub_id,))
     rows = cursor.fetchall()
 
