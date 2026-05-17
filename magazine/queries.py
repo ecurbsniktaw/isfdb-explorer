@@ -333,11 +333,29 @@ def get_contents(cursor, pub_id: int) -> list:
                 a.author_id
                 ORDER BY ca.ca_id
                 SEPARATOR ','
-            ) AS author_ids
+            ) AS author_ids,
+            GROUP_CONCAT(
+                IFNULL(pn.real_names, '')
+                ORDER BY ca.ca_id
+                SEPARATOR '|'
+            ) AS real_authors,
+            GROUP_CONCAT(
+                IFNULL(pn.real_ids, '')
+                ORDER BY ca.ca_id
+                SEPARATOR '|'
+            ) AS real_author_ids
         FROM pub_content pc
         JOIN titles t ON pc.title_id = t.title_id
         LEFT JOIN canonical_author ca ON t.title_id = ca.title_id
         LEFT JOIN authors a ON ca.author_id = a.author_id
+        LEFT JOIN (
+            SELECT ps.pseudonym,
+                   GROUP_CONCAT(ar.author_canonical ORDER BY ps.pseudo_id SEPARATOR ' & ') AS real_names,
+                   GROUP_CONCAT(ar.author_id        ORDER BY ps.pseudo_id SEPARATOR ',')   AS real_ids
+            FROM pseudonyms ps
+            JOIN authors ar ON ar.author_id = ps.author_id
+            GROUP BY ps.pseudonym
+        ) pn ON pn.pseudonym = a.author_id
         WHERE pc.pub_id = %s
         GROUP BY
             t.title_id, t.title_title, t.title_ttype,
@@ -356,10 +374,24 @@ def get_contents(cursor, pub_id: int) -> list:
     # Annotate each row with a human-readable type label
     fiction_set = set(FICTION_TYPES)
     for row in rows:
-        row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["type_label"]   = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
         row["is_narrative"] = row["title_ttype"] in NARRATIVE_TYPES
-        row["kind"]        = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
-        row["author_list"] = _make_author_list(row.get("authors"), row.get("author_ids"))
+        row["kind"]         = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
+        row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
+
+        # Enrich each author entry with real-author info when the credited name is a pen name
+        real_names = (row.get("real_authors") or "").split("|")
+        real_ids   = (row.get("real_author_ids") or "").split("|")
+        for i, entry in enumerate(row["author_list"]):
+            rname = real_names[i].strip() if i < len(real_names) else ""
+            rid   = real_ids[i].strip()   if i < len(real_ids)   else ""
+            if rname:
+                entry["real_name"] = html.unescape(rname)
+                first_id = rid.split(",")[0]
+                entry["real_id"] = int(first_id) if first_id.isdigit() else None
+            else:
+                entry["real_name"] = ""
+                entry["real_id"]   = None
 
     return rows
 

@@ -206,6 +206,7 @@
                     {% for a in row.author_list %}
                       {% if not forloop.first %} &amp; {% endif %}
                       {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                      {% if a.real_name %} [{% if a.real_id %}<a href="{% url 'author_detail' a.real_id %}" class="text-decoration-none">{{ a.real_name }}</a>{% else %}{{ a.real_name }}{% endif %}]{% endif %}
                     {% empty %}uncredited{% endfor %}
                   </td>
                 </tr>
