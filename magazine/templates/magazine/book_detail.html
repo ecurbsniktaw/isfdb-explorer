@@ -77,6 +77,12 @@
           <td class="py-1">{{ book.type_label }}</td>
         </tr>
         {% endif %}
+        {% if book.language and book.language != "English" %}
+        <tr style="line-height:1.3;">
+          <th class="text-muted fw-normal pe-4 py-1">Language</th>
+          <td class="py-1">{{ book.language }}</td>
+        </tr>
+        {% endif %}
         {% if book.pub_catalog %}
         <tr style="line-height:1.3;">
           <th class="text-muted fw-normal pe-4 py-1">Catalog ID</th>

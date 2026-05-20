@@ -682,6 +682,7 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
             t.series_id,
             t.title_seriesnum,
             t.title_seriesnum_2,
+            lang.lang_name     AS language,
             GROUP_CONCAT(
                 DISTINCT a_all.author_canonical
                 ORDER BY ca_all.ca_id
@@ -716,6 +717,7 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
                                      AND t_cv.title_ttype = 'COVERART'
         LEFT JOIN canonical_author ca_cv ON ca_cv.title_id = t_cv.title_id
         LEFT JOIN authors a_cv        ON a_cv.author_id = ca_cv.author_id
+        LEFT JOIN languages lang      ON lang.lang_id = t.title_language
         WHERE t.title_id = %s
           AND p.pub_ctype IN ({type_placeholders})
           AND YEAR(p.pub_year) > 0
