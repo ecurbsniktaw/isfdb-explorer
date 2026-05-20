@@ -599,7 +599,6 @@ _VALID_TITLE_TYPES = {
 def title_search(request):
     """Search for titles by name."""
     query        = request.GET.get("q", "").strip()
-    match_type   = request.GET.get("match_type", "exact")
     content_type = request.GET.get("content_type", "all")
     title_type   = request.GET.get("title_type", "").strip().upper()
     length       = request.GET.get("length", "").strip()
@@ -609,14 +608,13 @@ def title_search(request):
     non_genre    = bool(request.GET.get("non_genre"))
     graphic      = bool(request.GET.get("graphic"))
 
-    if match_type   not in ("exact", "partial"):         match_type   = "exact"
     if content_type not in ("all", "book", "fiction"):   content_type = "all"
     if title_type   not in _VALID_TITLE_TYPES:           title_type   = ""
     if length       not in ("novelette", "novella", "short story"): length = ""
     lang_id = int(language) if language.isdigit() else 17
 
     context = {
-        "query": query, "match_type": match_type, "content_type": content_type,
+        "query": query, "content_type": content_type,
         "title_type": title_type, "length": length, "language": str(lang_id),
         "juvenile": juvenile, "novelization": novelization,
         "non_genre": non_genre, "graphic": graphic,
@@ -625,7 +623,7 @@ def title_search(request):
     if query:
         cursor = _dict_cursor()
         try:
-            titles = find_titles(cursor, query, match_type, content_type,
+            titles = find_titles(cursor, query, "exact", content_type,
                                  title_type, length, lang_id,
                                  juvenile, novelization, non_genre, graphic)
         finally:
