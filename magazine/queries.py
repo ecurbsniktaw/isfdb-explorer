@@ -215,6 +215,7 @@ def get_issue_meta(cursor, pub_id: int) -> dict | None:
             p.pub_frontimage,
             p.pub_price,
             p.pub_pages,
+            p.pub_isbn,
             pub2.publisher_name,
             n.note_note AS pub_note
         FROM pubs p

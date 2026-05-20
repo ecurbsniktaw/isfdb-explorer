@@ -142,13 +142,14 @@ def issue_detail(request, pub_id):
     back_params = request.GET.urlencode()
 
     return render(request, "magazine/issue.html", {
-        "issue":        issue,
-        "narrative":    narrative,
-        "other":        other,
-        "back_params":  back_params,
-        "archive_links": archive_links,
-        "prev_issue":   prev_issue,
-        "next_issue":   next_issue,
+        "issue":            issue,
+        "narrative":        narrative,
+        "other":            other,
+        "back_params":      back_params,
+        "archive_links":    archive_links,
+        "prev_issue":       prev_issue,
+        "next_issue":       next_issue,
+        "find_copy_links":  _find_copy_links_issue(issue),
     })
 
 
@@ -447,6 +448,26 @@ def magazine_issues(request, mag_code):
         "use_accordion": use_accordion,
         "decades":       decades,
     })
+
+
+def _find_copy_links_issue(issue):
+    """Build bookseller search links for a magazine issue, preferring ISBN."""
+    isbn  = (issue.get("pub_isbn") or "").strip()
+    title = quote_plus(issue.get("pub_title") or "")
+    if isbn:
+        return [
+            {"label": "AbeBooks", "url": f"https://www.abebooks.com/servlet/SearchResults?isbn={isbn}"},
+            {"label": "Amazon",   "url": f"https://www.amazon.com/s?k={isbn}"},
+            {"label": "eBay",     "url": f"https://www.ebay.com/sch/i.html?_nkw={isbn}"},
+            {"label": "WorldCat", "url": f"https://www.worldcat.org/isbn/{isbn}"},
+        ]
+    else:
+        return [
+            {"label": "AbeBooks", "url": f"https://www.abebooks.com/servlet/SearchResults?tn={title}"},
+            {"label": "Amazon",   "url": f"https://www.amazon.com/s?k={title}"},
+            {"label": "eBay",     "url": f"https://www.ebay.com/sch/i.html?_nkw={title}"},
+            {"label": "WorldCat", "url": f"https://www.worldcat.org/search?q={title}"},
+        ]
 
 
 def _find_copy_links(book):
