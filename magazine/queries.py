@@ -1280,19 +1280,29 @@ _FICTION_SEARCH_TYPES = ("SHORTFICTION", "SERIAL")
 
 
 def find_titles(cursor, title: str, match_type: str = "exact",
-                content_type: str = "all") -> list:
+                content_type: str = "all", title_type: str = "",
+                length: str = "", language: int = 17,
+                juvenile: bool = False, novelization: bool = False,
+                non_genre: bool = False, graphic: bool = False) -> list:
     """
-    Search for titles by name.
+    Search for titles by name with optional filters.
 
     match_type:   'exact'   — full title match (case-insensitive)
                   'partial' — substring match
     content_type: 'all'     — novels, collections, short fiction, etc.
                   'book'    — books only (NOVEL, COLLECTION, ANTHOLOGY, …)
                   'fiction' — short fiction / serials only
+    title_type:   specific ttype value (overrides content_type when set)
+    length:       title_storylen value ('novelette', 'novella', 'short story')
+    language:     lang_id integer (default 17 = English)
+    juvenile/novelization/non_genre/graphic: flag filters (Yes/No columns)
 
     Returns up to 200 results sorted by title then first-pub year.
     """
-    if content_type == "book":
+    # Determine type list
+    if title_type:
+        type_list = (title_type,)
+    elif content_type == "book":
         type_list = _BOOK_SEARCH_TYPES
     elif content_type == "fiction":
         type_list = _FICTION_SEARCH_TYPES
@@ -1307,6 +1317,29 @@ def find_titles(cursor, title: str, match_type: str = "exact",
     else:
         title_clause = "LOWER(t.title_title) = LOWER(%s)"
         title_param  = title
+
+    # Build optional extra WHERE clauses and params
+    extra_clauses = []
+    extra_params  = []
+
+    if language:
+        extra_clauses.append("t.title_language = %s")
+        extra_params.append(language)
+
+    if length:
+        extra_clauses.append("t.title_storylen = %s")
+        extra_params.append(length)
+
+    if juvenile:
+        extra_clauses.append("t.title_jvn = 'Yes'")
+    if novelization:
+        extra_clauses.append("t.title_nvz = 'Yes'")
+    if non_genre:
+        extra_clauses.append("t.title_non_genre = 'Yes'")
+    if graphic:
+        extra_clauses.append("t.title_graphic = 'Yes'")
+
+    extra_where = "".join(f"\n          AND {c}" for c in extra_clauses)
 
     query = f"""
         SELECT
@@ -1327,15 +1360,13 @@ def find_titles(cursor, title: str, match_type: str = "exact",
         LEFT JOIN pub_content pc      ON pc.title_id   = t.title_id
         LEFT JOIN pubs p              ON p.pub_id      = pc.pub_id
                                      AND YEAR(p.pub_year) > 0
-        JOIN languages lang           ON lang.lang_id  = t.title_language
         WHERE {title_clause}
-          AND t.title_ttype IN ({type_placeholders})
-          AND lang.lang_code = 'eng'
+          AND t.title_ttype IN ({type_placeholders}){extra_where}
         GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen
         ORDER BY t.title_title, first_year
         LIMIT 200
     """
-    cursor.execute(query, (title_param, *type_list))
+    cursor.execute(query, (title_param, *type_list, *extra_params))
     rows = cursor.fetchall()
     for row in rows:
         row["type_label"]   = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")

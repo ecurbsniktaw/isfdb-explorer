@@ -38,29 +38,228 @@
           </div>
         </div>
       </div>
-      <div class="col-auto">
-        <div class="fw-semibold small mb-1">Type</div>
-        <div class="d-flex gap-3">
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="content_type" id="ct-all"
-                   value="all" {% if content_type == "all" %}checked{% endif %}>
-            <label class="form-check-label" for="ct-all">All</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="content_type" id="ct-book"
-                   value="book" {% if content_type == "book" %}checked{% endif %}>
-            <label class="form-check-label" for="ct-book">Books only</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="content_type" id="ct-fiction"
-                   value="fiction" {% if content_type == "fiction" %}checked{% endif %}>
-            <label class="form-check-label" for="ct-fiction">Short fiction only</label>
-          </div>
+    </div>
+    <div class="mt-2">
+      <a class="small text-decoration-none"
+         data-bs-toggle="collapse"
+         href="#tsMoreOptions"
+         role="button"
+         aria-expanded="{% if title_type or length or language != '17' or juvenile or novelization or non_genre or graphic %}true{% else %}false{% endif %}"
+         aria-controls="tsMoreOptions">
+        More options <i class="bi bi-chevron-{% if title_type or length or language != '17' or juvenile or novelization or non_genre or graphic %}up{% else %}down{% endif %}" id="tsMoreOptionsChevron"></i>
+      </a>
+    </div>
+    <div class="{% if title_type or length or language != '17' or juvenile or novelization or non_genre or graphic %}show{% endif %} collapse mt-3" id="tsMoreOptions">
+      <div class="row g-3 mb-3">
+        <div class="col-auto">
+          <label for="ts-type" class="form-label fw-semibold small mb-1">Title Type</label>
+          <select class="form-select form-select-sm" id="ts-type" name="title_type">
+            <option value="" {% if not title_type %}selected{% endif %}>Any</option>
+            <option value="ANTHOLOGY"   {% if title_type == "ANTHOLOGY"   %}selected{% endif %}>Anthology</option>
+            <option value="CHAPBOOK"    {% if title_type == "CHAPBOOK"    %}selected{% endif %}>Chapbook</option>
+            <option value="COLLECTION"  {% if title_type == "COLLECTION"  %}selected{% endif %}>Collection</option>
+            <option value="COVERART"    {% if title_type == "COVERART"    %}selected{% endif %}>Cover Art</option>
+            <option value="EDITOR"      {% if title_type == "EDITOR"      %}selected{% endif %}>Editor</option>
+            <option value="ESSAY"       {% if title_type == "ESSAY"       %}selected{% endif %}>Essay</option>
+            <option value="INTERIORART" {% if title_type == "INTERIORART" %}selected{% endif %}>Interior Art</option>
+            <option value="INTERVIEW"   {% if title_type == "INTERVIEW"   %}selected{% endif %}>Interview</option>
+            <option value="NONFICTION"  {% if title_type == "NONFICTION"  %}selected{% endif %}>Nonfiction</option>
+            <option value="NOVEL"       {% if title_type == "NOVEL"       %}selected{% endif %}>Novel</option>
+            <option value="OMNIBUS"     {% if title_type == "OMNIBUS"     %}selected{% endif %}>Omnibus</option>
+            <option value="POEM"        {% if title_type == "POEM"        %}selected{% endif %}>Poem</option>
+            <option value="REVIEW"      {% if title_type == "REVIEW"      %}selected{% endif %}>Review</option>
+            <option value="SERIAL"      {% if title_type == "SERIAL"      %}selected{% endif %}>Serial</option>
+            <option value="SHORTFICTION"{% if title_type == "SHORTFICTION"%}selected{% endif %}>Short Fiction</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <label for="ts-length" class="form-label fw-semibold small mb-1">Length</label>
+          <select class="form-select form-select-sm" id="ts-length" name="length">
+            <option value=""           {% if not length        %}selected{% endif %}>Any</option>
+            <option value="novelette"  {% if length == "novelette"   %}selected{% endif %}>Novelette</option>
+            <option value="novella"    {% if length == "novella"     %}selected{% endif %}>Novella</option>
+            <option value="short story"{% if length == "short story" %}selected{% endif %}>Short Story</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <label for="ts-lang" class="form-label fw-semibold small mb-1">Language</label>
+          <select class="form-select form-select-sm" id="ts-lang" name="language">
+            <option value="17"  {% if language == "17"  %}selected{% endif %}>English</option>
+            <option value="1"   {% if language == "1"   %}selected{% endif %}>Afrikaans</option>
+            <option value="105" {% if language == "105" %}selected{% endif %}>Akkadian</option>
+            <option value="2"   {% if language == "2"   %}selected{% endif %}>Albanian</option>
+            <option value="74"  {% if language == "74"  %}selected{% endif %}>Amharic</option>
+            <option value="3"   {% if language == "3"   %}selected{% endif %}>Ancient Greek</option>
+            <option value="4"   {% if language == "4"   %}selected{% endif %}>Arabic</option>
+            <option value="5"   {% if language == "5"   %}selected{% endif %}>Armenian</option>
+            <option value="109" {% if language == "109" %}selected{% endif %}>Asturian/Bable</option>
+            <option value="6"   {% if language == "6"   %}selected{% endif %}>Azerbaijani</option>
+            <option value="7"   {% if language == "7"   %}selected{% endif %}>Basque</option>
+            <option value="8"   {% if language == "8"   %}selected{% endif %}>Belarusian</option>
+            <option value="9"   {% if language == "9"   %}selected{% endif %}>Bengali</option>
+            <option value="75"  {% if language == "75"  %}selected{% endif %}>Bosnian</option>
+            <option value="159" {% if language == "159" %}selected{% endif %}>Breton</option>
+            <option value="10"  {% if language == "10"  %}selected{% endif %}>Bulgarian</option>
+            <option value="11"  {% if language == "11"  %}selected{% endif %}>Burmese</option>
+            <option value="12"  {% if language == "12"  %}selected{% endif %}>Catalan</option>
+            <option value="168" {% if language == "168" %}selected{% endif %}>Cebuano</option>
+            <option value="13"  {% if language == "13"  %}selected{% endif %}>Chinese</option>
+            <option value="160" {% if language == "160" %}selected{% endif %}>Cornish</option>
+            <option value="31"  {% if language == "31"  %}selected{% endif %}>Croatian</option>
+            <option value="14"  {% if language == "14"  %}selected{% endif %}>Czech</option>
+            <option value="15"  {% if language == "15"  %}selected{% endif %}>Danish</option>
+            <option value="16"  {% if language == "16"  %}selected{% endif %}>Dutch</option>
+            <option value="18"  {% if language == "18"  %}selected{% endif %}>Esperanto</option>
+            <option value="19"  {% if language == "19"  %}selected{% endif %}>Estonian</option>
+            <option value="162" {% if language == "162" %}selected{% endif %}>Faroese</option>
+            <option value="20"  {% if language == "20"  %}selected{% endif %}>Filipino</option>
+            <option value="21"  {% if language == "21"  %}selected{% endif %}>Finnish</option>
+            <option value="22"  {% if language == "22"  %}selected{% endif %}>French</option>
+            <option value="23"  {% if language == "23"  %}selected{% endif %}>Frisian</option>
+            <option value="24"  {% if language == "24"  %}selected{% endif %}>Galician</option>
+            <option value="25"  {% if language == "25"  %}selected{% endif %}>Georgian</option>
+            <option value="26"  {% if language == "26"  %}selected{% endif %}>German</option>
+            <option value="27"  {% if language == "27"  %}selected{% endif %}>Greek</option>
+            <option value="154" {% if language == "154" %}selected{% endif %}>Guarani</option>
+            <option value="28"  {% if language == "28"  %}selected{% endif %}>Gujarati</option>
+            <option value="76"  {% if language == "76"  %}selected{% endif %}>Hausa</option>
+            <option value="77"  {% if language == "77"  %}selected{% endif %}>Hawaiian</option>
+            <option value="29"  {% if language == "29"  %}selected{% endif %}>Hebrew</option>
+            <option value="30"  {% if language == "30"  %}selected{% endif %}>Hindi</option>
+            <option value="32"  {% if language == "32"  %}selected{% endif %}>Hungarian</option>
+            <option value="33"  {% if language == "33"  %}selected{% endif %}>Icelandic</option>
+            <option value="34"  {% if language == "34"  %}selected{% endif %}>Indonesian</option>
+            <option value="153" {% if language == "153" %}selected{% endif %}>Interlingua</option>
+            <option value="35"  {% if language == "35"  %}selected{% endif %}>Irish</option>
+            <option value="36"  {% if language == "36"  %}selected{% endif %}>Italian</option>
+            <option value="37"  {% if language == "37"  %}selected{% endif %}>Japanese</option>
+            <option value="78"  {% if language == "78"  %}selected{% endif %}>Javanese</option>
+            <option value="79"  {% if language == "79"  %}selected{% endif %}>Judeo-Arabic</option>
+            <option value="80"  {% if language == "80"  %}selected{% endif %}>Karen</option>
+            <option value="165" {% if language == "165" %}selected{% endif %}>Kashubian</option>
+            <option value="38"  {% if language == "38"  %}selected{% endif %}>Kazakh</option>
+            <option value="39"  {% if language == "39"  %}selected{% endif %}>Khmer</option>
+            <option value="157" {% if language == "157" %}selected{% endif %}>Klingon</option>
+            <option value="41"  {% if language == "41"  %}selected{% endif %}>Korean</option>
+            <option value="125" {% if language == "125" %}selected{% endif %}>Kurdish</option>
+            <option value="40"  {% if language == "40"  %}selected{% endif %}>Kyrgyz</option>
+            <option value="81"  {% if language == "81"  %}selected{% endif %}>Ladino</option>
+            <option value="43"  {% if language == "43"  %}selected{% endif %}>Latin</option>
+            <option value="42"  {% if language == "42"  %}selected{% endif %}>Latvian</option>
+            <option value="44"  {% if language == "44"  %}selected{% endif %}>Lithuanian</option>
+            <option value="111" {% if language == "111" %}selected{% endif %}>Low German</option>
+            <option value="166" {% if language == "166" %}selected{% endif %}>Lower Sorbian</option>
+            <option value="45"  {% if language == "45"  %}selected{% endif %}>Macedonian</option>
+            <option value="155" {% if language == "155" %}selected{% endif %}>Maithili</option>
+            <option value="46"  {% if language == "46"  %}selected{% endif %}>Malay</option>
+            <option value="47"  {% if language == "47"  %}selected{% endif %}>Malayalam</option>
+            <option value="82"  {% if language == "82"  %}selected{% endif %}>Maltese</option>
+            <option value="48"  {% if language == "48"  %}selected{% endif %}>Marathi</option>
+            <option value="104" {% if language == "104" %}selected{% endif %}>Mayan language</option>
+            <option value="101" {% if language == "101" %}selected{% endif %}>Middle English</option>
+            <option value="110" {% if language == "110" %}selected{% endif %}>Middle French</option>
+            <option value="102" {% if language == "102" %}selected{% endif %}>Middle High German</option>
+            <option value="83"  {% if language == "83"  %}selected{% endif %}>Minangkabau</option>
+            <option value="150" {% if language == "150" %}selected{% endif %}>Mirandese</option>
+            <option value="49"  {% if language == "49"  %}selected{% endif %}>Mongolian</option>
+            <option value="149" {% if language == "149" %}selected{% endif %}>Montenegrin</option>
+            <option value="158" {% if language == "158" %}selected{% endif %}>Nahuatl language</option>
+            <option value="112" {% if language == "112" %}selected{% endif %}>Nepali</option>
+            <option value="50"  {% if language == "50"  %}selected{% endif %}>Norwegian</option>
+            <option value="107" {% if language == "107" %}selected{% endif %}>Norwegian (Bokmal)</option>
+            <option value="108" {% if language == "108" %}selected{% endif %}>Norwegian (Nynorsk)</option>
+            <option value="84"  {% if language == "84"  %}selected{% endif %}>Nyanja</option>
+            <option value="161" {% if language == "161" %}selected{% endif %}>Occitan (post 1500)</option>
+            <option value="99"  {% if language == "99"  %}selected{% endif %}>Old English</option>
+            <option value="100" {% if language == "100" %}selected{% endif %}>Old French</option>
+            <option value="115" {% if language == "115" %}selected{% endif %}>Old Norse</option>
+            <option value="142" {% if language == "142" %}selected{% endif %}>Oriya</option>
+            <option value="85"  {% if language == "85"  %}selected{% endif %}>Panjabi</option>
+            <option value="113" {% if language == "113" %}selected{% endif %}>Pashto/Pushto</option>
+            <option value="51"  {% if language == "51"  %}selected{% endif %}>Persian</option>
+            <option value="52"  {% if language == "52"  %}selected{% endif %}>Polish</option>
+            <option value="53"  {% if language == "53"  %}selected{% endif %}>Portuguese</option>
+            <option value="156" {% if language == "156" %}selected{% endif %}>Romance language</option>
+            <option value="54"  {% if language == "54"  %}selected{% endif %}>Romanian</option>
+            <option value="55"  {% if language == "55"  %}selected{% endif %}>Russian</option>
+            <option value="86"  {% if language == "86"  %}selected{% endif %}>Samoan</option>
+            <option value="95"  {% if language == "95"  %}selected{% endif %}>Sanskrit</option>
+            <option value="98"  {% if language == "98"  %}selected{% endif %}>Scots</option>
+            <option value="56"  {% if language == "56"  %}selected{% endif %}>Scottish Gaelic</option>
+            <option value="60"  {% if language == "60"  %}selected{% endif %}>Serbian</option>
+            <option value="96"  {% if language == "96"  %}selected{% endif %}>Serbo-Croatian Cyrillic</option>
+            <option value="97"  {% if language == "97"  %}selected{% endif %}>Serbo-Croatian Roman</option>
+            <option value="114" {% if language == "114" %}selected{% endif %}>Shona</option>
+            <option value="87"  {% if language == "87"  %}selected{% endif %}>Sindhi</option>
+            <option value="61"  {% if language == "61"  %}selected{% endif %}>Sinhalese</option>
+            <option value="57"  {% if language == "57"  %}selected{% endif %}>Slovak</option>
+            <option value="58"  {% if language == "58"  %}selected{% endif %}>Slovenian</option>
+            <option value="88"  {% if language == "88"  %}selected{% endif %}>Somali</option>
+            <option value="152" {% if language == "152" %}selected{% endif %}>South American Indian language</option>
+            <option value="145" {% if language == "145" %}selected{% endif %}>Southern Sotho</option>
+            <option value="59"  {% if language == "59"  %}selected{% endif %}>Spanish</option>
+            <option value="89"  {% if language == "89"  %}selected{% endif %}>Sundanese</option>
+            <option value="90"  {% if language == "90"  %}selected{% endif %}>Swahili</option>
+            <option value="62"  {% if language == "62"  %}selected{% endif %}>Swedish</option>
+            <option value="91"  {% if language == "91"  %}selected{% endif %}>Tagalog</option>
+            <option value="64"  {% if language == "64"  %}selected{% endif %}>Tamil</option>
+            <option value="92"  {% if language == "92"  %}selected{% endif %}>Tatar</option>
+            <option value="93"  {% if language == "93"  %}selected{% endif %}>Telugu</option>
+            <option value="65"  {% if language == "65"  %}selected{% endif %}>Thai</option>
+            <option value="66"  {% if language == "66"  %}selected{% endif %}>Tibetan</option>
+            <option value="67"  {% if language == "67"  %}selected{% endif %}>Turkish</option>
+            <option value="94"  {% if language == "94"  %}selected{% endif %}>Uighur</option>
+            <option value="68"  {% if language == "68"  %}selected{% endif %}>Ukrainian</option>
+            <option value="167" {% if language == "167" %}selected{% endif %}>Upper Sorbian</option>
+            <option value="69"  {% if language == "69"  %}selected{% endif %}>Urdu</option>
+            <option value="70"  {% if language == "70"  %}selected{% endif %}>Uzbek</option>
+            <option value="71"  {% if language == "71"  %}selected{% endif %}>Vietnamese</option>
+            <option value="72"  {% if language == "72"  %}selected{% endif %}>Welsh</option>
+            <option value="169" {% if language == "169" %}selected{% endif %}>Yakut</option>
+            <option value="73"  {% if language == "73"  %}selected{% endif %}>Yiddish</option>
+            <option value="103" {% if language == "103" %}selected{% endif %}>Yoruba</option>
+            <option value="135" {% if language == "135" %}selected{% endif %}>Zulu</option>
+          </select>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-4">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="ts-juvenile" name="juvenile" value="1" {% if juvenile %}checked{% endif %}>
+          <label class="form-check-label" for="ts-juvenile">Juvenile</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="ts-novelization" name="novelization" value="1" {% if novelization %}checked{% endif %}>
+          <label class="form-check-label" for="ts-novelization">Novelization</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="ts-nongenre" name="non_genre" value="1" {% if non_genre %}checked{% endif %}>
+          <label class="form-check-label" for="ts-nongenre">Non-Genre</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="ts-graphic" name="graphic" value="1" {% if graphic %}checked{% endif %}>
+          <label class="form-check-label" for="ts-graphic">Graphic</label>
         </div>
       </div>
     </div>
   </div>
 </form>
+
+{% block extra_js %}
+<script>
+(function () {
+  var el = document.getElementById('tsMoreOptions');
+  var chevron = document.getElementById('tsMoreOptionsChevron');
+  if (el && chevron) {
+    el.addEventListener('show.bs.collapse', function () {
+      chevron.classList.replace('bi-chevron-down', 'bi-chevron-up');
+    });
+    el.addEventListener('hide.bs.collapse', function () {
+      chevron.classList.replace('bi-chevron-up', 'bi-chevron-down');
+    });
+  }
+})();
+</script>
+{% endblock %}
 
 {% if query %}
   {% if titles %}
