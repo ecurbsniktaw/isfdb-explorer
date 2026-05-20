@@ -106,8 +106,197 @@
                   More options <i class="bi bi-chevron-down" id="titleMoreOptionsChevron"></i>
                 </a>
               </div>
-              <div class="collapse mt-2" id="titleMoreOptions">
-                {# More options content will go here #}
+              <div class="collapse mt-3" id="titleMoreOptions">
+                <div class="row g-3 mb-3">
+                  <div class="col-auto">
+                    <label for="tl-type" class="form-label fw-semibold small mb-1">Title Type</label>
+                    <select class="form-select form-select-sm" id="tl-type" name="title_type">
+                      <option value="">Any</option>
+                      <option value="ANTHOLOGY">Anthology</option>
+                      <option value="CHAPBOOK">Chapbook</option>
+                      <option value="COLLECTION">Collection</option>
+                      <option value="COVERART">Cover Art</option>
+                      <option value="EDITOR">Editor</option>
+                      <option value="ESSAY">Essay</option>
+                      <option value="INTERIORART">Interior Art</option>
+                      <option value="INTERVIEW">Interview</option>
+                      <option value="NONFICTION">Nonfiction</option>
+                      <option value="NOVEL">Novel</option>
+                      <option value="OMNIBUS">Omnibus</option>
+                      <option value="POEM">Poem</option>
+                      <option value="REVIEW">Review</option>
+                      <option value="SERIAL">Serial</option>
+                      <option value="SHORTFICTION">Short Fiction</option>
+                    </select>
+                  </div>
+                  <div class="col-auto">
+                    <label for="tl-length" class="form-label fw-semibold small mb-1">Length</label>
+                    <select class="form-select form-select-sm" id="tl-length" name="length">
+                      <option value="">Any</option>
+                      <option value="novelette">Novelette</option>
+                      <option value="novella">Novella</option>
+                      <option value="short story">Short Story</option>
+                    </select>
+                  </div>
+                  <div class="col-auto">
+                    <label for="tl-lang" class="form-label fw-semibold small mb-1">Language</label>
+                    <select class="form-select form-select-sm" id="tl-lang" name="language">
+                      <option value="17" selected>English</option>
+                      <option value="1">Afrikaans</option>
+                      <option value="105">Akkadian</option>
+                      <option value="2">Albanian</option>
+                      <option value="74">Amharic</option>
+                      <option value="3">Ancient Greek</option>
+                      <option value="4">Arabic</option>
+                      <option value="5">Armenian</option>
+                      <option value="109">Asturian/Bable</option>
+                      <option value="6">Azerbaijani</option>
+                      <option value="7">Basque</option>
+                      <option value="8">Belarusian</option>
+                      <option value="9">Bengali</option>
+                      <option value="75">Bosnian</option>
+                      <option value="159">Breton</option>
+                      <option value="10">Bulgarian</option>
+                      <option value="11">Burmese</option>
+                      <option value="12">Catalan</option>
+                      <option value="168">Cebuano</option>
+                      <option value="13">Chinese</option>
+                      <option value="160">Cornish</option>
+                      <option value="31">Croatian</option>
+                      <option value="14">Czech</option>
+                      <option value="15">Danish</option>
+                      <option value="16">Dutch</option>
+                      <option value="18">Esperanto</option>
+                      <option value="19">Estonian</option>
+                      <option value="162">Faroese</option>
+                      <option value="20">Filipino</option>
+                      <option value="21">Finnish</option>
+                      <option value="22">French</option>
+                      <option value="23">Frisian</option>
+                      <option value="24">Galician</option>
+                      <option value="25">Georgian</option>
+                      <option value="26">German</option>
+                      <option value="27">Greek</option>
+                      <option value="154">Guarani</option>
+                      <option value="28">Gujarati</option>
+                      <option value="76">Hausa</option>
+                      <option value="77">Hawaiian</option>
+                      <option value="29">Hebrew</option>
+                      <option value="30">Hindi</option>
+                      <option value="32">Hungarian</option>
+                      <option value="33">Icelandic</option>
+                      <option value="34">Indonesian</option>
+                      <option value="153">Interlingua</option>
+                      <option value="35">Irish</option>
+                      <option value="36">Italian</option>
+                      <option value="37">Japanese</option>
+                      <option value="78">Javanese</option>
+                      <option value="79">Judeo-Arabic</option>
+                      <option value="80">Karen</option>
+                      <option value="165">Kashubian</option>
+                      <option value="38">Kazakh</option>
+                      <option value="39">Khmer</option>
+                      <option value="157">Klingon</option>
+                      <option value="41">Korean</option>
+                      <option value="125">Kurdish</option>
+                      <option value="40">Kyrgyz</option>
+                      <option value="81">Ladino</option>
+                      <option value="43">Latin</option>
+                      <option value="42">Latvian</option>
+                      <option value="44">Lithuanian</option>
+                      <option value="111">Low German</option>
+                      <option value="166">Lower Sorbian</option>
+                      <option value="45">Macedonian</option>
+                      <option value="155">Maithili</option>
+                      <option value="46">Malay</option>
+                      <option value="47">Malayalam</option>
+                      <option value="82">Maltese</option>
+                      <option value="48">Marathi</option>
+                      <option value="104">Mayan language</option>
+                      <option value="101">Middle English</option>
+                      <option value="110">Middle French</option>
+                      <option value="102">Middle High German</option>
+                      <option value="83">Minangkabau</option>
+                      <option value="150">Mirandese</option>
+                      <option value="49">Mongolian</option>
+                      <option value="149">Montenegrin</option>
+                      <option value="158">Nahuatl language</option>
+                      <option value="112">Nepali</option>
+                      <option value="50">Norwegian</option>
+                      <option value="107">Norwegian (Bokmal)</option>
+                      <option value="108">Norwegian (Nynorsk)</option>
+                      <option value="84">Nyanja</option>
+                      <option value="161">Occitan (post 1500)</option>
+                      <option value="99">Old English</option>
+                      <option value="100">Old French</option>
+                      <option value="115">Old Norse</option>
+                      <option value="142">Oriya</option>
+                      <option value="85">Panjabi</option>
+                      <option value="113">Pashto/Pushto</option>
+                      <option value="51">Persian</option>
+                      <option value="52">Polish</option>
+                      <option value="53">Portuguese</option>
+                      <option value="156">Romance language</option>
+                      <option value="54">Romanian</option>
+                      <option value="55">Russian</option>
+                      <option value="86">Samoan</option>
+                      <option value="95">Sanskrit</option>
+                      <option value="98">Scots</option>
+                      <option value="56">Scottish Gaelic</option>
+                      <option value="60">Serbian</option>
+                      <option value="96">Serbo-Croatian Cyrillic</option>
+                      <option value="97">Serbo-Croatian Roman</option>
+                      <option value="114">Shona</option>
+                      <option value="87">Sindhi</option>
+                      <option value="61">Sinhalese</option>
+                      <option value="57">Slovak</option>
+                      <option value="58">Slovenian</option>
+                      <option value="88">Somali</option>
+                      <option value="152">South American Indian language</option>
+                      <option value="145">Southern Sotho</option>
+                      <option value="59">Spanish</option>
+                      <option value="89">Sundanese</option>
+                      <option value="90">Swahili</option>
+                      <option value="62">Swedish</option>
+                      <option value="91">Tagalog</option>
+                      <option value="64">Tamil</option>
+                      <option value="92">Tatar</option>
+                      <option value="93">Telugu</option>
+                      <option value="65">Thai</option>
+                      <option value="66">Tibetan</option>
+                      <option value="67">Turkish</option>
+                      <option value="94">Uighur</option>
+                      <option value="68">Ukrainian</option>
+                      <option value="167">Upper Sorbian</option>
+                      <option value="69">Urdu</option>
+                      <option value="70">Uzbek</option>
+                      <option value="71">Vietnamese</option>
+                      <option value="72">Welsh</option>
+                      <option value="169">Yakut</option>
+                      <option value="73">Yiddish</option>
+                      <option value="103">Yoruba</option>
+                      <option value="135">Zulu</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="d-flex flex-wrap gap-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="tl-juvenile" name="juvenile" value="1">
+                    <label class="form-check-label" for="tl-juvenile">Juvenile</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="tl-novelization" name="novelization" value="1">
+                    <label class="form-check-label" for="tl-novelization">Novelization</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="tl-nongenre" name="non_genre" value="1">
+                    <label class="form-check-label" for="tl-nongenre">Non-Genre</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="tl-graphic" name="graphic" value="1">
+                    <label class="form-check-label" for="tl-graphic">Graphic</label>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="col-auto">
