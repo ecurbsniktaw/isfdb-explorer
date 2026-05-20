@@ -657,7 +657,7 @@ _PUB_PTYPE_LABELS = {
 
 def get_book_detail(cursor, title_id: int) -> dict | None:
     """
-    Return details for the first English-language publication of a given title_id.
+    Return details for the first publication of a given title_id.
     Includes cover image, pub date, catalog id, publisher, format, and cover artist.
     """
     type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
@@ -716,10 +716,8 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
                                      AND t_cv.title_ttype = 'COVERART'
         LEFT JOIN canonical_author ca_cv ON ca_cv.title_id = t_cv.title_id
         LEFT JOIN authors a_cv        ON a_cv.author_id = ca_cv.author_id
-        JOIN languages lang           ON lang.lang_id = t.title_language
         WHERE t.title_id = %s
           AND p.pub_ctype IN ({type_placeholders})
-          AND lang.lang_code = 'eng'
           AND YEAR(p.pub_year) > 0
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
                  p.pub_catalog, p.pub_isbn, p.pub_price, p.pub_ptype, p.pub_pages, p.pub_frontimage,
