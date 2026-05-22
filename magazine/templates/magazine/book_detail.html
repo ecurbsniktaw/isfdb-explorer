@@ -396,7 +396,7 @@
             <tbody>
               {% for ed in editions %}
               <tr>
-                <td>{{ ed.pub_title }}</td>
+                <td><a href="{% url 'book_detail' book.title_id %}?pub={{ ed.pub_id }}" class="text-decoration-none">{{ ed.pub_title }}</a></td>
                 <td>
                   {% if ed.pub_frontimage %}
                   <img src="{{ ed.pub_frontimage }}"

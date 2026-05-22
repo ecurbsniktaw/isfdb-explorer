@@ -495,10 +495,12 @@ def _find_copy_links(book):
 
 
 def book_detail(request, title_id):
-    """First-edition details for a single book title."""
+    """Details for a single book title, optionally for a specific pub_id edition."""
+    pub_param = request.GET.get("pub", "").strip()
+    pub_id    = int(pub_param) if pub_param.isdigit() else None
     cursor = _dict_cursor()
     try:
-        book = get_book_detail(cursor, title_id)
+        book = get_book_detail(cursor, title_id, pub_id)
         if not book:
             raise Http404(f"No book found for title_id={title_id}")
         editions  = get_book_editions(cursor, title_id, book["pub_id"])

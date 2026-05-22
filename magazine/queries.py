@@ -655,9 +655,11 @@ _PUB_PTYPE_LABELS = {
 }
 
 
-def get_book_detail(cursor, title_id: int) -> dict | None:
+def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
     """
-    Return details for the first publication of a given title_id.
+    Return details for a publication of a given title_id.
+    If pub_id is specified that specific publication is shown; otherwise the
+    first (earliest) publication is used.
     Includes cover image, pub date, catalog id, publisher, format, and cover artist.
     """
     type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
@@ -721,6 +723,7 @@ def get_book_detail(cursor, title_id: int) -> dict | None:
         WHERE t.title_id = %s
           AND p.pub_ctype IN ({type_placeholders})
           AND YEAR(p.pub_year) > 0
+          {f"AND p.pub_id = {int(pub_id)}" if pub_id else ""}
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
                  p.pub_catalog, p.pub_isbn, p.pub_price, p.pub_ptype, p.pub_pages, p.pub_frontimage,
                  pub.publisher_name, n.note_note, tn.note_note,
