@@ -2378,6 +2378,41 @@ def get_award_entries_by_category(cursor, award_type_id: int,
     ]
 
 
+# ---------------------------------------------------------------------------
+# Publishers
+# ---------------------------------------------------------------------------
+
+
+def get_publisher_count(cursor) -> int:
+    """Return total number of publishers (excluding HTML-entity names)."""
+    cursor.execute(
+        "SELECT COUNT(*) AS cnt FROM publishers WHERE publisher_name NOT LIKE '%%&#%%'"
+    )
+    row = cursor.fetchone()
+    return row["cnt"] if row else 0
+
+
+def find_publishers(cursor, name: str) -> list:
+    """
+    Return publishers whose name contains the given string (case-insensitive),
+    ordered by publication count descending.
+
+    Returns a list of dicts with keys:
+        publisher_id, publisher_name, pub_count
+    """
+    cursor.execute("""
+        SELECT p.publisher_id, p.publisher_name, COUNT(pub.pub_id) AS pub_count
+        FROM publishers p
+        JOIN pubs pub ON pub.publisher_id = p.publisher_id
+        WHERE p.publisher_name LIKE %s
+          AND p.publisher_name NOT LIKE '%%&#%%'
+        GROUP BY p.publisher_id, p.publisher_name
+        ORDER BY pub_count DESC
+        LIMIT 200
+    """, (f"%{name}%",))
+    return cursor.fetchall()
+
+
 def get_author_awards(cursor, author_id: int) -> list:
     """Return all award entries for titles by this author, in chronological order."""
     cursor.execute("""

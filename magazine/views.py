@@ -25,6 +25,7 @@ from .queries import (
     get_series_detail, get_series_by_author,
     get_pub_series_detail,
     _MAJOR_SERIES_IDS, _MAJOR_SERIES_INFO,
+    find_publishers, get_publisher_count,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -578,6 +579,43 @@ def artist_list(request):
         "artists":          artists,
         "total":            len(artists),
         "selected_artists": _SELECTED_ARTISTS,
+    })
+
+
+_SELECTED_PUBLISHERS = [
+    # (display name, publisher_id, pub_count)
+    ("Tor",                   23,    "11,538"),
+    ("Pabel-Moewig",          34608, "9,237"),
+    ("Ace Books",             37,    "8,309"),
+    ("Del Rey / Ballantine",  15,    "6,582"),
+    ("Heyne",                 1127,  "5,978"),
+    ("Gollancz",              13,    "5,502"),
+    ("Tantor Audio",          58216, "5,495"),
+    ("Project Gutenberg",     13741, "5,168"),
+    ("Baen Books",            38,    "5,025"),
+    ("DAW Books",             43,    "4,837"),
+    ("Orbit",                 113,   "4,689"),
+    ("Bastei Lübbe",          5719,  "4,629"),
+]
+
+
+def publisher_list(request):
+    """Publishers page: count, search form, and selected publisher cards."""
+    query = request.GET.get("q", "").strip()
+
+    cursor = _dict_cursor()
+    try:
+        total_publishers = get_publisher_count(cursor)
+        publishers = find_publishers(cursor, query) if query else []
+    finally:
+        cursor.close()
+
+    return render(request, "magazine/publisher_list.html", {
+        "query":               query,
+        "publishers":          publishers,
+        "total":               len(publishers),
+        "total_publishers":    f"{total_publishers:,}",
+        "selected_publishers": _SELECTED_PUBLISHERS,
     })
 
 

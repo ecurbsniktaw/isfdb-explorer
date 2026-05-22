@@ -1,0 +1,96 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}Publishers — ISFDB Explorer{% endblock %}
+
+{% block extra_css %}
+<style>
+.publisher-card { transition: box-shadow .15s; }
+.publisher-card:hover { box-shadow: 0 .25rem .75rem rgba(0,0,0,.15) !important; background-color: #f8f9fa; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-1">Publishers</h1>
+<p class="text-muted mb-4">{{ total_publishers }} publishers in the database</p>
+
+{# ── Search form ─────────────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h2 class="h5 card-title mb-3">Find a publisher</h2>
+    <form method="get" action="{% url 'publisher_list' %}">
+      <div class="input-group mb-2">
+        <input type="text"
+               name="q"
+               value="{{ query }}"
+               class="form-control"
+               placeholder="Publisher name…"
+               autofocus>
+        <button class="btn btn-primary" type="submit">Search</button>
+        {% if query %}
+          <a href="{% url 'publisher_list' %}" class="btn btn-outline-secondary">Clear</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ── Search results ──────────────────────────────────────────────────────── #}
+{% if query %}
+  {% if publishers %}
+    <p class="text-muted mb-3" id="result-count"></p>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm table-hover">
+        <thead class="table-light">
+          <tr>
+            <th style="width:75%">Name</th>
+            <th style="width:25%">Publications</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in publishers %}
+          <tr>
+            <td>{{ p.publisher_name }}</td>
+            <td class="text-muted small">{{ p.pub_count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      No publishers found matching <strong>{{ query }}</strong>.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endif %}
+{% endif %}
+
+{# ── Top Publishers cards ─────────────────────────────────────────────────── #}
+<h2 class="h5 mb-3">Top Publishers</h2>
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mb-4">
+  {% for name, publisher_id, pub_count in selected_publishers %}
+  <div class="col">
+    <div class="card publisher-card shadow-sm h-100">
+      <div class="card-body py-2 px-3">
+        <span class="fw-semibold">{{ name }}</span>
+        <br><small class="text-muted">{{ pub_count }} publications</small>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if publishers %}
+<script>
+(function () {
+  const qVal = "{{ query|escapejs }}";
+  const total = {{ total }};
+  document.getElementById('result-count').textContent =
+    total + ' publisher' + (total === 1 ? '' : 's') + ' matching "' + qVal + '"';
+})();
+</script>
+{% endif %}
+{% endblock %}
