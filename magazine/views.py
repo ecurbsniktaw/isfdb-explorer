@@ -26,6 +26,7 @@ from .queries import (
     get_pub_series_detail,
     _MAJOR_SERIES_IDS, _MAJOR_SERIES_INFO,
     find_publishers, get_publisher_count,
+    get_publisher_detail, get_publisher_books_by_year, get_publisher_books_by_author,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -616,6 +617,44 @@ def publisher_list(request):
         "total":               len(publishers),
         "total_publishers":    f"{total_publishers:,}",
         "selected_publishers": _SELECTED_PUBLISHERS,
+    })
+
+
+def publisher_detail(request, publisher_id):
+    """Publisher detail page: metadata, author search, year grid + book list."""
+    cursor = _dict_cursor()
+    try:
+        publisher = get_publisher_detail(cursor, publisher_id)
+        if publisher is None:
+            raise Http404("Publisher not found")
+
+        year_param   = request.GET.get("year",   "").strip()
+        author_param = request.GET.get("author", "").strip()
+
+        year_books   = []
+        author_books = []
+        selected_year = None
+
+        if year_param and year_param.isdigit():
+            selected_year = int(year_param)
+            year_books = get_publisher_books_by_year(cursor, publisher_id, selected_year)
+        elif author_param:
+            author_books = get_publisher_books_by_author(cursor, publisher_id, author_param)
+    finally:
+        cursor.close()
+
+    # Chunk active years into rows of 10 for the year grid
+    yrs = publisher["active_years"]
+    year_rows = [yrs[i:i + 10] for i in range(0, len(yrs), 10)]
+
+    return render(request, "magazine/publisher_detail.html", {
+        "publisher":    publisher,
+        "year_param":   year_param,
+        "author_param": author_param,
+        "selected_year": selected_year,
+        "year_books":    year_books,
+        "author_books":  author_books,
+        "year_rows":     year_rows,
     })
 
 

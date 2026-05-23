@@ -2383,6 +2383,19 @@ def get_award_entries_by_category(cursor, award_type_id: int,
 # ---------------------------------------------------------------------------
 
 
+def _clean_publisher_note(note: str) -> str:
+    """Strip ISFDB wiki markup from a publisher note, then rewrite links."""
+    if not note:
+        return ""
+    # {{publisher|Name}} → Name (must come before the catch-all)
+    note = re.sub(r"\{\{publisher\|([^}]+)\}\}", r"\1", note, flags=re.IGNORECASE)
+    # {{A|Name}} → Name
+    note = re.sub(r"\{\{A\|([^}]+)\}\}", r"\1", note)
+    # Other {{…}} → drop
+    note = re.sub(r"\{\{[^}]+\}\}", "", note)
+    return _rewrite_isfdb_links(note).strip()
+
+
 def get_publisher_count(cursor) -> int:
     """Return total number of publishers (excluding HTML-entity names)."""
     cursor.execute(
@@ -2411,6 +2424,165 @@ def find_publishers(cursor, name: str) -> list:
         LIMIT 200
     """, (f"%{name}%",))
     return cursor.fetchall()
+
+
+_PUBLISHER_BOOK_TYPES = (
+    "NOVEL", "COLLECTION", "ANTHOLOGY", "OMNIBUS", "NONFICTION", "CHAPBOOK",
+)
+
+
+def get_publisher_detail(cursor, publisher_id: int) -> dict | None:
+    """
+    Return metadata for a publisher: name, note, webpages, pub_count,
+    and list of active book-publication years with per-year title counts.
+    """
+    cursor.execute("""
+        SELECT pub.publisher_id, pub.publisher_name, n.note_note AS pub_note
+        FROM publishers pub
+        LEFT JOIN notes n ON n.note_id = pub.note_id
+        WHERE pub.publisher_id = %s
+    """, (publisher_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+
+    row["pub_note"] = _clean_publisher_note(row.get("pub_note") or "")
+
+    # Total publication count (all ctypes)
+    cursor.execute(
+        "SELECT COUNT(*) AS cnt FROM pubs WHERE publisher_id = %s",
+        (publisher_id,)
+    )
+    row["pub_count"] = cursor.fetchone()["cnt"]
+
+    # External webpages
+    cursor.execute(
+        "SELECT url FROM webpages WHERE publisher_id = %s ORDER BY webpage_id",
+        (publisher_id,),
+    )
+    row["webpages"] = [
+        {"url": r["url"], "label": _webpage_label(r["url"])}
+        for r in cursor.fetchall()
+        if r.get("url")
+    ]
+
+    # Active years: years in which ≥1 book title was published
+    type_placeholders = ", ".join(["%s"] * len(_PUBLISHER_BOOK_TYPES))
+    cursor.execute(f"""
+        SELECT YEAR(p.pub_year) AS yr, COUNT(DISTINCT t.title_id) AS title_cnt
+        FROM pubs p
+        JOIN pub_content pc ON pc.pub_id  = p.pub_id
+        JOIN titles t       ON t.title_id = pc.title_id
+                           AND t.title_ttype = p.pub_ctype
+        WHERE p.publisher_id = %s
+          AND p.pub_ctype IN ({type_placeholders})
+          AND YEAR(p.pub_year) > 0
+          AND YEAR(p.pub_year) < 8888
+        GROUP BY yr
+        ORDER BY yr
+    """, (publisher_id, *_PUBLISHER_BOOK_TYPES))
+    row["active_years"] = cursor.fetchall()
+
+    return row
+
+
+def get_publisher_books_by_year(cursor, publisher_id: int, year: int) -> list:
+    """
+    Return all book titles published in `year` by this publisher, deduplicated
+    by title_id (showing the earliest pub_id).  Ordered alphabetically.
+    """
+    type_placeholders = ", ".join(["%s"] * len(_PUBLISHER_BOOK_TYPES))
+    cursor.execute(f"""
+        SELECT
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            MIN(p.pub_id) AS pub_id,
+            GROUP_CONCAT(
+                DISTINCT a.author_canonical
+                ORDER BY ca.ca_id
+                SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT a.author_id
+                ORDER BY ca.ca_id
+                SEPARATOR ','
+            ) AS author_ids
+        FROM pubs p
+        JOIN pub_content pc ON pc.pub_id  = p.pub_id
+        JOIN titles t       ON t.title_id = pc.title_id
+                           AND t.title_ttype = p.pub_ctype
+        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
+        LEFT JOIN authors a           ON a.author_id  = ca.author_id
+        WHERE p.publisher_id = %s
+          AND p.pub_ctype IN ({type_placeholders})
+          AND YEAR(p.pub_year) = %s
+          AND YEAR(p.pub_year) > 0
+        GROUP BY t.title_id, t.title_title, t.title_ttype
+        ORDER BY t.title_title
+    """, (publisher_id, *_PUBLISHER_BOOK_TYPES, year))
+    rows = cursor.fetchall()
+    for row in rows:
+        row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["author_list"] = _make_author_list(row.get("authors"), row.get("author_ids"))
+    return rows
+
+
+def get_publisher_books_by_author(cursor, publisher_id: int,
+                                  author_name: str) -> list:
+    """
+    Return all book titles by authors whose name contains `author_name`,
+    published by this publisher.  Deduplicated by title_id (earliest pub_id),
+    ordered chronologically then by title.
+    """
+    # Phase 1: resolve author names → IDs
+    cursor.execute(
+        "SELECT author_id FROM authors WHERE author_canonical LIKE %s",
+        (f"%{author_name}%",),
+    )
+    author_ids = [r["author_id"] for r in cursor.fetchall()]
+    if not author_ids:
+        return []
+
+    id_placeholders   = ", ".join(["%s"] * len(author_ids))
+    type_placeholders = ", ".join(["%s"] * len(_PUBLISHER_BOOK_TYPES))
+
+    cursor.execute(f"""
+        SELECT
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            MIN(YEAR(p.pub_year))  AS first_year,
+            MIN(p.pub_id)          AS pub_id,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_canonical
+                ORDER BY ca_all.ca_id
+                SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT a_all.author_id
+                ORDER BY ca_all.ca_id
+                SEPARATOR ','
+            ) AS author_ids
+        FROM pubs p
+        JOIN pub_content pc               ON pc.pub_id   = p.pub_id
+        JOIN titles t                     ON t.title_id  = pc.title_id
+                                        AND t.title_ttype = p.pub_ctype
+        JOIN canonical_author ca          ON ca.title_id  = t.title_id
+                                        AND ca.author_id IN ({id_placeholders})
+        LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
+        LEFT JOIN authors a_all           ON a_all.author_id  = ca_all.author_id
+        WHERE p.publisher_id = %s
+          AND p.pub_ctype IN ({type_placeholders})
+          AND YEAR(p.pub_year) > 0
+        GROUP BY t.title_id, t.title_title, t.title_ttype
+        ORDER BY first_year, t.title_title
+    """, (*author_ids, publisher_id, *_PUBLISHER_BOOK_TYPES))
+    rows = cursor.fetchall()
+    for row in rows:
+        row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["author_list"] = _make_author_list(row.get("authors"), row.get("author_ids"))
+    return rows
 
 
 def get_author_awards(cursor, author_id: int) -> list:

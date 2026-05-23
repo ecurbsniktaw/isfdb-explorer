@@ -70,12 +70,14 @@
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mb-4">
   {% for name, publisher_id, pub_count in selected_publishers %}
   <div class="col">
-    <div class="card publisher-card shadow-sm h-100">
-      <div class="card-body py-2 px-3">
-        <span class="fw-semibold">{{ name }}</span>
-        <br><small class="text-muted">{{ pub_count }} publications</small>
+    <a href="{% url 'publisher_detail' publisher_id %}" class="text-decoration-none text-dark">
+      <div class="card publisher-card shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <span class="fw-semibold">{{ name }}</span>
+          <br><small class="text-muted">{{ pub_count }} publications</small>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
   {% endfor %}
 </div>
