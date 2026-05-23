@@ -50,7 +50,7 @@
         <tbody>
           {% for p in publishers %}
           <tr>
-            <td>{{ p.publisher_name }}</td>
+            <td><a href="{% url 'publisher_detail' p.publisher_id %}" class="text-decoration-none">{{ p.publisher_name }}</a></td>
             <td class="text-muted small">{{ p.pub_count }}</td>
           </tr>
           {% endfor %}
