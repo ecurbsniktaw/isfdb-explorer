@@ -4,27 +4,31 @@
 
 {% block extra_css %}
 <style>
-.year-btn {
-  width: 4.4rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-.year-btn.active {
-  font-weight: 600;
-}
-.year-btn-empty {
-  width: 4.4rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  opacity: .25;
-  cursor: default;
-  pointer-events: none;
-}
-.year-count {
-  font-size: .7em;
-  opacity: .75;
+.year-grid { border-collapse: separate; border-spacing: 3px; }
+.year-grid td { padding: 0; }
+.year-link {
   display: block;
-  line-height: 1;
+  padding: .2rem .45rem;
+  font-size: .875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: left;
+  text-decoration: none;
+  border: 1px solid #6c757d;
+  border-radius: .25rem;
+  color: #6c757d;
+}
+.year-link:hover { background-color: #6c757d; color: #fff; }
+.year-link.active { background-color: #0d6efd; border-color: #0d6efd; color: #fff; font-weight: 600; }
+.year-empty {
+  display: block;
+  padding: .2rem .45rem;
+  font-size: .875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: left;
+  color: #6c757d;
+  opacity: .25;
 }
 </style>
 {% endblock %}
@@ -160,25 +164,21 @@
 <h2 class="h5 mb-3">Active Years
   <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ publisher.active_years|length }}</span>
 </h2>
-<div class="mb-4">
+<table class="year-grid mb-4">
   {% for row in year_rows %}
-  <div class="d-flex flex-wrap gap-1 mb-1">
+  <tr>
     {% for y in row %}
+    <td>
       {% if y.active %}
-    <a href="?year={{ y.yr }}"
-       class="btn btn-sm btn-outline-secondary year-btn{% if y.yr == selected_year %} active{% endif %}"
-       title="{{ y.title_cnt }} title{{ y.title_cnt|pluralize }}">
-      {{ y.yr }}<span class="year-count">{{ y.title_cnt }}</span>
-    </a>
+      <a href="?year={{ y.yr }}" class="year-link{% if y.yr == selected_year %} active{% endif %}">{{ y.yr }}:{{ y.title_cnt }}</a>
       {% else %}
-    <span class="btn btn-sm btn-outline-secondary year-btn-empty">
-      {{ y.yr }}<span class="year-count">&nbsp;</span>
-    </span>
+      <span class="year-empty">{{ y.yr }}:0</span>
       {% endif %}
+    </td>
     {% endfor %}
-  </div>
+  </tr>
   {% endfor %}
-</div>
+</table>
 {% endif %}
 
 {# ── Year results ───────────────────────────────────────────────────────── #}
