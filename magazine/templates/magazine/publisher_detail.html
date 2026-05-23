@@ -169,6 +169,62 @@
 </div>
 {% endif %}
 
+{# ── Year results (above the grid) ──────────────────────────────────────── #}
+{% if selected_year %}
+<div class="accordion mb-4" id="yearBooksAccordion">
+  <div class="accordion-item border-0">
+    <h2 class="accordion-header h5 mb-0">
+      <button class="accordion-button ps-2 shadow-none fw-semibold"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#yearBooksPanel"
+              aria-expanded="true"
+              aria-controls="yearBooksPanel">
+        Books published by {{ publisher.publisher_name }} in {{ selected_year }}
+        <span class="badge text-bg-secondary fw-normal ms-2" style="font-size:.75em;">{{ year_books|length }}</span>
+      </button>
+    </h2>
+    <div id="yearBooksPanel" class="accordion-collapse collapse show"
+         data-bs-parent="#yearBooksAccordion">
+      <div class="accordion-body px-2 pt-2">
+        {% if year_books %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover toc-table mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Title</th>
+                <th style="width:35%">Author(s)</th>
+                <th style="width:12%">Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in year_books %}
+              <tr>
+                <td>
+                  <a href="{% url 'book_detail' b.title_id %}"
+                     class="text-decoration-none">{{ b.title_title }}</a>
+                </td>
+                <td class="text-muted small">
+                  {% for a in b.author_list %}
+                    {% if not forloop.first %} &amp; {% endif %}
+                    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                  {% empty %}—{% endfor %}
+                </td>
+                <td class="text-muted small">{{ b.type_label }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No book records found for {{ selected_year }}.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {# ── Year grid ──────────────────────────────────────────────────────────── #}
 {% if publisher.active_years %}
 <div class="text-center">
@@ -191,45 +247,6 @@
   {% endfor %}
 </table>
 </div>
-{% endif %}
-
-{# ── Year results ───────────────────────────────────────────────────────── #}
-{% if selected_year %}
-<h2 class="h5 mb-3">Books published in {{ selected_year }}
-  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ year_books|length }}</span>
-</h2>
-{% if year_books %}
-<div class="table-responsive mb-4">
-  <table class="table table-sm table-hover toc-table">
-    <thead class="table-light">
-      <tr>
-        <th>Title</th>
-        <th style="width:35%">Author(s)</th>
-        <th style="width:12%">Type</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for b in year_books %}
-      <tr>
-        <td>
-          <a href="{% url 'book_detail' b.title_id %}"
-             class="text-decoration-none">{{ b.title_title }}</a>
-        </td>
-        <td class="text-muted small">
-          {% for a in b.author_list %}
-            {% if not forloop.first %} &amp; {% endif %}
-            {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
-          {% empty %}—{% endfor %}
-        </td>
-        <td class="text-muted small">{{ b.type_label }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-{% else %}
-<p class="text-muted">No book records found for {{ selected_year }}.</p>
-{% endif %}
 {% endif %}
 
 {% endblock %}
