@@ -4,22 +4,25 @@
 
 {% block extra_css %}
 <style>
-.year-grid { border-collapse: separate; border-spacing: 3px; }
+.year-grid { border-collapse: separate; border-spacing: 5px; }
 .year-grid td { padding: 0; }
-.year-link {
+.year-link,
+.year-link:hover,
+.year-link:focus {
   display: block;
   padding: .2rem .45rem;
   font-size: .875rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   text-align: left;
-  text-decoration: none !important;
+  text-decoration: none;
   border: 1px solid #6c757d;
   border-radius: .25rem;
   color: #6c757d;
 }
 .year-link:hover { background-color: #6c757d; color: #fff; }
-.year-link.active { background-color: #0d6efd; border-color: #0d6efd; color: #fff; font-weight: 600; }
+.year-link.active,
+.year-link.active:hover { background-color: #0d6efd; border-color: #0d6efd; color: #fff; font-weight: 600; }
 .year-empty {
   display: block;
   padding: .2rem .45rem;
@@ -161,6 +164,7 @@
 
 {# ── Year grid ──────────────────────────────────────────────────────────── #}
 {% if publisher.active_years %}
+<div class="text-center">
 <h2 class="h5 mb-3">Active Years
   <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ publisher.active_years|length }}</span>
 </h2>
@@ -179,6 +183,7 @@
   </tr>
   {% endfor %}
 </table>
+</div>
 {% endif %}
 
 {# ── Year results ───────────────────────────────────────────────────────── #}
