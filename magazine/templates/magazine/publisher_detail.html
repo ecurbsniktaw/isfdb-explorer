@@ -6,33 +6,8 @@
 <style>
 .year-grid { border-collapse: separate; border-spacing: 5px; }
 .year-grid td { padding: 0; }
-.year-link,
-.year-link:hover,
-.year-link:focus {
-  display: block;
-  padding: .2rem .45rem;
-  font-size: .875rem;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  text-align: left;
-  text-decoration: none;
-  border: 1px solid #6c757d;
-  border-radius: .25rem;
-  color: #6c757d;
-}
-.year-link:hover { background-color: #6c757d; color: #fff; }
-.year-link.active,
-.year-link.active:hover { background-color: #0d6efd; border-color: #0d6efd; color: #fff; font-weight: 600; }
-.year-empty {
-  display: block;
-  padding: .2rem .45rem;
-  font-size: .875rem;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  text-align: left;
-  color: #6c757d;
-  opacity: .25;
-}
+.year-link, .year-empty { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.year-empty { opacity: .25; pointer-events: none; }
 </style>
 {% endblock %}
 
@@ -174,9 +149,9 @@
     {% for y in row %}
     <td>
       {% if y.active %}
-      <a href="?year={{ y.yr }}" class="year-link{% if y.yr == selected_year %} active{% endif %}">{{ y.yr }}:{{ y.title_cnt }}</a>
+      <a href="?year={{ y.yr }}" class="btn btn-sm btn-outline-secondary d-block year-link{% if y.yr == selected_year %} active{% endif %}">{{ y.yr }}:{{ y.title_cnt }}</a>
       {% else %}
-      <span class="year-empty">{{ y.yr }}:0</span>
+      <span class="btn btn-sm btn-outline-secondary d-block year-empty">{{ y.yr }}:0</span>
       {% endif %}
     </td>
     {% endfor %}
