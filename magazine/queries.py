@@ -2528,6 +2528,31 @@ def get_publisher_books_by_year(cursor, publisher_id: int, year: int) -> list:
     return rows
 
 
+def get_publisher_all_authors(cursor, publisher_id: int) -> list:
+    """
+    Return all authors who have at least one book published by this publisher,
+    with a count of distinct titles, sorted by count descending then name.
+    """
+    type_placeholders = ", ".join(["%s"] * len(_PUBLISHER_BOOK_TYPES))
+    cursor.execute(f"""
+        SELECT a.author_id, a.author_canonical,
+               COUNT(DISTINCT t.title_id) AS book_count
+        FROM pubs p
+        JOIN pub_content pc ON pc.pub_id  = p.pub_id
+        JOIN titles t       ON t.title_id = pc.title_id
+                           AND t.title_ttype = p.pub_ctype
+        JOIN canonical_author ca ON ca.title_id  = t.title_id
+        JOIN authors a           ON a.author_id   = ca.author_id
+        WHERE p.publisher_id = %s
+          AND p.pub_ctype IN ({type_placeholders})
+          AND YEAR(p.pub_year) > 0
+          AND a.author_canonical NOT LIKE '%%&#%%'
+        GROUP BY a.author_id, a.author_canonical
+        ORDER BY book_count DESC, a.author_canonical
+    """, (publisher_id, *_PUBLISHER_BOOK_TYPES))
+    return cursor.fetchall()
+
+
 def get_publisher_books_by_author(cursor, publisher_id: int,
                                   author_name: str) -> list:
     """

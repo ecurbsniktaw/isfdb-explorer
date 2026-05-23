@@ -26,7 +26,8 @@ from .queries import (
     get_pub_series_detail,
     _MAJOR_SERIES_IDS, _MAJOR_SERIES_INFO,
     find_publishers, get_publisher_count,
-    get_publisher_detail, get_publisher_books_by_year, get_publisher_books_by_author,
+    get_publisher_detail, get_publisher_books_by_year,
+    get_publisher_books_by_author, get_publisher_all_authors,
     format_date, NARRATIVE_TYPES,
 )
 
@@ -628,11 +629,13 @@ def publisher_detail(request, publisher_id):
         if publisher is None:
             raise Http404("Publisher not found")
 
-        year_param   = request.GET.get("year",   "").strip()
-        author_param = request.GET.get("author", "").strip()
+        year_param      = request.GET.get("year",       "").strip()
+        author_param    = request.GET.get("author",     "").strip()
+        show_all_authors = request.GET.get("all_authors", "").strip()
 
-        year_books   = []
-        author_books = []
+        year_books    = []
+        author_books  = []
+        all_authors   = []
         selected_year = None
 
         if year_param and year_param.isdigit():
@@ -640,6 +643,8 @@ def publisher_detail(request, publisher_id):
             year_books = get_publisher_books_by_year(cursor, publisher_id, selected_year)
         elif author_param:
             author_books = get_publisher_books_by_author(cursor, publisher_id, author_param)
+        elif show_all_authors:
+            all_authors = get_publisher_all_authors(cursor, publisher_id)
     finally:
         cursor.close()
 
@@ -660,13 +665,15 @@ def publisher_detail(request, publisher_id):
         year_rows = []
 
     return render(request, "magazine/publisher_detail.html", {
-        "publisher":    publisher,
-        "year_param":   year_param,
-        "author_param": author_param,
-        "selected_year": selected_year,
-        "year_books":    year_books,
-        "author_books":  author_books,
-        "year_rows":     year_rows,
+        "publisher":       publisher,
+        "year_param":      year_param,
+        "author_param":    author_param,
+        "show_all_authors": show_all_authors,
+        "selected_year":   selected_year,
+        "year_books":      year_books,
+        "author_books":    author_books,
+        "all_authors":     all_authors,
+        "year_rows":       year_rows,
     })
 
 
