@@ -5,11 +5,20 @@
 {% block extra_css %}
 <style>
 .year-btn {
-  min-width: 4.2rem;
+  width: 4.4rem;
+  text-align: center;
   font-variant-numeric: tabular-nums;
 }
 .year-btn.active {
   font-weight: 600;
+}
+.year-btn-empty {
+  width: 4.4rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  opacity: .25;
+  cursor: default;
+  pointer-events: none;
 }
 .year-count {
   font-size: .7em;
@@ -155,12 +164,17 @@
   {% for row in year_rows %}
   <div class="d-flex flex-wrap gap-1 mb-1">
     {% for y in row %}
+      {% if y.active %}
     <a href="?year={{ y.yr }}"
        class="btn btn-sm btn-outline-secondary year-btn{% if y.yr == selected_year %} active{% endif %}"
        title="{{ y.title_cnt }} title{{ y.title_cnt|pluralize }}">
-      {{ y.yr }}
-      <span class="year-count">{{ y.title_cnt }}</span>
+      {{ y.yr }}<span class="year-count">{{ y.title_cnt }}</span>
     </a>
+      {% else %}
+    <span class="btn btn-sm btn-outline-secondary year-btn-empty">
+      {{ y.yr }}<span class="year-count">&nbsp;</span>
+    </span>
+      {% endif %}
     {% endfor %}
   </div>
   {% endfor %}

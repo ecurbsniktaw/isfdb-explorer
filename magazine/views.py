@@ -643,9 +643,21 @@ def publisher_detail(request, publisher_id):
     finally:
         cursor.close()
 
-    # Chunk active years into rows of 10 for the year grid
-    yrs = publisher["active_years"]
-    year_rows = [yrs[i:i + 10] for i in range(0, len(yrs), 10)]
+    # Build decade rows: one row per full decade, placeholder entries for
+    # years with no publications so every row is exactly 10 wide.
+    active_map = {y["yr"]: y["title_cnt"] for y in publisher["active_years"]}
+    if active_map:
+        decade_start = (min(active_map) // 10) * 10
+        decade_end   = (max(active_map) // 10) * 10
+        year_rows = [
+            [
+                {"yr": yr, "title_cnt": active_map.get(yr, 0), "active": yr in active_map}
+                for yr in range(decade, decade + 10)
+            ]
+            for decade in range(decade_start, decade_end + 1, 10)
+        ]
+    else:
+        year_rows = []
 
     return render(request, "magazine/publisher_detail.html", {
         "publisher":    publisher,
