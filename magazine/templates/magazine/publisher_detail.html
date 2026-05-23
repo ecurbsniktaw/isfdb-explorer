@@ -13,7 +13,7 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   text-align: left;
-  text-decoration: none;
+  text-decoration: none !important;
   border: 1px solid #6c757d;
   border-radius: .25rem;
   color: #6c757d;
@@ -53,16 +53,16 @@
     <div class="accordion mb-3" id="notesAccordion">
       <div class="accordion-item border-0">
         <h2 class="accordion-header h6 mb-0">
-          <button class="accordion-button ps-2 shadow-none fw-semibold"
+          <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target="#notesPanel"
-                  aria-expanded="true"
+                  aria-expanded="false"
                   aria-controls="notesPanel">
             Notes
           </button>
         </h2>
-        <div id="notesPanel" class="accordion-collapse collapse show"
+        <div id="notesPanel" class="accordion-collapse collapse"
              data-bs-parent="#notesAccordion">
           <div class="accordion-body px-2 pt-1 small">{{ publisher.pub_note|safe }}</div>
         </div>
@@ -164,7 +164,7 @@
 <h2 class="h5 mb-3">Active Years
   <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ publisher.active_years|length }}</span>
 </h2>
-<table class="year-grid mb-4">
+<table class="year-grid mb-4 mx-auto">
   {% for row in year_rows %}
   <tr>
     {% for y in row %}
