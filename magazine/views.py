@@ -9,7 +9,7 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.db import connection
 from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from .queries import (
@@ -144,6 +144,7 @@ def search(request):
     return render(request, "magazine/search.html", context)
 
 
+@ensure_csrf_cookie
 def issue_detail(request, pub_id):
     """Table of contents for one magazine issue."""
     cursor = _dict_cursor()
@@ -522,6 +523,7 @@ def _find_copy_links(book):
         ]
 
 
+@ensure_csrf_cookie
 def book_detail(request, title_id):
     """Details for a single book title, optionally for a specific pub_id edition."""
     pub_param = request.GET.get("pub", "").strip()
