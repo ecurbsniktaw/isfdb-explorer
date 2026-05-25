@@ -470,17 +470,12 @@
   var itemType = "{{ col_item_type }}";
   var itemId   = {{ col_item_id }};
 
-  function getCsrf() {
-    var m = document.cookie.match(/csrftoken=([^;]+)/);
-    return m ? m[1] : '';
-  }
-
   document.querySelectorAll('.col-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var status = this.dataset.status;
       fetch("{% url 'collection_toggle' %}", {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ item_type: itemType, item_id: itemId, status: status }),
       })
       .then(function (r) { return r.json(); })

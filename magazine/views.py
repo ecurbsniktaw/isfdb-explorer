@@ -1096,6 +1096,7 @@ def contact(request):
     })
 
 
+@csrf_exempt
 @require_POST
 def collection_toggle(request):
     """
