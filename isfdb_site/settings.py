@@ -28,6 +28,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+# On HTTPS deployments Django 4.0+ requires CSRF_TRUSTED_ORIGINS to include
+# the full scheme+domain (e.g. ['https://www.sfinfo.org', 'https://sfinfo.org']).
+# Override this in local_settings.py on the production server.
+CSRF_TRUSTED_ORIGINS = []
+
 
 # Application definition
 
