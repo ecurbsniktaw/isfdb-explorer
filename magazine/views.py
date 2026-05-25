@@ -1,4 +1,6 @@
+import json
 import random
+import uuid as _uuid
 from urllib.parse import quote_plus
 
 from django.conf import settings as django_settings
@@ -6,8 +8,9 @@ from django.core.mail import send_mail
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.db import connection
 from django.shortcuts import render, redirect
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links, get_adjacent_issues,
@@ -29,6 +32,9 @@ from .queries import (
     get_publisher_detail, get_publisher_books_by_year,
     get_publisher_books_by_author, get_publisher_all_authors,
     format_date, NARRATIVE_TYPES,
+)
+from .collection_queries import (
+    get_collection_status, toggle_collection_item, get_full_collection,
 )
 
 
@@ -63,6 +69,19 @@ def _split_contents(contents):
     narrative = [r for r in contents if r["is_narrative"]]
     other     = [r for r in contents if not r["is_narrative"]]
     return narrative, other
+
+
+_COLLECTION_COOKIE     = "collection_token"
+_COLLECTION_COOKIE_AGE = 5 * 365 * 24 * 60 * 60   # 5 years
+
+
+def _get_collection_token(request):
+    """Return the collection token string from the cookie, or None."""
+    return request.COOKIES.get(_COLLECTION_COOKIE) or None
+
+
+def _empty_col_status():
+    return {"owned": False, "wanted": False}
 
 
 def home(request):
@@ -135,6 +154,9 @@ def issue_detail(request, pub_id):
         contents = get_contents(cursor, pub_id)
         archive_links = get_archive_links(cursor, pub_id)
         prev_issue, next_issue = get_adjacent_issues(cursor, pub_id)
+        token      = _get_collection_token(request)
+        col_status = (get_collection_status(cursor, token, "magazine", pub_id)
+                      if token else _empty_col_status())
     finally:
         cursor.close()
 
@@ -153,6 +175,9 @@ def issue_detail(request, pub_id):
         "prev_issue":       prev_issue,
         "next_issue":       next_issue,
         "find_copy_links":  _find_copy_links_issue(issue),
+        "col_status":       col_status,
+        "col_item_type":    "magazine",
+        "col_item_id":      pub_id,
     })
 
 
@@ -506,14 +531,20 @@ def book_detail(request, title_id):
         book = get_book_detail(cursor, title_id, pub_id)
         if not book:
             raise Http404(f"No book found for title_id={title_id}")
-        editions  = get_book_editions(cursor, title_id, book["pub_id"])
-        contents  = get_book_contents(cursor, book["pub_id"])
-        reviews   = get_book_reviews(cursor, title_id)
+        editions   = get_book_editions(cursor, title_id, book["pub_id"])
+        contents   = get_book_contents(cursor, book["pub_id"])
+        reviews    = get_book_reviews(cursor, title_id)
+        token      = _get_collection_token(request)
+        col_status = (get_collection_status(cursor, token, "book", title_id)
+                      if token else _empty_col_status())
     finally:
         cursor.close()
     return render(request, "magazine/book_detail.html", {
         "book": book, "editions": editions, "contents": contents, "reviews": reviews,
         "find_copy_links": _find_copy_links(book),
+        "col_status":      col_status,
+        "col_item_type":   "book",
+        "col_item_id":     title_id,
     })
 
 
@@ -1061,6 +1092,99 @@ def contact(request):
         "captcha_question": captcha_question,
         "captcha_signed":   captcha_signed,
     })
+
+
+@require_POST
+def collection_toggle(request):
+    """
+    AJAX endpoint: toggle owned/wanted status for one item.
+
+    POST body (JSON): {"item_type": "book"|"magazine", "item_id": int, "status": "owned"|"wanted"}
+    Response  (JSON): {"added": bool, "owned": bool, "wanted": bool}
+
+    Creates the collection_token cookie if this is the user's first toggle.
+    """
+    try:
+        data      = json.loads(request.body)
+        item_type = data["item_type"]
+        item_id   = int(data["item_id"])
+        status    = data["status"]
+    except (KeyError, ValueError, TypeError):
+        return JsonResponse({"error": "bad request"}, status=400)
+
+    if item_type not in ("book", "magazine") or status not in ("owned", "wanted"):
+        return JsonResponse({"error": "bad request"}, status=400)
+
+    token     = _get_collection_token(request)
+    new_token = not token
+    if new_token:
+        token = str(_uuid.uuid4())
+
+    cursor = _dict_cursor()
+    try:
+        added      = toggle_collection_item(cursor, token, item_type, item_id, status)
+        col_status = get_collection_status(cursor, token, item_type, item_id)
+    finally:
+        cursor.close()
+
+    response = JsonResponse({
+        "added":  added,
+        "owned":  col_status["owned"],
+        "wanted": col_status["wanted"],
+    })
+    if new_token:
+        response.set_cookie(
+            _COLLECTION_COOKIE, token,
+            max_age=_COLLECTION_COOKIE_AGE,
+            httponly=True,
+            samesite="Lax",
+        )
+    return response
+
+
+def my_collection(request):
+    """The My Collection page — shows all owned and wanted items for this token."""
+    token = _get_collection_token(request)
+
+    if token:
+        cursor = _dict_cursor()
+        try:
+            collection = get_full_collection(cursor, token)
+        finally:
+            cursor.close()
+    else:
+        collection = {
+            "owned_books":     [],
+            "wanted_books":    [],
+            "owned_magazines": [],
+            "wanted_magazines": [],
+            "total":           0,
+        }
+
+    return render(request, "magazine/my_collection.html", {
+        "token":      token or "",
+        "collection": collection,
+    })
+
+
+@require_POST
+def collection_set_token(request):
+    """POST endpoint: replace the active collection token with a user-supplied UUID."""
+    raw = request.POST.get("token", "").strip()
+    try:
+        _uuid.UUID(raw)          # validate format
+        token = raw.lower()
+    except ValueError:
+        return redirect("my_collection")
+
+    response = redirect("my_collection")
+    response.set_cookie(
+        _COLLECTION_COOKIE, token,
+        max_age=_COLLECTION_COOKIE_AGE,
+        httponly=True,
+        samesite="Lax",
+    )
+    return response
 
 
 def error_404(request, exception=None):

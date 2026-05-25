@@ -33,4 +33,7 @@ urlpatterns = [
     path("pubseries/<int:pub_series_id>/", views.pub_series_detail, name="pub_series_detail"),
     path("about/", views.about, name="about"),
     path("contact/", views.contact, name="contact"),
+    path("collection/", views.my_collection, name="my_collection"),
+    path("collection/toggle/", views.collection_toggle, name="collection_toggle"),
+    path("collection/set-token/", views.collection_set_token, name="collection_set_token"),
 ]

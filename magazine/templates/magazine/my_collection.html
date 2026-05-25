@@ -1,0 +1,227 @@
+{% extends "magazine/base.html" %}
+
+{% block title %}My Collection — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-1">My Collection</h1>
+<p class="text-muted mb-4">
+  {% if collection.total %}
+    {{ collection.total }} item{{ collection.total|pluralize }} in your collection
+  {% else %}
+    Your collection is empty
+  {% endif %}
+</p>
+
+{# ── Token management card ──────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h2 class="h6 card-title mb-2">Your Collection Token</h2>
+    {% if token %}
+    <p class="small text-muted mb-1">
+      Copy this token to access your collection on another device.
+    </p>
+    <code class="d-block mb-3 user-select-all small">{{ token }}</code>
+    {% else %}
+    <p class="small text-muted mb-3">
+      You don't have a collection yet. Start by clicking
+      <strong>I Own This</strong> or <strong>I Want This</strong>
+      on any book or magazine issue page.
+    </p>
+    {% endif %}
+    <form method="post" action="{% url 'collection_set_token' %}" class="d-flex flex-wrap gap-2 align-items-end">
+      {% csrf_token %}
+      <div>
+        <label class="form-label small mb-1">Load a collection from another device:</label>
+        <input type="text" name="token" class="form-control form-control-sm"
+               style="width:24em;"
+               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+      </div>
+      <button type="submit" class="btn btn-sm btn-outline-secondary">Use Token</button>
+    </form>
+  </div>
+</div>
+
+{% if collection.total == 0 %}
+<div class="alert alert-info">
+  Browse <a href="{% url 'title_list' %}" class="alert-link">books</a> or
+  <a href="{% url 'magazine_list' %}" class="alert-link">magazines</a>
+  and mark items as owned or wanted.
+</div>
+
+{% else %}
+
+{# ── Owned Books ─────────────────────────────────────────────────────────── #}
+{% if collection.owned_books %}
+<h2 class="h5 mb-3">
+  <i class="bi bi-check-circle-fill text-success me-1"></i>
+  Owned Books
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.owned_books|length }}</span>
+</h2>
+<div class="table-responsive mb-4">
+  <table class="table table-sm table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Title</th>
+        <th style="width:30%">Author(s)</th>
+        <th style="width:7%">Year</th>
+        <th style="width:12%">Type</th>
+        <th style="width:1%"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in collection.owned_books %}
+      <tr data-item-type="book" data-item-id="{{ b.title_id }}" data-status="owned">
+        <td><a href="{% url 'book_detail' b.title_id %}" class="text-decoration-none">{{ b.title_title }}</a></td>
+        <td class="text-muted small">
+          {% for a in b.author_list %}
+            {% if not forloop.first %} &amp; {% endif %}
+            {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+          {% empty %}—{% endfor %}
+        </td>
+        <td class="text-muted small">{{ b.first_year }}</td>
+        <td class="text-muted small">{{ b.type_label }}</td>
+        <td><button class="btn btn-sm btn-outline-danger remove-btn" title="Remove from collection">&times;</button></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{# ── Wanted Books ─────────────────────────────────────────────────────────── #}
+{% if collection.wanted_books %}
+<h2 class="h5 mb-3">
+  <i class="bi bi-bookmark-fill text-primary me-1"></i>
+  Wanted Books
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.wanted_books|length }}</span>
+</h2>
+<div class="table-responsive mb-4">
+  <table class="table table-sm table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Title</th>
+        <th style="width:30%">Author(s)</th>
+        <th style="width:7%">Year</th>
+        <th style="width:12%">Type</th>
+        <th style="width:1%"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in collection.wanted_books %}
+      <tr data-item-type="book" data-item-id="{{ b.title_id }}" data-status="wanted">
+        <td><a href="{% url 'book_detail' b.title_id %}" class="text-decoration-none">{{ b.title_title }}</a></td>
+        <td class="text-muted small">
+          {% for a in b.author_list %}
+            {% if not forloop.first %} &amp; {% endif %}
+            {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+          {% empty %}—{% endfor %}
+        </td>
+        <td class="text-muted small">{{ b.first_year }}</td>
+        <td class="text-muted small">{{ b.type_label }}</td>
+        <td><button class="btn btn-sm btn-outline-danger remove-btn" title="Remove from collection">&times;</button></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{# ── Owned Magazines ──────────────────────────────────────────────────────── #}
+{% if collection.owned_magazines %}
+<h2 class="h5 mb-3">
+  <i class="bi bi-check-circle-fill text-success me-1"></i>
+  Owned Magazines
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.owned_magazines|length }}</span>
+</h2>
+<div class="table-responsive mb-4">
+  <table class="table table-sm table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Title</th>
+        <th style="width:15%">Date</th>
+        <th style="width:1%"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in collection.owned_magazines %}
+      <tr data-item-type="magazine" data-item-id="{{ m.pub_id }}" data-status="owned">
+        <td><a href="{% url 'issue_detail' m.pub_id %}" class="text-decoration-none">{{ m.pub_title }}</a></td>
+        <td class="text-muted small">{{ m.formatted_date }}</td>
+        <td><button class="btn btn-sm btn-outline-danger remove-btn" title="Remove from collection">&times;</button></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{# ── Wanted Magazines ─────────────────────────────────────────────────────── #}
+{% if collection.wanted_magazines %}
+<h2 class="h5 mb-3">
+  <i class="bi bi-bookmark-fill text-primary me-1"></i>
+  Wanted Magazines
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.wanted_magazines|length }}</span>
+</h2>
+<div class="table-responsive mb-4">
+  <table class="table table-sm table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Title</th>
+        <th style="width:15%">Date</th>
+        <th style="width:1%"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in collection.wanted_magazines %}
+      <tr data-item-type="magazine" data-item-id="{{ m.pub_id }}" data-status="wanted">
+        <td><a href="{% url 'issue_detail' m.pub_id %}" class="text-decoration-none">{{ m.pub_title }}</a></td>
+        <td class="text-muted small">{{ m.formatted_date }}</td>
+        <td><button class="btn btn-sm btn-outline-danger remove-btn" title="Remove from collection">&times;</button></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endif %}{# end collection.total #}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if token and collection.total %}
+<script>
+(function () {
+  function getCsrf() {
+    var m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+
+  document.querySelectorAll('.remove-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var row      = this.closest('tr');
+      var itemType = row.dataset.itemType;
+      var itemId   = parseInt(row.dataset.itemId, 10);
+      var status   = row.dataset.status;
+      var self     = this;
+
+      self.disabled = true;
+
+      fetch("{% url 'collection_toggle' %}", {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        body:    JSON.stringify({ item_type: itemType, item_id: itemId, status: status }),
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error) { self.disabled = false; return; }
+        row.remove();
+      })
+      .catch(function () { self.disabled = false; });
+    });
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

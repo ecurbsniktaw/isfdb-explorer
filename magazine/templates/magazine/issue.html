@@ -110,6 +110,23 @@
     </div>
     {% endif %}
 
+    {# ── My Collection buttons ───────────────────────────────────────────── #}
+    <div class="d-flex gap-2 align-items-center mt-2">
+      <span class="text-muted small">My Collection:</span>
+      <button type="button"
+              class="btn btn-sm btn-outline-success col-btn{% if col_status.owned %} active{% endif %}"
+              data-status="owned"
+              title="Toggle owned">
+        <i class="bi bi-check2-circle me-1"></i>I Own This
+      </button>
+      <button type="button"
+              class="btn btn-sm btn-outline-primary col-btn{% if col_status.wanted %} active{% endif %}"
+              data-status="wanted"
+              title="Toggle want list">
+        <i class="bi bi-bookmark me-1"></i>I Want This
+      </button>
+    </div>
+
   </div>
 
 </div>{# end flex #}
@@ -303,4 +320,38 @@
   {% endif %}
 
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var itemType = "{{ col_item_type }}";
+  var itemId   = {{ col_item_id }};
+
+  function getCsrf() {
+    var m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+
+  document.querySelectorAll('.col-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var status = this.dataset.status;
+      fetch("{% url 'collection_toggle' %}", {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        body:    JSON.stringify({ item_type: itemType, item_id: itemId, status: status }),
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error) return;
+        document.querySelector('.col-btn[data-status="owned"]')
+          .classList.toggle('active', data.owned);
+        document.querySelector('.col-btn[data-status="wanted"]')
+          .classList.toggle('active', data.wanted);
+      })
+      .catch(function () {});
+    });
+  });
+})();
+</script>
 {% endblock %}
