@@ -579,7 +579,7 @@ _SELECTED_ARTISTS = [
     ("Frank R. Paul",      731,   "1884–1963"),
     ("Alex Schomburg",     1306,  "1905–1998"),
     ("Hannes Bok",         609,   "1914–1964"),
-    ("Richard Powers",     3508,  "1921–1996"),
+    ("Richard Powers",     1811,  "1921–1996"),
     ("Frank Kelly Freas",  488,   "1922–2005"),
     ("Ed Emshwiller",      550,   "1925–1990"),
     ("Frank Frazetta",     1825,  "1928–2010"),
