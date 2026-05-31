@@ -1500,7 +1500,12 @@ def find_authors(cursor, name: str, search_type: str = "full") -> list:
             a.author_legalname,
             YEAR(a.author_birthdate) AS birth_year,
             YEAR(a.author_deathdate) AS death_year,
-            abd.title_count
+            COALESCE(
+                abd.title_count,
+                (SELECT COUNT(DISTINCT ca.title_id)
+                 FROM canonical_author ca
+                 WHERE ca.author_id = a.author_id)
+            ) AS title_count
         FROM authors a
         LEFT JOIN authors_by_debut_date abd ON abd.author_id = a.author_id
         WHERE {where}
