@@ -1504,7 +1504,10 @@ def find_authors(cursor, name: str, search_type: str = "full") -> list:
                 abd.title_count,
                 (SELECT COUNT(DISTINCT ca.title_id)
                  FROM canonical_author ca
-                 WHERE ca.author_id = a.author_id)
+                 JOIN titles t2 ON t2.title_id = ca.title_id
+                 JOIN languages lg ON lg.lang_id = t2.title_language
+                 WHERE ca.author_id = a.author_id
+                   AND lg.lang_code = 'eng')
             ) AS title_count
         FROM authors a
         LEFT JOIN authors_by_debut_date abd ON abd.author_id = a.author_id
