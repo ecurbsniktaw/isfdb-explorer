@@ -88,7 +88,7 @@
         <h2 class="h6 card-title fw-semibold mb-3">All Awards for a Single Year</h2>
         <form method="get" action="">
           <div class="row g-2 align-items-end">
-            <div class="col">
+            <div class="col-12">
               <label for="year-select" class="form-label small">Year</label>
               <select id="year-select" name="year" class="form-select form-select-sm">
                 <option value="">— choose a year —</option>
@@ -96,6 +96,18 @@
                 <option value="{{ yr }}" {% if yr == selected_year %}selected{% endif %}>{{ yr }}</option>
                 {% endfor %}
               </select>
+            </div>
+            <div class="col-12">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="year_nominees" id="ynom-no" value="no"
+                       {% if not year_include_nominees %}checked{% endif %}>
+                <label class="form-check-label small" for="ynom-no">Winners only</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="year_nominees" id="ynom-yes" value="yes"
+                       {% if year_include_nominees %}checked{% endif %}>
+                <label class="form-check-label small" for="ynom-yes">Include nominees</label>
+              </div>
             </div>
             <div class="col-auto">
               <button type="submit" class="btn btn-primary btn-sm">Show</button>
@@ -145,7 +157,7 @@
   {% endfor %}
 
   {# Runners-up — collapsed accordion #}
-  {% if cat.runners_up %}
+  {% if year_include_nominees and cat.runners_up %}
   <div class="accordion mt-2 mb-1" id="ycat-ru-acc-{{ forloop.counter }}">
     <div class="accordion-item border-0">
       <h2 class="accordion-header h6 mb-0">
@@ -183,7 +195,7 @@
   {% endif %}
 
   {# Finalists — collapsed accordion #}
-  {% if cat.finalists %}
+  {% if year_include_nominees and cat.finalists %}
   <div class="accordion mt-1" id="ycat-fin-acc-{{ forloop.counter }}">
     <div class="accordion-item border-0">
       <h2 class="accordion-header h6 mb-0">
@@ -221,7 +233,7 @@
   {% endif %}
 
   {# Nominees — collapsed accordion #}
-  {% if cat.nominees %}
+  {% if year_include_nominees and cat.nominees %}
   <div class="accordion mt-1" id="ycat-nom-acc-{{ forloop.counter }}">
     <div class="accordion-item border-0">
       <h2 class="accordion-header h6 mb-0">

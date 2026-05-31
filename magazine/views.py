@@ -876,11 +876,12 @@ def new_award_list(request):
 def new_award_detail(request, award_type_id):
     """New award detail page with category filter, nominee toggle, sort order,
     and a per-year view that shows every category for one chosen year."""
-    selected_cat     = request.GET.get("cat", "").strip()
-    include_nominees = request.GET.get("nominees", "no") == "yes"
-    sort_asc         = request.GET.get("sort", "desc") == "asc"
-    year_param       = request.GET.get("year", "").strip()
-    selected_year    = int(year_param) if year_param.isdigit() else None
+    selected_cat          = request.GET.get("cat", "").strip()
+    include_nominees      = request.GET.get("nominees", "no") == "yes"
+    sort_asc              = request.GET.get("sort", "desc") == "asc"
+    year_param            = request.GET.get("year", "").strip()
+    selected_year         = int(year_param) if year_param.isdigit() else None
+    year_include_nominees = request.GET.get("year_nominees", "no") == "yes"
 
     cursor = _dict_cursor()
     try:
@@ -908,8 +909,9 @@ def new_award_detail(request, award_type_id):
         "include_nominees": include_nominees,
         "sort_asc":         sort_asc,
         "year_blocks":      year_blocks,
-        "selected_year":    selected_year,
-        "year_cats":        year_cats,
+        "selected_year":         selected_year,
+        "year_cats":             year_cats,
+        "year_include_nominees": year_include_nominees,
     })
 
 
