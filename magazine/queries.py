@@ -2386,6 +2386,82 @@ def get_award_entries_by_category(cursor, award_type_id: int,
     ]
 
 
+def get_award_years(cursor, award_type_id: int) -> list:
+    """Return distinct years this award was given, most-recent first."""
+    cursor.execute("""
+        SELECT DISTINCT YEAR(award_year) AS yr
+        FROM awards
+        WHERE award_type_id = %s
+          AND YEAR(award_year) > 0
+        ORDER BY yr DESC
+    """, (award_type_id,))
+    return [r["yr"] for r in cursor.fetchall()]
+
+
+def get_award_entries_by_year(cursor, award_type_id: int, year: int) -> list:
+    """
+    Return every category given for one award year, each containing
+    winners, runners_up, finalists, and nominees.
+
+    Returns a list of dicts ordered by award_cat_order then name:
+        {category, winners, runners_up, finalists, nominees}
+    Each entry dict has: title, author, title_id, is_book.
+    """
+    cursor.execute("""
+        SELECT
+            ac.award_cat_name  AS category,
+            ac.award_cat_order AS cat_order,
+            a.award_title,
+            a.award_author,
+            a.award_level,
+            ta.title_id
+        FROM awards a
+        JOIN award_cats ac ON ac.award_cat_id = a.award_cat_id
+        LEFT JOIN title_awards ta ON ta.award_id = a.award_id
+        WHERE a.award_type_id = %s
+          AND YEAR(a.award_year) = %s
+        ORDER BY ac.award_cat_order, ac.award_cat_name, a.award_level
+    """, (award_type_id, year))
+    entries = cursor.fetchall()
+
+    # Determine which title_ids are books for correct linking
+    title_ids = [e["title_id"] for e in entries if e.get("title_id")]
+    book_ids: set = set()
+    if title_ids:
+        placeholders      = ", ".join(["%s"] * len(title_ids))
+        type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
+        cursor.execute(
+            f"SELECT title_id FROM titles WHERE title_id IN ({placeholders})"
+            f" AND title_ttype IN ({type_placeholders})",
+            (*title_ids, *BOOK_TYPES),
+        )
+        book_ids = {r["title_id"] for r in cursor.fetchall()}
+
+    from collections import OrderedDict
+    by_cat: dict = OrderedDict()
+    for e in entries:
+        cat = e["category"]
+        if cat not in by_cat:
+            by_cat[cat] = {"winners": [], "runners_up": [], "finalists": [], "nominees": []}
+        level_str = str(e["award_level"] or "")
+        entry = {
+            "title":    html.unescape(e["award_title"] or ""),
+            "author":   html.unescape(e["award_author"] or ""),
+            "title_id": e.get("title_id"),
+            "is_book":  e.get("title_id") in book_ids if e.get("title_id") else False,
+        }
+        if level_str == "1":
+            by_cat[cat]["winners"].append(entry)
+        elif level_str == "2":
+            by_cat[cat]["runners_up"].append(entry)
+        elif level_str in ("3", "4", "5"):
+            by_cat[cat]["finalists"].append(entry)
+        else:
+            by_cat[cat]["nominees"].append(entry)
+
+    return [{"category": cat, **data} for cat, data in by_cat.items()]
+
+
 # ---------------------------------------------------------------------------
 # Publishers
 # ---------------------------------------------------------------------------

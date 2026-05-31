@@ -23,6 +23,7 @@ from .queries import (
     get_random_short_fiction_id,
     get_all_award_types, search_award_types, get_award_detail, get_author_awards,
     get_award_type_info, get_award_categories, get_award_entries_by_category,
+    get_award_years, get_award_entries_by_year,
     _MAJOR_AWARD_IDS, _MAJOR_AWARD_NAMES,
     get_series_letters, get_series_count, get_series_by_letter, search_series, search_pub_series,
     get_series_detail, get_series_by_author,
@@ -873,10 +874,13 @@ def new_award_list(request):
 
 
 def new_award_detail(request, award_type_id):
-    """New award detail page with category filter, nominee toggle, and sort order."""
+    """New award detail page with category filter, nominee toggle, sort order,
+    and a per-year view that shows every category for one chosen year."""
     selected_cat     = request.GET.get("cat", "").strip()
     include_nominees = request.GET.get("nominees", "no") == "yes"
     sort_asc         = request.GET.get("sort", "desc") == "asc"
+    year_param       = request.GET.get("year", "").strip()
+    selected_year    = int(year_param) if year_param.isdigit() else None
 
     cursor = _dict_cursor()
     try:
@@ -884,9 +888,14 @@ def new_award_detail(request, award_type_id):
         if not award:
             raise Http404(f"No award with id={award_type_id}")
         categories  = get_award_categories(cursor, award_type_id)
+        award_years = get_award_years(cursor, award_type_id)
         year_blocks = (
             get_award_entries_by_category(cursor, award_type_id, selected_cat, sort_asc)
             if selected_cat else []
+        )
+        year_cats = (
+            get_award_entries_by_year(cursor, award_type_id, selected_year)
+            if selected_year else []
         )
     finally:
         cursor.close()
@@ -894,10 +903,13 @@ def new_award_detail(request, award_type_id):
     return render(request, "magazine/new_award_detail.html", {
         "award":            award,
         "categories":       categories,
+        "award_years":      award_years,
         "selected_cat":     selected_cat,
         "include_nominees": include_nominees,
         "sort_asc":         sort_asc,
         "year_blocks":      year_blocks,
+        "selected_year":    selected_year,
+        "year_cats":        year_cats,
     })
 
 
