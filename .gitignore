@@ -12,5 +12,8 @@ venv/
 # Large data files not needed in the repo
 isfdb_schema.sql
 
+# Original source images (processed copies live in magazine/static/)
+homeimages/
+
 # Claude Code local config
 .claude/settings.local.json
