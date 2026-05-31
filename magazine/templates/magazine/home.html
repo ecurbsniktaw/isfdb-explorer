@@ -1,53 +1,75 @@
 {% extends "magazine/base.html" %}
+{% load static %}
 
 {% block title %}ISFDB Explorer{% endblock %}
 
-{% block content %}
-<div class="row justify-content-center">
+{# Use a fluid container so the side covers have room to breathe #}
+{% block main_class %}container-fluid px-4{% endblock %}
 
-<!--   <div class="col">
-    <img src="http://www.isfdb.org/wiki/images/5/5d/Heinlein-face-1-.jpg"
-               alt="Robert A. Heinlein"
-               class="rounded shadow-sm"
-               style="max-width:160px; max-height:200px; object-fit:cover; cursor:zoom-in;">
+{% block content %}
+
+<div class="d-flex gap-4 justify-content-center align-items-start">
+
+  {# ── Left covers ──────────────────────────────────────────────────────── #}
+  <div class="d-none d-xl-flex flex-column gap-3 flex-shrink-0">
+    <img src="{% static 'magazine/images/AMAZAPR1927.jpg' %}"
+         alt="Amazing Stories, April 1927"
+         class="rounded shadow" style="height:650px; width:auto;">
+    <img src="{% static 'magazine/images/FSFAPR1964.jpg' %}"
+         alt="The Magazine of Fantasy &amp; Science Fiction, April 1964"
+         class="rounded shadow" style="height:650px; width:auto;">
   </div>
- -->
-  <div class="col-lg-8">
+
+  {# ── Centre text ──────────────────────────────────────────────────────── #}
+  <div style="max-width:640px; min-width:280px;">
 
     <h1 class="h2">Welcome to The ISFDB Explorer</h1>
-    <p>Bibliographic data on speculative fiction: science fiction, fantasy, and horror. 
-    More than 2 million titles, 200 thousand authors/artists, and 82 thousand magazine issues, 
-    using a local copy of the 
+    <p>Bibliographic data on speculative fiction: science fiction, fantasy, and horror.
+    More than 2 million titles, 200 thousand authors/artists, and 82 thousand magazine issues,
+    using a local copy of the
     <a href="https://www.isfdb.org" target="_blank" rel="noopener">
       Internet Speculative Fiction Database.
     </a>
     </p>
 
     <p class="lead">
-      The Internet Speculative Fiction Database (ISFDB) is a massive collection of bibliographic data on speculative fiction publications in print, 
-      electronic, and audio formats. The first version of the web site went 
-      live in 1995, and it is continually updated by a large community of volunteer database editors. 
-      The project and its history are described on 
-    <a href="https://en.wikipedia.org/wiki/Internet_Speculative_Fiction_Database" target="_blank" rel="noopener">
-      Wikipedia. 
-    </a>
-      
+      The Internet Speculative Fiction Database (ISFDB) is a massive collection of bibliographic
+      data on speculative fiction publications in print, electronic, and audio formats.
+      The first version of the web site went live in 1995, and it is continually updated by a
+      large community of volunteer database editors. The project and its history are described on
+      <a href="https://en.wikipedia.org/wiki/Internet_Speculative_Fiction_Database"
+         target="_blank" rel="noopener">Wikipedia.</a>
     </p>
 
     <p class="lead">
-      This web site - The ISFDB Explorer - gives
-      you access to  a local copy of the ISFDB database, 
-      providing an alternative means for viewing the data using a different user interface.
-      The most recent and most complete data is always available at ISFDB. The data used here is
-      from a backup copy of the ISFDB database downloaded in February 2026, so any additions and changes 
-      made to ISFDB since then are not included in our output.
+      This web site — The ISFDB Explorer — gives you access to a local copy of the ISFDB
+      database, providing an alternative means for viewing the data using a different user
+      interface. The most recent and most complete data is always available at ISFDB. The data
+      used here is from a backup copy of the ISFDB database downloaded in February 2026, so any
+      additions and changes made to ISFDB since then are not included in our output.
     </p>
 
+    {# ── Winston endpaper ─────────────────────────────────────────────── #}
+    <div class="text-center my-4">
+      <img src="{% static 'magazine/images/winston_endpaper.jpg' %}"
+           alt="Winston Science Fiction series endpaper"
+           class="rounded shadow img-fluid">
+    </div>
+
+    <hr>
+
   </div>
 
-<!--   <div class="col">
-    right
+  {# ── Right covers ─────────────────────────────────────────────────────── #}
+  <div class="d-none d-xl-flex flex-column gap-3 flex-shrink-0">
+    <img src="{% static 'magazine/images/GLCTCDRLCT1958.jpg' %}"
+         alt="Galaxy Science Fiction, October 1958"
+         class="rounded shadow" style="height:650px; width:auto;">
+    <img src="{% static 'magazine/images/THCTNDTHST1957.jpg' %}"
+         alt="The Haunted Palace / The Night the Sun Died, 1957"
+         class="rounded shadow" style="height:650px; width:auto;">
   </div>
- -->
+
 </div>
+
 {% endblock %}
