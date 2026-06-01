@@ -1,7 +1,9 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from . import views
 
 urlpatterns = [
+    path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
     path("", views.home, name="home"),
     path("search/", views.combined_search, name="combined_search"),
     path("issues/", views.search, name="search"),
