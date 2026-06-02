@@ -256,7 +256,7 @@ function authorPhotoMissing(img) {
                 {% for aw in author_awards %}
                 <tr>
                   <td class="text-muted small">{{ aw.year }}</td>
-                  <td><a href="{% url 'award_detail' aw.award_type_id %}" class="text-decoration-none">{{ aw.award_name }}</a></td>
+                  <td><a href="{% url 'new_award_detail' aw.award_type_id %}?year={{ aw.year }}&year_nominees=yes" class="text-decoration-none">{{ aw.award_name }}</a></td>
                   <td class="text-muted small">{{ aw.category }}</td>
                   <td class="text-muted small">
                     {% if aw.title_id %}
