@@ -769,7 +769,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
     # Awards
     _AWARD_LEVEL = {"1": "Winner", "2": "Runner-up"}
     cursor.execute("""
-        SELECT at2.award_type_name, ac.award_cat_name, a.award_level,
+        SELECT at2.award_type_id, at2.award_type_name, ac.award_cat_name, a.award_level,
                YEAR(a.award_year) AS award_year
         FROM title_awards ta
         JOIN awards a        ON a.award_id       = ta.award_id
@@ -780,10 +780,11 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
     """, (title_id,))
     row["awards"] = [
         {
-            "award_name": r["award_type_name"],
-            "category":   r["award_cat_name"],
-            "level":      _AWARD_LEVEL.get(str(r["award_level"]), "Nominee/Finalist"),
-            "year":       r["award_year"] if r["award_year"] else "",
+            "award_type_id": r["award_type_id"],
+            "award_name":    r["award_type_name"],
+            "category":      r["award_cat_name"],
+            "level":         _AWARD_LEVEL.get(str(r["award_level"]), "Nominee/Finalist"),
+            "year":          r["award_year"] if r["award_year"] else "",
         }
         for r in cursor.fetchall()
     ]
@@ -881,7 +882,7 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
     # Awards
     _AWARD_LEVEL = {"1": "Winner", "2": "Runner-up"}
     cursor.execute("""
-        SELECT at2.award_type_name, ac.award_cat_name, a.award_level,
+        SELECT at2.award_type_id, at2.award_type_name, ac.award_cat_name, a.award_level,
                YEAR(a.award_year) AS award_year
         FROM title_awards ta
         JOIN awards a        ON a.award_id       = ta.award_id
@@ -892,10 +893,11 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
     """, (title_id,))
     row["awards"] = [
         {
-            "award_name": r["award_type_name"],
-            "category":   r["award_cat_name"],
-            "level":      _AWARD_LEVEL.get(str(r["award_level"]), "Nominee/Finalist"),
-            "year":       r["award_year"] if r["award_year"] else "",
+            "award_type_id": r["award_type_id"],
+            "award_name":    r["award_type_name"],
+            "category":      r["award_cat_name"],
+            "level":         _AWARD_LEVEL.get(str(r["award_level"]), "Nominee/Finalist"),
+            "year":          r["award_year"] if r["award_year"] else "",
         }
         for r in cursor.fetchall()
     ]

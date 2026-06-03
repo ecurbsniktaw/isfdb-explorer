@@ -197,7 +197,7 @@
                 {% for award in book.awards %}
                 <tr>
                   <td class="text-muted small">{{ award.year }}</td>
-                  <td>{{ award.award_name }}</td>
+                  <td><a href="{% url 'new_award_detail' award.award_type_id %}?year={{ award.year }}&year_nominees=yes" class="text-decoration-none">{{ award.award_name }}</a></td>
                   <td class="text-muted">{{ award.category }}</td>
                   <td>
                     {% if award.level == "Winner" %}
