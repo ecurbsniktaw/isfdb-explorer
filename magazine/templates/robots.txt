@@ -8,6 +8,9 @@ Disallow: /
 User-agent: Applebot
 Disallow: /
 
+User-agent: SemrushBot
+Disallow: /
+
 # AI training crawlers
 User-agent: GPTBot
 Disallow: /
