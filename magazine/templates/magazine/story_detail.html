@@ -10,55 +10,88 @@
 
 <div class="row g-4 mb-2">
 
-  {# ── Left column: title, authors, metadata ─────────────────────────────── #}
+  {# ── Left column: cover image + title, authors, metadata ───────────────── #}
   <div class="col-lg-4">
-    <h1 class="h2 mb-1">{{ story.title_title }}</h1>
-    <p class="text-muted mb-3">
-      {% for a in story.author_list %}
-        {% if not forloop.first %} &amp; {% endif %}
-        {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
-      {% empty %}Uncredited{% endfor %}
-    </p>
+  <div class="d-flex gap-4 align-items-start">
 
-    <table class="table table-sm table-borderless w-auto">
-      <tbody>
-        {% if story.first_pub_date %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">First published</th>
-          <td>
-            {% if story.first_pub_id %}
-              <a href="{% url 'issue_detail' story.first_pub_id %}" class="text-decoration-none">{{ story.first_pub_date }}</a>
-            {% else %}
-              {{ story.first_pub_date }}
-            {% endif %}
-          </td>
-        </tr>
-        {% endif %}
-        {% if story.type_label %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Type</th>
-          <td>{{ story.type_label }}</td>
-        </tr>
-        {% endif %}
-        {% if story.length_label %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Length</th>
-          <td>{{ story.length_label }}</td>
-        </tr>
-        {% endif %}
-        {% if story.series %}
-        <tr>
-          <th class="text-muted fw-normal pe-4">Series</th>
-          <td>
-            {% if story.series.parent_title %}{{ story.series.parent_title }} &rsaquo; {% endif %}
-            {{ story.series.series_title }}
-            {% if story.title_seriesnum %} #{{ story.title_seriesnum }}{% endif %}
-            {% if story.title_seriesnum_2 %}.{{ story.title_seriesnum_2 }}{% endif %}
-          </td>
-        </tr>
-        {% endif %}
-      </tbody>
-    </table>
+    {# Cover image of first publication #}
+    {% if story.first_pub_image %}
+    <div class="flex-shrink-0">
+      <a href="#" data-bs-toggle="modal" data-bs-target="#storyCoverModal" style="display:block;">
+        <img src="{{ story.first_pub_image }}"
+             alt="Cover of first publication"
+             class="rounded shadow-sm"
+             style="max-width:120px; max-height:160px; object-fit:cover; cursor:zoom-in;">
+      </a>
+    </div>
+
+    {# Cover modal #}
+    <div class="modal fade" id="storyCoverModal" tabindex="-1" aria-label="Cover image" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+          <div class="modal-body p-0 text-center">
+            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
+                    data-bs-dismiss="modal" aria-label="Close"></button>
+            <img src="{{ story.first_pub_image }}"
+                 alt="Cover of first publication"
+                 class="img-fluid rounded shadow">
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div>
+      <h1 class="h2 mb-1">{{ story.title_title }}</h1>
+      <p class="text-muted mb-3">
+        {% for a in story.author_list %}
+          {% if not forloop.first %} &amp; {% endif %}
+          {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+        {% empty %}Uncredited{% endfor %}
+      </p>
+
+      <table class="table table-sm table-borderless w-auto">
+        <tbody>
+          {% if story.first_pub_date %}
+          <tr>
+            <th class="text-muted fw-normal pe-4">First published</th>
+            <td>
+              {% if story.first_pub_id %}
+                <a href="{% url 'issue_detail' story.first_pub_id %}" class="text-decoration-none">{{ story.first_pub_date }}</a>
+              {% else %}
+                {{ story.first_pub_date }}
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
+          {% if story.type_label %}
+          <tr>
+            <th class="text-muted fw-normal pe-4">Type</th>
+            <td>{{ story.type_label }}</td>
+          </tr>
+          {% endif %}
+          {% if story.length_label %}
+          <tr>
+            <th class="text-muted fw-normal pe-4">Length</th>
+            <td>{{ story.length_label }}</td>
+          </tr>
+          {% endif %}
+          {% if story.series %}
+          <tr>
+            <th class="text-muted fw-normal pe-4">Series</th>
+            <td>
+              {% if story.series.parent_title %}{{ story.series.parent_title }} &rsaquo; {% endif %}
+              {{ story.series.series_title }}
+              {% if story.title_seriesnum %} #{{ story.title_seriesnum }}{% endif %}
+              {% if story.title_seriesnum_2 %}.{{ story.title_seriesnum_2 }}{% endif %}
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>{# end flex #}
   </div>
 
   {# ── Right column: synopsis / notes / awards / external links ──────────── #}

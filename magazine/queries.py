@@ -941,14 +941,16 @@ def get_story_detail(cursor, title_id: int) -> dict | None:
         p["publisher_name"]    = html.unescape(p["publisher_name"] or "") if p.get("publisher_name") else ""
     row["publications"] = pubs
 
-    # First publication date (earliest entry)
+    # First publication date and cover image (earliest entry)
     if pubs:
         first = pubs[0]
-        row["first_pub_date"] = first["formatted_date"]
-        row["first_pub_id"]   = first["pub_id"]
+        row["first_pub_date"]  = first["formatted_date"]
+        row["first_pub_id"]    = first["pub_id"]
+        row["first_pub_image"] = first.get("pub_frontimage") or ""
     else:
-        row["first_pub_date"] = ""
-        row["first_pub_id"]   = None
+        row["first_pub_date"]  = ""
+        row["first_pub_id"]    = None
+        row["first_pub_image"] = ""
 
     return row
 
