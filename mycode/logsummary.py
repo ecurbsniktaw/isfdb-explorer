@@ -7,5 +7,14 @@ import subprocess
 
 # wc -l /var/log/nginx/access.log
 
-result = subprocess.check_output("wc -l /var/log/nginx/access.log", shell=True, text=True)
-print(f'# lines in log file = {result}')
+num_lines  = subprocess.check_output("wc -l /var/log/nginx/access.log", shell=True, text=True)
+time_first = subprocess.check_output("head -n 1 /var/log/nginx/access.log | awk '{print $4}'", shell=True, text=True)
+time_last  = subprocess.check_output("tail -n 1 /var/log/nginx/access.log | awk '{print $4}'", shell=True, text=True)
+
+
+print(' ')
+print(f'# lines in log file = {num_lines}')
+print(f'first date/time = {time_first}')
+print(f'last date/time = {time_last}')
+
+
