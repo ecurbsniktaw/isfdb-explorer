@@ -9,6 +9,7 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.db import connection
 from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
@@ -1041,6 +1042,7 @@ def about(request):
 _signer = TimestampSigner()
 
 
+@never_cache
 @csrf_exempt
 def contact(request):
     """Contact form — sends an email to the site owner on POST."""
