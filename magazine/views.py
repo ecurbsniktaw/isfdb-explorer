@@ -4,7 +4,7 @@ import uuid as _uuid
 from urllib.parse import quote_plus
 
 from django.conf import settings as django_settings
-from django.core.mail import send_mail
+import resend
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.db import connection
 from django.shortcuts import render, redirect
@@ -1078,13 +1078,13 @@ def contact(request):
                 f"From: {form['email']}"
             )
             try:
-                send_mail(
-                    subject="ISFDB Explorer — contact form",
-                    message=body,
-                    from_email=django_settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[django_settings.CONTACT_RECIPIENT],
-                    fail_silently=False,
-                )
+                resend.api_key = django_settings.RESEND_API_KEY
+                resend.Emails.send({
+                    "from":    django_settings.DEFAULT_FROM_EMAIL,
+                    "to":      [django_settings.CONTACT_RECIPIENT],
+                    "subject": "ISFDB Explorer — contact form",
+                    "text":    body,
+                })
                 success = True
             except Exception as exc:
                 errors["email"] = (

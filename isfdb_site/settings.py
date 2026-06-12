@@ -111,15 +111,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email — override in local_settings.py with real credentials.
-# Use console backend locally so emails are printed to the terminal.
-EMAIL_BACKEND  = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST     = ''
-EMAIL_PORT     = 587
-EMAIL_USE_TLS  = True
-EMAIL_HOST_USER     = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_TIMEOUT  = 10   # seconds before giving up on SMTP connection
+# Email — uses Resend HTTP API (not SMTP) to avoid port 587 blocks.
+# Set RESEND_API_KEY in local_settings.py on production.
+RESEND_API_KEY      = ''
 DEFAULT_FROM_EMAIL  = 'ISFDB Explorer <noreply@sfinfo.org>'
 CONTACT_RECIPIENT   = 'bruce.watkins.1947@gmail.com'
 
