@@ -79,16 +79,24 @@ def get_user_collection_status(cursor, user_id: int,
 def toggle_user_collection_item(cursor, user_id: int,
                                  item_type: str, item_id: int,
                                  status: str) -> bool:
-    """Toggle one item/status for a logged-in user. Returns True if added, False if removed."""
+    """Toggle one item/status for a logged-in user. Returns True if added, False if removed.
+    Adding a status automatically removes the opposite status (owned/wanted are mutually exclusive)."""
+    opposite = "wanted" if status == "owned" else "owned"
+
     cursor.execute("""
         SELECT id FROM user_collection_items
         WHERE user_id = %s AND item_type = %s AND item_id = %s AND status = %s
     """, (user_id, item_type, item_id, status))
     existing = cursor.fetchone()
+
     if existing:
         cursor.execute("DELETE FROM user_collection_items WHERE id = %s", (existing["id"],))
         return False
     else:
+        cursor.execute("""
+            DELETE FROM user_collection_items
+            WHERE user_id = %s AND item_type = %s AND item_id = %s AND status = %s
+        """, (user_id, item_type, item_id, opposite))
         cursor.execute("""
             INSERT INTO user_collection_items (user_id, item_type, item_id, status)
             VALUES (%s, %s, %s, %s)
