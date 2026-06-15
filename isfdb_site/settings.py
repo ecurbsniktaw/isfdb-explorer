@@ -37,6 +37,9 @@ CSRF_TRUSTED_ORIGINS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
     'django.contrib.staticfiles',
     'anymail',
     'magazine',
@@ -44,8 +47,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -59,6 +64,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
             ],
         },
     },
@@ -110,6 +116,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL          = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/collection/'
+LOGOUT_REDIRECT_URL = '/'
 
 # Email — uses Resend HTTP API (not SMTP) to avoid port 587 blocks.
 # Set RESEND_API_KEY in local_settings.py on production.

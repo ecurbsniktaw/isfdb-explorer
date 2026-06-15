@@ -5,13 +5,23 @@ from urllib.parse import quote_plus
 
 from django.conf import settings as django_settings
 import resend
+from django.contrib.auth import (
+    authenticate, login as auth_login, logout as auth_logout, get_user_model,
+)
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.db import connection
 from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse
+from django.urls import reverse
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_POST
+
+User = get_user_model()
 
 from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links, get_adjacent_issues,
@@ -37,6 +47,7 @@ from .queries import (
 )
 from .collection_queries import (
     get_collection_status, toggle_collection_item, get_full_collection,
+    get_user_collection_status, toggle_user_collection_item, get_full_user_collection,
 )
 
 
@@ -73,17 +84,7 @@ def _split_contents(contents):
     return narrative, other
 
 
-_COLLECTION_COOKIE     = "collection_token"
-_COLLECTION_COOKIE_AGE = 5 * 365 * 24 * 60 * 60   # 5 years
-
-
-def _get_collection_token(request):
-    """Return the collection token string from the cookie, or None."""
-    return request.COOKIES.get(_COLLECTION_COOKIE) or None
-
-
-def _empty_col_status():
-    return {"owned": False, "wanted": False}
+_NO_COL_STATUS = {"owned": False, "wanted": False}
 
 
 def home(request):
@@ -157,9 +158,8 @@ def issue_detail(request, pub_id):
         contents = get_contents(cursor, pub_id)
         archive_links = get_archive_links(cursor, pub_id)
         prev_issue, next_issue = get_adjacent_issues(cursor, pub_id)
-        token      = _get_collection_token(request)
-        col_status = (get_collection_status(cursor, token, "magazine", pub_id)
-                      if token else _empty_col_status())
+        col_status = (get_user_collection_status(cursor, request.user.id, "magazine", pub_id)
+                      if request.user.is_authenticated else _NO_COL_STATUS)
     finally:
         cursor.close()
 
@@ -538,9 +538,8 @@ def book_detail(request, title_id):
         editions   = get_book_editions(cursor, title_id, book["pub_id"])
         contents   = get_book_contents(cursor, book["pub_id"])
         reviews    = get_book_reviews(cursor, title_id)
-        token      = _get_collection_token(request)
-        col_status = (get_collection_status(cursor, token, "book", title_id)
-                      if token else _empty_col_status())
+        col_status = (get_user_collection_status(cursor, request.user.id, "book", title_id)
+                      if request.user.is_authenticated else _NO_COL_STATUS)
     finally:
         cursor.close()
     return render(request, "magazine/book_detail.html", {
@@ -1115,14 +1114,10 @@ def contact(request):
 @csrf_exempt
 @require_POST
 def collection_toggle(request):
-    """
-    AJAX endpoint: toggle owned/wanted status for one item.
+    """AJAX endpoint: toggle owned/wanted status for one item (requires login)."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "login required"}, status=401)
 
-    POST body (JSON): {"item_type": "book"|"magazine", "item_id": int, "status": "owned"|"wanted"}
-    Response  (JSON): {"added": bool, "owned": bool, "wanted": bool}
-
-    Creates the collection_token cookie if this is the user's first toggle.
-    """
     try:
         data      = json.loads(request.body)
         item_type = data["item_type"]
@@ -1134,76 +1129,211 @@ def collection_toggle(request):
     if item_type not in ("book", "magazine") or status not in ("owned", "wanted"):
         return JsonResponse({"error": "bad request"}, status=400)
 
-    token     = _get_collection_token(request)
-    new_token = not token
-    if new_token:
-        token = str(_uuid.uuid4())
-
     cursor = _dict_cursor()
     try:
-        added      = toggle_collection_item(cursor, token, item_type, item_id, status)
-        col_status = get_collection_status(cursor, token, item_type, item_id)
+        added      = toggle_user_collection_item(cursor, request.user.id, item_type, item_id, status)
+        col_status = get_user_collection_status(cursor, request.user.id, item_type, item_id)
     finally:
         cursor.close()
 
-    response = JsonResponse({
+    return JsonResponse({
         "added":  added,
         "owned":  col_status["owned"],
         "wanted": col_status["wanted"],
     })
-    if new_token:
-        response.set_cookie(
-            _COLLECTION_COOKIE, token,
-            max_age=_COLLECTION_COOKIE_AGE,
-            httponly=True,
-            samesite="Lax",
-        )
-    return response
 
 
+@login_required
 def my_collection(request):
-    """The My Collection page — shows all owned and wanted items for this token."""
-    token = _get_collection_token(request)
-
-    if token:
-        cursor = _dict_cursor()
-        try:
-            collection = get_full_collection(cursor, token)
-        finally:
-            cursor.close()
-    else:
-        collection = {
-            "owned_books":     [],
-            "wanted_books":    [],
-            "owned_magazines": [],
-            "wanted_magazines": [],
-            "total":           0,
-        }
-
+    """My Collection page — shows all owned and wanted items for the logged-in user."""
+    cursor = _dict_cursor()
+    try:
+        collection = get_full_user_collection(cursor, request.user.id)
+    finally:
+        cursor.close()
     return render(request, "magazine/my_collection.html", {
-        "token":      token or "",
         "collection": collection,
+        "user_email": request.user.email,
     })
 
 
-@require_POST
-def collection_set_token(request):
-    """POST endpoint: replace the active collection token with a user-supplied UUID."""
-    raw = request.POST.get("token", "").strip()
-    try:
-        _uuid.UUID(raw)          # validate format
-        token = raw.lower()
-    except ValueError:
-        return redirect("my_collection")
+# ── Auth views ────────────────────────────────────────────────────────────────
 
-    response = redirect("my_collection")
-    response.set_cookie(
-        _COLLECTION_COOKIE, token,
-        max_age=_COLLECTION_COOKIE_AGE,
-        httponly=True,
-        samesite="Lax",
-    )
-    return response
+@never_cache
+def register_view(request):
+    errors = {}
+    form   = {}
+
+    if request.method == "POST":
+        form["email"] = request.POST.get("email", "").strip().lower()
+        password      = request.POST.get("password", "")
+        password2     = request.POST.get("password2", "")
+        user_answer   = request.POST.get("captcha_answer", "").strip()
+        signed_answer = request.POST.get("captcha_signed", "")
+
+        if not form["email"]:
+            errors["email"] = "Please enter your email address."
+        elif "@" not in form["email"] or "." not in form["email"].split("@")[-1]:
+            errors["email"] = "Please enter a valid email address."
+        elif User.objects.filter(username=form["email"]).exists():
+            errors["email"] = "An account with this email already exists."
+
+        if not password:
+            errors["password"] = "Please enter a password."
+        elif len(password) < 8:
+            errors["password"] = "Password must be at least 8 characters."
+        elif password != password2:
+            errors["password2"] = "Passwords do not match."
+
+        captcha_ok = False
+        try:
+            expected   = _signer.unsign(signed_answer, max_age=3600)
+            captcha_ok = user_answer == expected
+        except (BadSignature, SignatureExpired):
+            pass
+        if not captcha_ok:
+            errors["captcha"] = "Incorrect answer — please try again."
+
+        if not errors:
+            user = User.objects.create_user(
+                username=form["email"],
+                email=form["email"],
+                password=password,
+            )
+            auth_login(request, user)
+            return redirect("my_collection")
+
+    a, b = random.randint(1, 9), random.randint(1, 9)
+    return render(request, "magazine/register.html", {
+        "errors":           errors,
+        "form":             form,
+        "captcha_question": f"What is {a} + {b}?",
+        "captcha_signed":   _signer.sign(str(a + b)),
+    })
+
+
+@never_cache
+def login_view(request):
+    errors   = {}
+    next_url = request.GET.get("next", "") or request.POST.get("next", "")
+
+    if request.method == "POST":
+        email    = request.POST.get("email", "").strip().lower()
+        password = request.POST.get("password", "")
+
+        if not email:
+            errors["email"] = "Please enter your email address."
+        if not password:
+            errors["password"] = "Please enter your password."
+
+        if not errors:
+            user = authenticate(request, username=email, password=password)
+            if user is not None:
+                auth_login(request, user)
+                return redirect(next_url or "my_collection")
+            else:
+                errors["general"] = "Invalid email address or password."
+
+    return render(request, "magazine/login.html", {
+        "errors": errors,
+        "next":   next_url,
+    })
+
+
+def logout_view(request):
+    auth_logout(request)
+    return redirect("home")
+
+
+@never_cache
+def password_reset_request(request):
+    errors = {}
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        if not email:
+            errors["email"] = "Please enter your email address."
+        else:
+            try:
+                user  = User.objects.get(username=email)
+                uid   = urlsafe_base64_encode(force_bytes(user.pk))
+                token = default_token_generator.make_token(user)
+                reset_url = request.build_absolute_uri(
+                    reverse("password_reset_confirm", kwargs={"uidb64": uid, "token": token})
+                )
+                if django_settings.DEBUG or not django_settings.RESEND_API_KEY:
+                    print(f"\n*** PASSWORD RESET URL (dev mode): {reset_url}\n")
+                else:
+                    try:
+                        resend.api_key = django_settings.RESEND_API_KEY
+                        resend.Emails.send({
+                            "from":    django_settings.DEFAULT_FROM_EMAIL,
+                            "to":      [email],
+                            "subject": "ISFDB Explorer — reset your password",
+                            "text":    (
+                                "Click the link below to reset your password. "
+                                "This link expires in 1 hour.\n\n"
+                                f"{reset_url}\n\n"
+                                "If you did not request a password reset, ignore this email."
+                            ),
+                        })
+                    except Exception:
+                        pass  # Don't expose email delivery errors
+            except User.DoesNotExist:
+                pass  # Don't reveal whether the email is registered
+            return redirect("password_reset_sent")
+
+    return render(request, "magazine/password_reset_request.html", {"errors": errors})
+
+
+def password_reset_sent(request):
+    return render(request, "magazine/password_reset_sent.html")
+
+
+@never_cache
+def password_reset_confirm(request, uidb64, token):
+    errors   = {}
+    valid    = False
+    user_obj = None
+
+    try:
+        uid      = force_str(urlsafe_base64_decode(uidb64))
+        user_obj = User.objects.get(pk=uid)
+        if default_token_generator.check_token(user_obj, token):
+            valid = True
+    except (User.DoesNotExist, ValueError, TypeError):
+        pass
+
+    if not valid:
+        return render(request, "magazine/password_reset_confirm.html", {"invalid": True})
+
+    if request.method == "POST":
+        password  = request.POST.get("password", "")
+        password2 = request.POST.get("password2", "")
+
+        if not password:
+            errors["password"] = "Please enter a new password."
+        elif len(password) < 8:
+            errors["password"] = "Password must be at least 8 characters."
+        elif password != password2:
+            errors["password2"] = "Passwords do not match."
+
+        if not errors:
+            user_obj.set_password(password)
+            user_obj.save()
+            auth_login(request, user_obj)
+            return redirect("password_reset_complete")
+
+    return render(request, "magazine/password_reset_confirm.html", {
+        "errors":  errors,
+        "uidb64":  uidb64,
+        "token":   token,
+        "invalid": False,
+    })
+
+
+def password_reset_complete(request):
+    return render(request, "magazine/password_reset_complete.html")
 
 
 def error_404(request, exception=None):

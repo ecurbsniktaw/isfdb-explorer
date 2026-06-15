@@ -37,5 +37,11 @@ urlpatterns = [
     path("contact/", views.contact, name="contact"),
     path("collection/", views.my_collection, name="my_collection"),
     path("collection/toggle/", views.collection_toggle, name="collection_toggle"),
-    path("collection/set-token/", views.collection_set_token, name="collection_set_token"),
+    path("accounts/register/", views.register_view, name="register"),
+    path("accounts/login/", views.login_view, name="login"),
+    path("accounts/logout/", views.logout_view, name="logout"),
+    path("accounts/password-reset/", views.password_reset_request, name="password_reset_request"),
+    path("accounts/password-reset/sent/", views.password_reset_sent, name="password_reset_sent"),
+    path("accounts/password-reset/confirm/<str:uidb64>/<str:token>/", views.password_reset_confirm, name="password_reset_confirm"),
+    path("accounts/password-reset/complete/", views.password_reset_complete, name="password_reset_complete"),
 ]

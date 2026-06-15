@@ -64,6 +64,126 @@ def toggle_collection_item(cursor, token: str,
         return True    # added
 
 
+def get_user_collection_status(cursor, user_id: int,
+                               item_type: str, item_id: int) -> dict:
+    """Return {'owned': bool, 'wanted': bool} for one item, keyed by user_id."""
+    cursor.execute("""
+        SELECT status
+        FROM user_collection_items
+        WHERE user_id = %s AND item_type = %s AND item_id = %s
+    """, (user_id, item_type, item_id))
+    statuses = {r["status"] for r in cursor.fetchall()}
+    return {"owned": "owned" in statuses, "wanted": "wanted" in statuses}
+
+
+def toggle_user_collection_item(cursor, user_id: int,
+                                 item_type: str, item_id: int,
+                                 status: str) -> bool:
+    """Toggle one item/status for a logged-in user. Returns True if added, False if removed."""
+    cursor.execute("""
+        SELECT id FROM user_collection_items
+        WHERE user_id = %s AND item_type = %s AND item_id = %s AND status = %s
+    """, (user_id, item_type, item_id, status))
+    existing = cursor.fetchone()
+    if existing:
+        cursor.execute("DELETE FROM user_collection_items WHERE id = %s", (existing["id"],))
+        return False
+    else:
+        cursor.execute("""
+            INSERT INTO user_collection_items (user_id, item_type, item_id, status)
+            VALUES (%s, %s, %s, %s)
+        """, (user_id, item_type, item_id, status))
+        return True
+
+
+def get_full_user_collection(cursor, user_id: int) -> dict:
+    """Return all collection items for a logged-in user, organised by status."""
+    cursor.execute("""
+        SELECT item_type, item_id, status, added_at
+        FROM user_collection_items
+        WHERE user_id = %s
+        ORDER BY item_type, status, added_at DESC
+    """, (user_id,))
+    items = cursor.fetchall()
+
+    empty = {
+        "owned_books": [], "wanted_books": [],
+        "owned_magazines": [], "wanted_magazines": [],
+        "total": 0,
+    }
+    if not items:
+        return empty
+
+    book_ids = [r["item_id"] for r in items if r["item_type"] == "book"]
+    mag_ids  = [r["item_id"] for r in items if r["item_type"] == "magazine"]
+
+    book_map = {}
+    if book_ids:
+        bp = ", ".join(["%s"] * len(book_ids))
+        tp = ", ".join(["%s"] * len(BOOK_TYPES))
+        cursor.execute(f"""
+            SELECT
+                t.title_id,
+                t.title_title,
+                t.title_ttype,
+                MIN(YEAR(p.pub_year)) AS first_year,
+                GROUP_CONCAT(
+                    DISTINCT a.author_canonical
+                    ORDER BY ca.ca_id SEPARATOR ' & '
+                ) AS authors,
+                GROUP_CONCAT(
+                    DISTINCT a.author_id
+                    ORDER BY ca.ca_id SEPARATOR ','
+                ) AS author_ids
+            FROM titles t
+            LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
+            LEFT JOIN authors a           ON a.author_id  = ca.author_id
+            LEFT JOIN pub_content pc      ON pc.title_id  = t.title_id
+            LEFT JOIN pubs p              ON p.pub_id     = pc.pub_id
+                                        AND YEAR(p.pub_year) > 0
+            WHERE t.title_id IN ({bp})
+              AND t.title_ttype IN ({tp})
+            GROUP BY t.title_id, t.title_title, t.title_ttype
+        """, (*book_ids, *BOOK_TYPES))
+        for r in cursor.fetchall():
+            r["type_label"]  = TITLE_TYPE_LABELS.get(r["title_ttype"], r["title_ttype"] or "")
+            r["author_list"] = _make_author_list(r.get("authors"), r.get("author_ids"))
+            book_map[r["title_id"]] = r
+
+    mag_map = {}
+    if mag_ids:
+        mp = ", ".join(["%s"] * len(mag_ids))
+        cursor.execute(f"""
+            SELECT pub_id, pub_title,
+                   YEAR(pub_year)  AS pub_year,
+                   MONTH(pub_year) AS pub_month
+            FROM pubs
+            WHERE pub_id IN ({mp})
+              AND pub_ctype = 'MAGAZINE'
+        """, tuple(mag_ids))
+        for r in cursor.fetchall():
+            r["formatted_date"] = format_date(r["pub_year"], r["pub_month"])
+            mag_map[r["pub_id"]] = r
+
+    result = {
+        "owned_books": [], "wanted_books": [],
+        "owned_magazines": [], "wanted_magazines": [],
+    }
+    for item in items:
+        itype, iid, status = item["item_type"], item["item_id"], item["status"]
+        if itype == "book":
+            detail = book_map.get(iid)
+            if detail:
+                result["owned_books" if status == "owned" else "wanted_books"].append(detail)
+        else:
+            detail = mag_map.get(iid)
+            if detail:
+                result["owned_magazines" if status == "owned" else "wanted_magazines"].append(detail)
+
+    result["total"] = len(items)
+    return result
+
+
 def get_full_collection(cursor, token: str) -> dict:
     """
     Return all collection items for a token, enriched with book/magazine
