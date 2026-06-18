@@ -991,7 +991,7 @@ def get_book_contents(cursor, pub_id: int) -> list:
             ) AS author_ids
         FROM pub_content pc
         JOIN titles t            ON t.title_id  = pc.title_id
-        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
+        LEFT JOIN canonical_author ca ON ca.title_id = IF(t.title_parent > 0, t.title_parent, t.title_id)
         LEFT JOIN authors a       ON a.author_id  = ca.author_id
         WHERE pc.pub_id = %s
           AND t.title_ttype IN ({type_placeholders})
