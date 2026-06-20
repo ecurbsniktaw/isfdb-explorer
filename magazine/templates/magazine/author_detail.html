@@ -202,6 +202,50 @@ function authorPhotoMissing(img) {
     </div>
     {% endif %}
 
+    {% if poems %}
+    <div class="accordion mb-2" id="poemsAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#poemsPanel"
+                  aria-expanded="false"
+                  aria-controls="poemsPanel">
+            Poems <span class="badge text-bg-secondary ms-2">{{ poems|length }}</span>
+          </button>
+        </h2>
+        <div id="poemsPanel" class="accordion-collapse collapse"
+             data-bs-parent="#poemsAccordion">
+          <div class="accordion-body px-0 pt-2">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover toc-table">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:10%">Year</th>
+                    <th style="width:50%">Title</th>
+                    <th>First Published In</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in poems %}
+                  <tr>
+                    <td class="text-muted small">{{ row.pub_year }}</td>
+                    <td>
+                      <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
+                    </td>
+                    <td class="text-muted small">{{ row.pub_title }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     {% if series %}
     <div class="accordion mb-2" id="seriesAccordion">
       <div class="accordion-item border-0">

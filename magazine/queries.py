@@ -583,6 +583,56 @@ def get_author_works(cursor, author_id: int) -> list:
     return rows
 
 
+def get_author_poems(cursor, author_id: int) -> list:
+    """
+    Return all English-language poems by an author, across all publication
+    types (magazines and books), deduplicated by title_id, chronological.
+    """
+    cursor.execute("""
+        SELECT
+            t.title_id,
+            t.title_title,
+            CAST(LEFT(MIN(CONCAT(
+                LPAD(YEAR(p.pub_year), 4, '0'),
+                LPAD(MONTH(p.pub_year), 2, '0'),
+                LPAD(p.pub_id, 10, '0')
+            )), 4) AS UNSIGNED)  AS pub_year,
+            CAST(RIGHT(MIN(CONCAT(
+                LPAD(YEAR(p.pub_year), 4, '0'),
+                LPAD(MONTH(p.pub_year), 2, '0'),
+                LPAD(p.pub_id, 10, '0')
+            )), 10) AS UNSIGNED) AS pub_id
+        FROM canonical_author ca
+        JOIN titles t         ON t.title_id  = ca.title_id
+        JOIN pub_content pc   ON pc.title_id = t.title_id
+        JOIN pubs p           ON p.pub_id    = pc.pub_id
+        JOIN languages lang   ON lang.lang_id = t.title_language
+        WHERE ca.author_id = %s
+          AND t.title_ttype = 'POEM'
+          AND lang.lang_code = 'eng'
+        GROUP BY t.title_id, t.title_title
+        ORDER BY pub_year, t.title_title
+    """, (author_id,))
+    rows = cursor.fetchall()
+    if not rows:
+        return rows
+
+    pub_ids = [row["pub_id"] for row in rows]
+    placeholders = ", ".join(["%s"] * len(pub_ids))
+    cursor.execute(
+        f"SELECT pub_id, pub_title, pub_ctype FROM pubs WHERE pub_id IN ({placeholders})",
+        pub_ids,
+    )
+    pub_map = {r["pub_id"]: r for r in cursor.fetchall()}
+
+    for row in rows:
+        pub = pub_map.get(row["pub_id"], {})
+        row["pub_title"] = pub.get("pub_title", "")
+        row["pub_ctype"] = pub.get("pub_ctype", "")
+
+    return rows
+
+
 BOOK_TYPES = ("NOVEL", "COLLECTION", "ANTHOLOGY", "OMNIBUS", "NONFICTION", "CHAPBOOK")
 
 

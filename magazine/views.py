@@ -25,7 +25,7 @@ User = get_user_model()
 
 from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links, get_adjacent_issues,
-    get_author_fiction, get_author_detail, get_author_works, get_author_books,
+    get_author_fiction, get_author_detail, get_author_works, get_author_books, get_author_poems,
     get_book_detail, get_book_editions, get_book_contents, get_book_reviews, get_story_detail, find_titles,
     get_magazine_issues_by_name, get_magazine_group_info,
     get_all_magazines, get_magazine_issues, search_magazines,
@@ -225,6 +225,7 @@ def author_detail(request, author_id):
             raise Http404(f"No author with id={author_id}")
         mag_works      = get_author_works(cursor, author_id)
         books          = get_author_books(cursor, author_id)
+        poems          = get_author_poems(cursor, author_id)
         _, series      = get_series_by_author(cursor, author_id)
         author_awards  = get_author_awards(cursor, author_id)
         cover_art      = get_author_art(cursor, author_id, "COVERART")
@@ -236,6 +237,7 @@ def author_detail(request, author_id):
         "author":         author,
         "mag_works":      mag_works,
         "books":          books,
+        "poems":          poems,
         "series":         series,
         "author_awards":  author_awards,
         "cover_art":      cover_art,
