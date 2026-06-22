@@ -503,14 +503,25 @@ def _earliest_pub_id_expr(alias="sort_key"):
 def get_author_works(cursor, author_id: int) -> list:
     """
     Return all works by a specific author (by ID), in chronological order,
-    deduplicated across editions (grouped by title_id).
+    deduplicated across editions (grouped by title_id).  Includes works
+    published under pseudonyms, flagged with the credited pen name.
 
     pub_id and pub_title are always from the *earliest* publication of each
     title (by pub_year then pub_id), not the alphabetically-first one.
     """
-    # Step 1 — get title-level data with the correct earliest pub_id encoded
-    # in a sortable CONCAT string. We extract year/month/pub_id from it.
-    query = """
+    # Collect canonical author_id plus all pseudonym author_ids
+    cursor.execute("""
+        SELECT p.pseudonym AS pseudo_id, a.author_canonical AS pen_name
+        FROM pseudonyms p
+        JOIN authors a ON a.author_id = p.pseudonym
+        WHERE p.author_id = %s
+    """, (author_id,))
+    pseudo_rows = cursor.fetchall()
+    pseudo_map = {r["pseudo_id"]: r["pen_name"] for r in pseudo_rows}
+    all_ids = [author_id] + list(pseudo_map.keys())
+    id_placeholders = ", ".join(["%s"] * len(all_ids))
+
+    query = f"""
         SELECT
             CAST(RIGHT(MIN(CONCAT(
                 LPAD(YEAR(p.pub_year), 4, '0'),
@@ -532,6 +543,7 @@ def get_author_works(cursor, author_id: int) -> list:
             t.title_ttype,
             t.title_storylen,
             MIN(pc.pubc_page)             AS pubc_page,
+            MIN(ca.author_id)             AS credited_author_id,
             GROUP_CONCAT(
                 DISTINCT a_all.author_canonical
                 ORDER BY ca_all.ca_id
@@ -546,7 +558,7 @@ def get_author_works(cursor, author_id: int) -> list:
         JOIN pub_content pc               ON pc.pub_id    = p.pub_id
         JOIN titles t                     ON t.title_id   = pc.title_id
         JOIN canonical_author ca          ON ca.title_id  = t.title_id
-                                         AND ca.author_id = %s
+                                         AND ca.author_id IN ({id_placeholders})
         LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
         LEFT JOIN authors a_all           ON a_all.author_id = ca_all.author_id
         JOIN languages lang               ON lang.lang_id = t.title_language
@@ -557,7 +569,7 @@ def get_author_works(cursor, author_id: int) -> list:
         ORDER BY
             pub_year, pub_month, t.title_title
     """
-    cursor.execute(query, (author_id,))
+    cursor.execute(query, all_ids)
     rows = cursor.fetchall()
 
     if not rows:
@@ -579,6 +591,8 @@ def get_author_works(cursor, author_id: int) -> list:
         row["formatted_date"] = format_date(row["pub_year"], row["pub_month"])
         row["kind"]           = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
         row["author_list"]    = _make_author_list(row.get("authors"), row.get("author_ids"))
+        credited = row.get("credited_author_id")
+        row["pen_name"] = pseudo_map.get(credited) if credited != author_id else None
 
     return rows
 

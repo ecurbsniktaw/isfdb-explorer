@@ -46,6 +46,7 @@
           {% else %}
             {{ row.title_title }}
           {% endif %}
+          {% if row.pen_name %}<span class="text-muted small"> (as {{ row.pen_name }})</span>{% endif %}
         </td>
         <td class="text-muted small">{{ row.pub_title }}</td>
         <td class="text-muted">
