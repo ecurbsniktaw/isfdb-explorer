@@ -1,4 +1,5 @@
 {% extends "magazine/base.html" %}
+{% load humanize %}
 
 {% block title %}{{ story.title_title }} — ISFDB Explorer{% endblock %}
 
@@ -150,7 +151,7 @@
                   data-bs-target="#awardsPanel"
                   aria-expanded="false"
                   aria-controls="awardsPanel">
-            Awards <span class="badge text-bg-secondary ms-2">{{ story.awards|length }}</span>
+            Awards <span class="badge text-bg-secondary ms-2">{{ story.awards|length|intcomma }}</span>
           </button>
         </h2>
         <div id="awardsPanel" class="accordion-collapse collapse"
@@ -209,7 +210,7 @@
               data-bs-target="#publicationsBody"
               aria-expanded="false"
               aria-controls="publicationsBody">
-        Publications <span class="badge text-bg-secondary ms-2">{{ story.publications|length }}</span>
+        Publications <span class="badge text-bg-secondary ms-2">{{ story.publications|length|intcomma }}</span>
       </button>
     </h2>
     <div id="publicationsBody" class="accordion-collapse collapse"

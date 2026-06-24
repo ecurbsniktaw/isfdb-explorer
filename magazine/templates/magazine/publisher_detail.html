@@ -1,4 +1,5 @@
 {% extends "magazine/base.html" %}
+{% load humanize %}
 
 {% block title %}{{ publisher.publisher_name }} — ISFDB Explorer{% endblock %}
 
@@ -147,7 +148,7 @@
 {# ── All authors list ─────────────────────────────────────────────────── #}
 {% if all_authors %}
 <h2 class="h5 mb-3">All Authors Published by {{ publisher.publisher_name }}
-  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ all_authors|length }}</span>
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ all_authors|length|intcomma }}</span>
 </h2>
 <div class="table-responsive mb-4">
   <table class="table table-sm table-hover">
@@ -181,7 +182,7 @@
               aria-expanded="true"
               aria-controls="yearBooksPanel">
         Books published by {{ publisher.publisher_name }} in {{ selected_year }}
-        <span class="badge text-bg-secondary fw-normal ms-2" style="font-size:.75em;">{{ year_books|length }}</span>
+        <span class="badge text-bg-secondary fw-normal ms-2" style="font-size:.75em;">{{ year_books|length|intcomma }}</span>
       </button>
     </h2>
     <div id="yearBooksPanel" class="accordion-collapse collapse show"
@@ -229,7 +230,7 @@
 {% if publisher.active_years %}
 <div class="text-center">
 <h2 class="h5 mb-3">Active Years
-  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ publisher.active_years|length }}</span>
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ publisher.active_years|length|intcomma }}</span>
 </h2>
 <table class="year-grid mb-4 mx-auto">
   {% for row in year_rows %}

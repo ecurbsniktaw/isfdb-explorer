@@ -1,4 +1,5 @@
 {% extends "magazine/base.html" %}
+{% load humanize %}
 
 {% block title %}{{ book.title_title }} — ISFDB Explorer{% endblock %}
 
@@ -182,7 +183,7 @@
                   data-bs-target="#awardsPanel"
                   aria-expanded="false"
                   aria-controls="awardsPanel">
-            Awards <span class="badge text-bg-secondary ms-2">{{ book.awards|length }}</span>
+            Awards <span class="badge text-bg-secondary ms-2">{{ book.awards|length|intcomma }}</span>
           </button>
         </h2>
         <div id="awardsPanel" class="accordion-collapse collapse"
@@ -232,7 +233,7 @@
                   data-bs-target="#reviewsPanel"
                   aria-expanded="false"
                   aria-controls="reviewsPanel">
-            Reviews <span class="badge text-bg-secondary ms-2">{{ reviews|length }}</span>
+            Reviews <span class="badge text-bg-secondary ms-2">{{ reviews|length|intcomma }}</span>
           </button>
         </h2>
         <div id="reviewsPanel" class="accordion-collapse collapse"
@@ -341,7 +342,7 @@
               data-bs-target="#contentsPanel"
               aria-expanded="false"
               aria-controls="contentsPanel">
-        Table of Contents <span class="badge text-bg-secondary ms-2">{{ contents|length }}</span>
+        Table of Contents <span class="badge text-bg-secondary ms-2">{{ contents|length|intcomma }}</span>
       </button>
     </h2>
     <div id="contentsPanel" class="accordion-collapse collapse"
@@ -394,7 +395,7 @@
               data-bs-target="#editionsPanel"
               aria-expanded="false"
               aria-controls="editionsPanel">
-        Other Editions <span class="badge text-bg-secondary ms-2">{{ editions|length }}</span>
+        Other Editions <span class="badge text-bg-secondary ms-2">{{ editions|length|intcomma }}</span>
       </button>
     </h2>
     <div id="editionsPanel" class="accordion-collapse collapse"

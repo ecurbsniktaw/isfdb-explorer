@@ -1,4 +1,5 @@
 {% extends "magazine/base.html" %}
+{% load humanize %}
 
 {% block title %}{{ author.author_canonical }} — ISFDB Explorer{% endblock %}
 
@@ -101,13 +102,13 @@ function authorPhotoMissing(img) {
                   data-bs-target="#magWorksPanel"
                   aria-expanded="false"
                   aria-controls="magWorksPanel">
-            Magazine Works <span class="badge text-bg-secondary ms-2">{{ mag_works|length }}</span>
+            Magazine Works <span class="badge text-bg-secondary ms-2">{{ mag_works|length|intcomma }}</span>
           </button>
         </h2>
         <div id="magWorksPanel" class="accordion-collapse collapse"
              data-bs-parent="#magWorksAccordion">
           <div class="accordion-body px-0 pt-2">
-            <p class="text-muted small mb-2" id="works-count-label">{{ mag_works|length }} work{{ mag_works|length|pluralize }} in English-language magazines</p>
+            <p class="text-muted small mb-2" id="works-count-label">{{ mag_works|length|intcomma }} work{{ mag_works|length|pluralize }} in English-language magazines</p>
             <div id="works-type-filter" class="mb-2"></div>
             <div class="table-responsive">
               <table class="table table-sm table-hover toc-table" id="works-table">
@@ -160,13 +161,13 @@ function authorPhotoMissing(img) {
                   data-bs-target="#booksPanel"
                   aria-expanded="false"
                   aria-controls="booksPanel">
-            Books <span class="badge text-bg-secondary ms-2">{{ books|length }}</span>
+            Books <span class="badge text-bg-secondary ms-2">{{ books|length|intcomma }}</span>
           </button>
         </h2>
         <div id="booksPanel" class="accordion-collapse collapse"
              data-bs-parent="#booksAccordion">
           <div class="accordion-body px-0 pt-2">
-            <p class="text-muted small mb-2" id="books-count-label">{{ books|length }} English-language book{{ books|length|pluralize }}</p>
+            <p class="text-muted small mb-2" id="books-count-label">{{ books|length|intcomma }} English-language book{{ books|length|pluralize }}</p>
             <div id="books-type-filter" class="mb-2"></div>
             <div class="table-responsive">
               <table class="table table-sm table-hover toc-table" id="books-table">
@@ -213,7 +214,7 @@ function authorPhotoMissing(img) {
                   data-bs-target="#poemsPanel"
                   aria-expanded="false"
                   aria-controls="poemsPanel">
-            Poems <span class="badge text-bg-secondary ms-2">{{ poems|length }}</span>
+            Poems <span class="badge text-bg-secondary ms-2">{{ poems|length|intcomma }}</span>
           </button>
         </h2>
         <div id="poemsPanel" class="accordion-collapse collapse"
@@ -257,7 +258,7 @@ function authorPhotoMissing(img) {
                   data-bs-target="#seriesPanel"
                   aria-expanded="false"
                   aria-controls="seriesPanel">
-            Series <span class="badge text-bg-secondary ms-2">{{ series|length }}</span>
+            Series <span class="badge text-bg-secondary ms-2">{{ series|length|intcomma }}</span>
           </button>
         </h2>
         <div id="seriesPanel" class="accordion-collapse collapse"
@@ -287,7 +288,7 @@ function authorPhotoMissing(img) {
                   data-bs-target="#authorAwardsPanel"
                   aria-expanded="false"
                   aria-controls="authorAwardsPanel">
-            Awards <span class="badge text-bg-secondary ms-2">{{ author_awards|length }}</span>
+            Awards <span class="badge text-bg-secondary ms-2">{{ author_awards|length|intcomma }}</span>
           </button>
         </h2>
         <div id="authorAwardsPanel" class="accordion-collapse collapse"
@@ -360,7 +361,7 @@ function authorPhotoMissing(img) {
                   data-bs-target="#penNamesPanel"
                   aria-expanded="false"
                   aria-controls="penNamesPanel">
-            Pen Names <span class="badge text-bg-secondary ms-2">{{ author.pseudonyms|length }}</span>
+            Pen Names <span class="badge text-bg-secondary ms-2">{{ author.pseudonyms|length|intcomma }}</span>
           </button>
         </h2>
         <div id="penNamesPanel" class="accordion-collapse collapse"
@@ -423,7 +424,7 @@ function authorPhotoMissing(img) {
               data-bs-target="#coverArtPanel"
               aria-expanded="false"
               aria-controls="coverArtPanel">
-        Cover Art <span class="badge text-bg-secondary ms-2">{{ cover_art|length }}</span>
+        Cover Art <span class="badge text-bg-secondary ms-2">{{ cover_art|length|intcomma }}</span>
       </button>
     </h2>
     <div id="coverArtPanel" class="accordion-collapse collapse"
@@ -487,7 +488,7 @@ function authorPhotoMissing(img) {
               data-bs-target="#interiorArtPanel"
               aria-expanded="false"
               aria-controls="interiorArtPanel">
-        Interior Art <span class="badge text-bg-secondary ms-2">{{ interior_art|length }}</span>
+        Interior Art <span class="badge text-bg-secondary ms-2">{{ interior_art|length|intcomma }}</span>
       </button>
     </h2>
     <div id="interiorArtPanel" class="accordion-collapse collapse"
@@ -550,7 +551,7 @@ function authorPhotoMissing(img) {
 {% if mag_works %}
 <script>
 (function () {
-  const total = {{ mag_works|length }};
+  const total = {{ mag_works|length|intcomma }};
   const suffix = 'work' + (total === 1 ? '' : 's') + ' in English-language magazines';
   const rows = Array.from(document.querySelectorAll('#works-table tbody tr[data-type]'));
   const countLabel = document.getElementById('works-count-label');
@@ -600,7 +601,7 @@ function authorPhotoMissing(img) {
 {% if books %}
 <script>
 (function () {
-  const total = {{ books|length }};
+  const total = {{ books|length|intcomma }};
   const suffix = 'English-language ' + (total === 1 ? 'book' : 'books');
   const rows = Array.from(document.querySelectorAll('#books-table tbody tr[data-type]'));
   const countLabel = document.getElementById('books-count-label');

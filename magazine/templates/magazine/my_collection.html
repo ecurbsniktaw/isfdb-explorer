@@ -1,4 +1,5 @@
 {% extends "magazine/base.html" %}
+{% load humanize %}
 
 {% block title %}My Collection — ISFDB Explorer{% endblock %}
 
@@ -29,7 +30,7 @@
 <h2 class="h5 mb-3">
   <i class="bi bi-check-circle-fill text-success me-1"></i>
   Owned Books
-  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.owned_books|length }}</span>
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.owned_books|length|intcomma }}</span>
 </h2>
 <div class="table-responsive mb-4">
   <table class="table table-sm table-hover">
@@ -67,7 +68,7 @@
 <h2 class="h5 mb-3">
   <i class="bi bi-bookmark-fill text-primary me-1"></i>
   Wanted Books
-  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.wanted_books|length }}</span>
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.wanted_books|length|intcomma }}</span>
 </h2>
 <div class="table-responsive mb-4">
   <table class="table table-sm table-hover">
@@ -105,7 +106,7 @@
 <h2 class="h5 mb-3">
   <i class="bi bi-check-circle-fill text-success me-1"></i>
   Owned Magazines
-  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.owned_magazines|length }}</span>
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.owned_magazines|length|intcomma }}</span>
 </h2>
 <div class="table-responsive mb-4">
   <table class="table table-sm table-hover">
@@ -134,7 +135,7 @@
 <h2 class="h5 mb-3">
   <i class="bi bi-bookmark-fill text-primary me-1"></i>
   Wanted Magazines
-  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.wanted_magazines|length }}</span>
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ collection.wanted_magazines|length|intcomma }}</span>
 </h2>
 <div class="table-responsive mb-4">
   <table class="table table-sm table-hover">
