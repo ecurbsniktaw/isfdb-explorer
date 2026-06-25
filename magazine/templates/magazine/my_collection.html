@@ -14,7 +14,7 @@
   {% endif %}
 </p>
 
-<p class="text-muted small mb-4">Signed in as {{ user_email }}</p>
+<p class="text-muted small mb-4">Signed in as {{ user_email }} &mdash; <a href="{% url 'logout' %}">Sign out</a></p>
 
 {% if collection.total == 0 %}
 <div class="alert alert-info">
