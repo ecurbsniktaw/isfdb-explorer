@@ -550,6 +550,7 @@ def book_detail(request, title_id):
         "col_status":      col_status,
         "col_item_type":   "book",
         "col_item_id":     title_id,
+        "col_pub_id":      book["pub_id"],
     })
 
 
@@ -1125,6 +1126,8 @@ def collection_toggle(request):
         item_type = data["item_type"]
         item_id   = int(data["item_id"])
         status    = data["status"]
+        pub_id_raw = data.get("pub_id")
+        pub_id    = int(pub_id_raw) if pub_id_raw else None
     except (KeyError, ValueError, TypeError):
         return JsonResponse({"error": "bad request"}, status=400)
 
@@ -1133,7 +1136,7 @@ def collection_toggle(request):
 
     cursor = _dict_cursor()
     try:
-        added      = toggle_user_collection_item(cursor, request.user.id, item_type, item_id, status)
+        added      = toggle_user_collection_item(cursor, request.user.id, item_type, item_id, status, pub_id)
         col_status = get_user_collection_status(cursor, request.user.id, item_type, item_id)
     finally:
         cursor.close()

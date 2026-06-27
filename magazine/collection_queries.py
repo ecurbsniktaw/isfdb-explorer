@@ -78,9 +78,10 @@ def get_user_collection_status(cursor, user_id: int,
 
 def toggle_user_collection_item(cursor, user_id: int,
                                  item_type: str, item_id: int,
-                                 status: str) -> bool:
+                                 status: str, pub_id: int = None) -> bool:
     """Toggle one item/status for a logged-in user. Returns True if added, False if removed.
-    Adding a status automatically removes the opposite status (owned/wanted are mutually exclusive)."""
+    Adding a status automatically removes the opposite status (owned/wanted are mutually exclusive).
+    pub_id records the specific edition for books."""
     opposite = "wanted" if status == "owned" else "owned"
 
     cursor.execute("""
@@ -98,16 +99,16 @@ def toggle_user_collection_item(cursor, user_id: int,
             WHERE user_id = %s AND item_type = %s AND item_id = %s AND status = %s
         """, (user_id, item_type, item_id, opposite))
         cursor.execute("""
-            INSERT INTO user_collection_items (user_id, item_type, item_id, status)
-            VALUES (%s, %s, %s, %s)
-        """, (user_id, item_type, item_id, status))
+            INSERT INTO user_collection_items (user_id, item_type, item_id, status, pub_id)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (user_id, item_type, item_id, status, pub_id))
         return True
 
 
 def get_full_user_collection(cursor, user_id: int) -> dict:
     """Return all collection items for a logged-in user, organised by status."""
     cursor.execute("""
-        SELECT item_type, item_id, status, added_at
+        SELECT item_type, item_id, status, pub_id, added_at
         FROM user_collection_items
         WHERE user_id = %s
         ORDER BY item_type, status, added_at DESC
@@ -182,7 +183,9 @@ def get_full_user_collection(cursor, user_id: int) -> dict:
         if itype == "book":
             detail = book_map.get(iid)
             if detail:
-                result["owned_books" if status == "owned" else "wanted_books"].append(detail)
+                entry = dict(detail)
+                entry["col_pub_id"] = item.get("pub_id")
+                result["owned_books" if status == "owned" else "wanted_books"].append(entry)
         else:
             detail = mag_map.get(iid)
             if detail:

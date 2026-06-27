@@ -474,6 +474,7 @@
 (function () {
   var itemType = "{{ col_item_type }}";
   var itemId   = {{ col_item_id }};
+  var pubId    = {{ col_pub_id }};
 
   document.querySelectorAll('.col-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -487,7 +488,7 @@
       fetch("{% url 'collection_toggle' %}", {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ item_type: itemType, item_id: itemId, status: status }),
+        body:    JSON.stringify({ item_type: itemType, item_id: itemId, status: status, pub_id: pubId }),
       })
       .then(function (r) { return r.json(); })
       .then(function (data) {

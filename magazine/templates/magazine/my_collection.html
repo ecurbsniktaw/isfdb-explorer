@@ -53,7 +53,7 @@
             <tbody>
               {% for b in collection.owned_books %}
               <tr data-item-type="book" data-item-id="{{ b.title_id }}" data-status="owned">
-                <td><a href="{% url 'book_detail' b.title_id %}" class="text-decoration-none">{{ b.title_title }}</a></td>
+                <td><a href="{% url 'book_detail' b.title_id %}{% if b.col_pub_id %}?pub={{ b.col_pub_id }}{% endif %}" class="text-decoration-none">{{ b.title_title }}</a></td>
                 <td class="text-muted small">
                   {% for a in b.author_list %}
                     {% if not forloop.first %} &amp; {% endif %}
@@ -102,7 +102,7 @@
             <tbody>
               {% for b in collection.wanted_books %}
               <tr data-item-type="book" data-item-id="{{ b.title_id }}" data-status="wanted">
-                <td><a href="{% url 'book_detail' b.title_id %}" class="text-decoration-none">{{ b.title_title }}</a></td>
+                <td><a href="{% url 'book_detail' b.title_id %}{% if b.col_pub_id %}?pub={{ b.col_pub_id }}{% endif %}" class="text-decoration-none">{{ b.title_title }}</a></td>
                 <td class="text-muted small">
                   {% for a in b.author_list %}
                     {% if not forloop.first %} &amp; {% endif %}
