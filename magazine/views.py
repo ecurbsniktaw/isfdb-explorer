@@ -43,6 +43,7 @@ from .queries import (
     find_publishers, get_publisher_count,
     get_publisher_detail, get_publisher_books_by_year,
     get_publisher_books_by_author, get_publisher_all_authors,
+    get_artist_count, get_db_stats,
     format_date, NARRATIVE_TYPES,
 )
 from .collection_queries import (
@@ -361,12 +362,10 @@ def magazine_list(request):
 
     cursor = _dict_cursor()
     try:
-        if query:
-            magazines = search_magazines(cursor, query)
-            all_mags  = get_all_magazines(cursor)
-        else:
-            all_mags  = get_all_magazines(cursor)
-            magazines = None
+        all_mags = get_all_magazines(cursor)
+        magazines = search_magazines(cursor, query) if query else None
+        cursor.execute("SELECT COUNT(*) AS cnt FROM pubs WHERE pub_ctype = 'MAGAZINE'")
+        total_issues = cursor.fetchone()["cnt"]
     finally:
         cursor.close()
 
@@ -385,7 +384,8 @@ def magazine_list(request):
         "magazines":          magazines,
         "letter":             letter if not query else None,
         "letters_with_mags":  letters_with_mags,
-        "total_all":          f"{len(all_mags):,}",
+        "total_all":          len(all_mags),
+        "total_issues":       total_issues,
         "query":              query,
         "selected_magazines": _SELECTED_MAGAZINES,
     })
@@ -607,6 +607,7 @@ def artist_list(request):
 
     cursor = _dict_cursor()
     try:
+        artist_count = get_artist_count(cursor)
         artists = find_artists(cursor, query, search_type, scope) if query else []
     finally:
         cursor.close()
@@ -617,6 +618,7 @@ def artist_list(request):
         "scope":            scope,
         "artists":          artists,
         "total":            len(artists),
+        "artist_count":     artist_count,
         "selected_artists": _SELECTED_ARTISTS,
     })
 
@@ -1037,8 +1039,15 @@ def pub_series_detail(request, pub_series_id):
 
 
 def about(request):
-    """About page with hardcoded database statistics (from Feb 2026 snapshot)."""
-    return render(request, "magazine/about.html")
+    cursor = _dict_cursor()
+    try:
+        stats = get_db_stats(cursor)
+    finally:
+        cursor.close()
+    return render(request, "magazine/about.html", {
+        "stats": stats,
+        "snapshot_date": django_settings.ISFDB_SNAPSHOT_DATE,
+    })
 
 
 _signer = TimestampSigner()

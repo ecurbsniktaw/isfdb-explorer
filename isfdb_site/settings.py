@@ -122,6 +122,9 @@ LOGIN_URL          = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/collection/'
 LOGOUT_REDIRECT_URL = '/'
 
+# Update this when loading a new ISFDB database snapshot.
+ISFDB_SNAPSHOT_DATE = "early February 2026"
+
 # Email — uses Resend HTTP API (not SMTP) to avoid port 587 blocks.
 # Set RESEND_API_KEY in local_settings.py on production.
 RESEND_API_KEY      = ''

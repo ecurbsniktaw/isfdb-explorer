@@ -1,4 +1,5 @@
 {% extends "magazine/base.html" %}
+{% load humanize %}
 
 {% block title %}About — ISFDB Explorer{% endblock %}
 
@@ -6,7 +7,7 @@
 
 <h1 class="h3 mb-4">About ISFDB Explorer</h1>
 
-<p>This site is built on data from the <a href="https://www.isfdb.org" target="_blank" rel="noopener">Internet Speculative Fiction Database</a>, a community-maintained bibliography of science fiction, fantasy, and horror. Our queries run against a local copy of that database downloaded in early February 2026; additions and corrections made to ISFDB since then are not reflected here.</p>
+<p>This site is built on data from the <a href="https://www.isfdb.org" target="_blank" rel="noopener">Internet Speculative Fiction Database</a>, a community-maintained bibliography of science fiction, fantasy, and horror. Our queries run against a local copy of that database downloaded {{ snapshot_date }}; additions and corrections made to ISFDB since then are not reflected here.</p>
 
 <hr class="my-4">
 
@@ -20,35 +21,35 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item d-flex justify-content-between">
           <span>Authors with works</span>
-          <span class="badge text-bg-secondary rounded-pill">294,203</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.authors_with_works|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Total titles (all types)</span>
-          <span class="badge text-bg-secondary rounded-pill">2,467,006</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.total_titles|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Novels</span>
-          <span class="badge text-bg-secondary rounded-pill">265,751</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.novels|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Short fiction</span>
-          <span class="badge text-bg-secondary rounded-pill">724,409</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.short_fiction|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Collections</span>
-          <span class="badge text-bg-secondary rounded-pill">36,103</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.collections|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Anthologies</span>
-          <span class="badge text-bg-secondary rounded-pill">28,352</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.anthologies|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Nonfiction</span>
-          <span class="badge text-bg-secondary rounded-pill">19,096</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.nonfiction|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Series</span>
-          <span class="badge text-bg-secondary rounded-pill">57,353</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.series_count|intcomma }}</span>
         </li>
       </ul>
     </div>
@@ -60,27 +61,27 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item d-flex justify-content-between">
           <span>Magazine issues</span>
-          <span class="badge text-bg-secondary rounded-pill">82,591</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.magazine_issues|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Distinct magazine titles</span>
-          <span class="badge text-bg-secondary rounded-pill">7,831</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.distinct_magazines|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Book publications</span>
-          <span class="badge text-bg-secondary rounded-pill">838,526</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.book_pubs|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Publishers</span>
-          <span class="badge text-bg-secondary rounded-pill">41,740</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.publishers|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Publications with cover images</span>
-          <span class="badge text-bg-secondary rounded-pill">833,469</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.pubs_with_images|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Titles with Wikipedia links</span>
-          <span class="badge text-bg-secondary rounded-pill">16,412</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.wikipedia_titles|intcomma }}</span>
         </li>
       </ul>
     </div>
@@ -92,15 +93,15 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item d-flex justify-content-between">
           <span>Award types tracked</span>
-          <span class="badge text-bg-secondary rounded-pill">120</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.award_types|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Total award records</span>
-          <span class="badge text-bg-secondary rounded-pill">78,540</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.total_awards|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Titles with at least one award</span>
-          <span class="badge text-bg-secondary rounded-pill">41,933</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ stats.awarded_titles|intcomma }}</span>
         </li>
       </ul>
     </div>
