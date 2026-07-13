@@ -1039,14 +1039,16 @@ def pub_series_detail(request, pub_series_id):
 
 
 def about(request):
-    cursor = _dict_cursor()
-    try:
-        stats = get_db_stats(cursor)
-    finally:
-        cursor.close()
+    # cursor = _dict_cursor()
+    # try:
+    #     stats = get_db_stats(cursor)
+    # finally:
+    #     cursor.close()
     return render(request, "magazine/about.html", {
-        "stats": stats,
+        # "stats": stats,
         "snapshot_date": django_settings.ISFDB_SNAPSHOT_DATE,
+        # "authors_with_works": django_settings.AUTHORS_WITH_WORKS,
+        "the_dict": django_settings.ABOUT_STATS,
     })
 
 

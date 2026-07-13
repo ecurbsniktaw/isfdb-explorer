@@ -125,6 +125,31 @@ LOGOUT_REDIRECT_URL = '/'
 # Update this when loading a new ISFDB database snapshot.
 ISFDB_SNAPSHOT_DATE = "early February 2026"
 
+# These values will change every time we install a new version of
+# the ISFDB database.
+# Run genstats.py in the mycode directory to generate new assignment
+# statements. genstats.py will output the assignment statements to
+# setstats.py in the mycode directory.
+# These values are referenced on the about page.
+ABOUT_STATS = {"authors_with_works": "294203",
+"total_titles": "2467006",
+"novels": "265751",
+"short_fiction": "724409",
+"collections": "36103",
+"anthologies": "28352",
+"nonfiction": "19096",
+"series_count": "57353",
+"magazine_issues": "82591",
+"distinct_magazines": "7831",
+"book_pubs": "845841",
+"publishers": "41740",
+"pubs_with_images": "833469",
+"wikipedia_titles": "15876",
+"award_types": "120",
+"total_awards": "78540",
+"awarded_titles": "41933",
+}
+
 # Email — uses Resend HTTP API (not SMTP) to avoid port 587 blocks.
 # Set RESEND_API_KEY in local_settings.py on production.
 RESEND_API_KEY      = ''
