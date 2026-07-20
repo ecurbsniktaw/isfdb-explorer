@@ -37,6 +37,55 @@ def get_db_stats(cursor) -> dict:
     """)
     return cursor.fetchone()
 
+def get_author_count(cursor) -> int:
+    """Return the total number of authors/artists in the database (excluding HTML-entity names)."""
+    cursor.execute(
+        "SELECT COUNT(*) AS cnt FROM authors WHERE author_canonical NOT LIKE '%%&#%%'"
+    )
+    row = cursor.fetchone()
+    return row["cnt"] if row else 0
+
+def get_artist_count(cursor) -> int:
+    """Return the number of authors who have at least one cover or interior art credit."""
+    cursor.execute("""
+        SELECT COUNT(DISTINCT ca.author_id) AS cnt
+        FROM canonical_author ca
+        JOIN titles t ON t.title_id = ca.title_id
+        WHERE t.title_ttype IN ('COVERART', 'INTERIORART')
+    """)
+    row = cursor.fetchone()
+    return row["cnt"] if row else 0
+
+def get_publisher_count(cursor) -> int:
+    """Return total number of publishers (excluding HTML-entity names)."""
+    cursor.execute(
+        "SELECT COUNT(*) AS cnt FROM publishers WHERE publisher_name NOT LIKE '%%&#%%'"
+    )
+    row = cursor.fetchone()
+    return row["cnt"] if row else 0
+
+def get_all_magazines(cursor) -> list:
+    """
+    Return all magazines derived directly from pubs, grouped by the name
+    portion of pub_title (everything before the first comma).
+    Sorted alphabetically.
+    """
+    cursor.execute("""
+        SELECT
+            SUBSTRING_INDEX(pub_title, ',', 1)  AS mag_name,
+            COUNT(*)                             AS issue_count,
+            MIN(CASE WHEN YEAR(pub_year) > 0 AND YEAR(pub_year) < 8888
+                     THEN YEAR(pub_year) END)    AS first_year,
+            MAX(CASE WHEN YEAR(pub_year) > 0 AND YEAR(pub_year) < 8888
+                     THEN YEAR(pub_year) END)    AS last_year
+        FROM pubs
+        WHERE pub_ctype = 'MAGAZINE'
+        GROUP BY SUBSTRING_INDEX(pub_title, ',', 1)
+        HAVING mag_name NOT LIKE '%%&#%%'
+        ORDER BY mag_name
+    """)
+    return cursor.fetchall()
+
 class _DictCursorWrapper:
     """Thin wrapper that makes a Django cursor behave like dictionary=True."""
     def __init__(self, cursor):
@@ -67,30 +116,53 @@ def about(request):
         stats = get_db_stats(cursor)
     finally:
         cursor.close()
-        # July 2026: added test_value
     return render(request, "magazine/about.html", {
         "stats": stats,
         "snapshot_date": django_settings.ISFDB_SNAPSHOT_DATE,
-        "test_value": django_settings.TEST_VALUE,
     })
 
 #--------------------------------------------------------
 
 connection = get_connection()
 cursor     = _dict_cursor()
-stats      = get_db_stats(cursor)
 
-# with open("setstats.py", "w", encoding="utf-8") as file:
-#     for key, value in stats.items():
-#         file.write(f'{key.upper()} = "{value}"\n')
+# stats: for About page.
+print('getting stats for about page...')
+stats = get_db_stats(cursor)
+
+# total_authors: for Authors page
+print('getting author count for author page...')
+total_authors = get_author_count(cursor)
+
+# artist_count: for Artists page
+print('getting artist count for artist page...')
+artist_count = get_artist_count(cursor)
+
+# publisher_count: for Publishers page
+print('getting publisher count for publisher page...')
+publisher_count = get_publisher_count(cursor)
+
+# magazine count and magazine issue count for Magazines page
+print('getting magazine and issues counts for magazines page...')
+all_mags = get_all_magazines(cursor)
+cursor.execute("SELECT COUNT(*) AS cnt FROM pubs WHERE pub_ctype = 'MAGAZINE'")
+total_issues = cursor.fetchone()["cnt"]
+total_all = len(all_mags)
 
 with open("setstats.py", "w", encoding="utf-8") as file:
-    file.write('ABOUT_STATS = {')
 
+    file.write('ABOUT_STATS = {')
     for key, value in stats.items():
         file.write(f'"{key}": "{value}",\n')
-
     file.write('}\n')
 
+    file.write(f'TOTAL_AUTHORS = {total_authors}\n')
+
+    file.write(f'ARTIST_COUNT = {artist_count}\n')
+
+    file.write(f'PUBLISHER_COUNT = {publisher_count}\n')
+
+    file.write(f'TOTAL_ISSUES = {total_issues}\n')
+    file.write(f'TOTAL_ALL = {total_all}\n')
 
 

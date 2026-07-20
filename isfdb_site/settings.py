@@ -149,6 +149,11 @@ ABOUT_STATS = {"authors_with_works": "294203",
 "total_awards": "78540",
 "awarded_titles": "41933",
 }
+TOTAL_AUTHORS = 284202
+ARTIST_COUNT = 69709
+PUBLISHER_COUNT = 40556
+TOTAL_ISSUES = 82591
+TOTAL_ALL = 7478
 
 # Email — uses Resend HTTP API (not SMTP) to avoid port 587 blocks.
 # Set RESEND_API_KEY in local_settings.py on production.
