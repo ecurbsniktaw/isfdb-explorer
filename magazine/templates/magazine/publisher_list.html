@@ -11,8 +11,9 @@
 
 {% block content %}
 
+{% load humanize %}
 <h1 class="h3 mb-1">Publishers</h1>
-<p class="text-muted mb-4">{{ total_publishers }} publishers in the database</p>
+<p class="text-muted mb-4">{{ db_stats.publisher_count|intcomma }} publishers in the database</p>
 
 {# ── Search form ─────────────────────────────────────────────────────────── #}
 <div class="card shadow-sm mb-4">

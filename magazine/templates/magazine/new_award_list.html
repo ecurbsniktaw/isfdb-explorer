@@ -5,7 +5,7 @@
 {% block content %}
 
 <h1 class="h3 mb-1">Awards</h1>
-<p class="text-muted mb-4">{{ the_dict.award_types }} award types tracked in the database</p>
+<p class="text-muted mb-4">{{ db_stats.award_types }} award types tracked in the database</p>
 
 {# ── Search form ────────────────────────────────────────────────────────── #}
 <form method="get" action="{% url 'new_award_list' %}" class="mb-4">

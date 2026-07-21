@@ -13,7 +13,7 @@
 
 {% load humanize %}
 <h1 class="h3 mb-1">Magazines</h1>
-<p class="text-muted mb-3">{{ total_issues|intcomma }} magazine issues from {{ total_all|intcomma }} distinct magazine titles in database</p>
+<p class="text-muted mb-3">{{ db_stats.total_issues|intcomma }} magazine issues from {{ db_stats.total_all|intcomma }} distinct magazine titles in database</p>
 
 {# Search forms #}
 <div class="row g-4 mb-4">

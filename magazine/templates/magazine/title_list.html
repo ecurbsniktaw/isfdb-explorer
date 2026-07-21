@@ -14,7 +14,7 @@
 
 <h1 class="h3 mb-1">Titles</h1>
 <p class="text-muted mb-4">
-  {{ the_dict.total_titles|intcomma }} titles in the database
+  {{ db_stats.total_titles|intcomma }} titles in the database
   <button type="button"
           class="btn btn-sm btn-link p-0 ms-1 align-baseline text-muted"
           data-bs-toggle="modal"
@@ -34,27 +34,27 @@
         <ul class="list-group list-group-flush">
           <li class="list-group-item d-flex justify-content-between">
             <span>Total (all types)</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ the_dict.total_titles|intcomma }}</span>
+            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.total_titles|intcomma }}</span>
           </li>
           <li class="list-group-item d-flex justify-content-between">
             <span>&nbsp;&nbsp;— Novels</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ the_dict.novels|intcomma }}</span>
+            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.novels|intcomma }}</span>
           </li>
           <li class="list-group-item d-flex justify-content-between">
             <span>&nbsp;&nbsp;— Short fiction</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ the_dict.short_fiction|intcomma }}</span>
+            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.short_fiction|intcomma }}</span>
           </li>
           <li class="list-group-item d-flex justify-content-between">
             <span>&nbsp;&nbsp;— Collections</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ the_dict.collections|intcomma }}</span>
+            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.collections|intcomma }}</span>
           </li>
           <li class="list-group-item d-flex justify-content-between">
             <span>&nbsp;&nbsp;— Anthologies</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ the_dict.anthologies|intcomma }}</span>
+            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.anthologies|intcomma }}</span>
           </li>
           <li class="list-group-item d-flex justify-content-between">
             <span>&nbsp;&nbsp;— Nonfiction</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ the_dict.nonfiction|intcomma }}</span>
+            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.nonfiction|intcomma }}</span>
           </li>
         </ul>
       </div>

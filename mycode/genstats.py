@@ -121,10 +121,14 @@ def about(request):
         "snapshot_date": django_settings.ISFDB_SNAPSHOT_DATE,
     })
 
-#--------------------------------------------------------
 
+#---------------------------------------------------------
+# Open the database and get a cursor.
 connection = get_connection()
 cursor     = _dict_cursor()
+
+#---------------------------------------------------------
+# Run multiple queries to collect the statistics we need.
 
 # stats: for About page.
 print('getting stats for about page...')
@@ -149,20 +153,29 @@ cursor.execute("SELECT COUNT(*) AS cnt FROM pubs WHERE pub_ctype = 'MAGAZINE'")
 total_issues = cursor.fetchone()["cnt"]
 total_all = len(all_mags)
 
+#---------------------------------------------------------
+# Write a file named setstats.py containing a python 
+# statement that defines the dictionary variable containing 
+# all the stats.
+
 with open("setstats.py", "w", encoding="utf-8") as file:
 
-    file.write('ABOUT_STATS = {')
+    file.write('DB_STATS = {')
+
     for key, value in stats.items():
         file.write(f'"{key}": "{value}",\n')
+
+    file.write(f'"total_authors": "{total_authors}",\n')
+    file.write(f'"artist_count": "{artist_count}",\n')
+    file.write(f'"publisher_count": "{publisher_count}",\n')
+    file.write(f'"total_issues": "{total_issues}",\n')
+    file.write(f'"total_all": "{total_all}",\n')
+
     file.write('}\n')
 
-    file.write(f'TOTAL_AUTHORS = {total_authors}\n')
-
-    file.write(f'ARTIST_COUNT = {artist_count}\n')
-
-    file.write(f'PUBLISHER_COUNT = {publisher_count}\n')
-
-    file.write(f'TOTAL_ISSUES = {total_issues}\n')
-    file.write(f'TOTAL_ALL = {total_all}\n')
-
-
+print('')
+print('setstats.py has been created.')
+print('Open that file in sublime text, copy all the text,')
+print('and paste it into settings.py, replacing the existing')
+print('definition for the DB_STATS dictionary variable.')
+print('')

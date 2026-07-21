@@ -13,7 +13,7 @@ x{% extends "magazine/base.html" %}
 
 {% load humanize %}
 <h1 class="h3 mb-1">Artists</h1>
-<p class="text-muted mb-4">{{ artist_count|intcomma }} Artists in the database</p>
+<p class="text-muted mb-4">{{ db_stats.artist_count|intcomma }} Artists in the database</p>
 
 {# ── Search form ─────────────────────────────────────────────────────────── #}
 <div class="card shadow-sm mb-4">

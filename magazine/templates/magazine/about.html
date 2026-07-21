@@ -21,35 +21,35 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item d-flex justify-content-between">
           <span>Authors with works</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.authors_with_works|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.authors_with_works|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Total titles (all types)</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.total_titles|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.total_titles|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Novels</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.novels|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.novels|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Short fiction</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.short_fiction|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.short_fiction|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Collections</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.collections|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.collections|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Anthologies</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.anthologies|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.anthologies|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>&nbsp;&nbsp;— Nonfiction</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.nonfiction|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.nonfiction|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Series</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.series_count|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.series_count|intcomma }}</span>
         </li>
       </ul>
     </div>
@@ -61,27 +61,27 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item d-flex justify-content-between">
           <span>Magazine issues</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.magazine_issues|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.magazine_issues|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Distinct magazine titles</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.distinct_magazines|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.distinct_magazines|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Book publications</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.book_pubs|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.book_pubs|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Publishers</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.publishers|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.publishers|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Publications with cover images</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.pubs_with_images|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.pubs_with_images|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Titles with Wikipedia links</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.wikipedia_titles|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.wikipedia_titles|intcomma }}</span>
         </li>
       </ul>
     </div>
@@ -93,15 +93,15 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item d-flex justify-content-between">
           <span>Award types tracked</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.award_types|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.award_types|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Total award records</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.total_awards|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.total_awards|intcomma }}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between">
           <span>Titles with at least one award</span>
-          <span class="badge text-bg-secondary rounded-pill">{{ the_dict.awarded_titles|intcomma }}</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ db_stats.awarded_titles|intcomma }}</span>
         </li>
       </ul>
     </div>

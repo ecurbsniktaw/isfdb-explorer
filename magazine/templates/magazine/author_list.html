@@ -11,8 +11,9 @@
 
 {% block content %}
 
+{% load humanize %}
 <h1 class="h3 mb-1">Authors</h1>
-<p class="text-muted mb-4">{{ total_authors }} Authors/Artists in the database</p>
+<p class="text-muted mb-4">{{ db_stats.total_authors|intcomma }} Authors/Artists in the database</p>
 
 {# ── Dual search forms ───────────────────────────────────────────────────── #}
 <div class="row g-4 mb-4">
