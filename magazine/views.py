@@ -43,7 +43,6 @@ from .queries import (
     find_publishers, get_publisher_count,
     get_publisher_detail, get_publisher_books_by_year,
     get_publisher_books_by_author, get_publisher_all_authors,
-    get_artist_count, get_db_stats,
     format_date, NARRATIVE_TYPES,
 )
 from .collection_queries import (
@@ -613,8 +612,6 @@ def artist_list(request):
 
     cursor = _dict_cursor()
     try:
-        # artist_count = get_artist_count(cursor)
-        # artist_count = django_settings.ARTIST_COUNT
         artists = find_artists(cursor, query, search_type, scope) if query else []
     finally:
         cursor.close()
