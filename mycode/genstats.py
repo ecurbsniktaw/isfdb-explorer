@@ -154,9 +154,13 @@ total_issues = cursor.fetchone()["cnt"]
 total_all = len(all_mags)
 
 #---------------------------------------------------------
+# Set the date of this database snapshot.
+snap_date = input("Enter date of this db snapshot [e.g.: early February 2026]: ").strip() or "early February 2026"
+
+#---------------------------------------------------------
 # Write a file named setstats.py containing a python 
 # statement that defines the dictionary variable containing 
-# all the stats.
+# all the stats (DB_STATS).
 
 with open("setstats.py", "w", encoding="utf-8") as file:
 
@@ -170,6 +174,8 @@ with open("setstats.py", "w", encoding="utf-8") as file:
     file.write(f'"publisher_count": "{publisher_count}",\n')
     file.write(f'"total_issues": "{total_issues}",\n')
     file.write(f'"total_all": "{total_all}",\n')
+
+    file.write(f'"snapshot_date": "{snap_date}",\n')
 
     file.write('}\n')
 

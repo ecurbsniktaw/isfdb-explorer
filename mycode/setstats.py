@@ -20,4 +20,5 @@ DB_STATS = {"authors_with_works": "294203",
 "publisher_count": "40556",
 "total_issues": "82591",
 "total_all": "7478",
+"snapshot_date": "late June 2026",
 }

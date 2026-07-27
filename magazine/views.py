@@ -90,7 +90,8 @@ _NO_COL_STATUS = {"owned": False, "wanted": False}
 def home(request):
     """Home page with site description."""
     return render(request, "magazine/home.html", {
-        "snapshot_date": django_settings.ISFDB_SNAPSHOT_DATE,
+        # "snapshot_date": django_settings.ISFDB_SNAPSHOT_DATE,
+        "db_stats": django_settings.DB_STATS,
         })
 
 
@@ -1049,7 +1050,7 @@ def pub_series_detail(request, pub_series_id):
 def about(request):
     return render(request, "magazine/about.html", {
         # "stats": stats,
-        "snapshot_date": django_settings.ISFDB_SNAPSHOT_DATE,
+        # "snapshot_date": django_settings.ISFDB_SNAPSHOT_DATE,
         "db_stats": django_settings.DB_STATS,
     })
 
