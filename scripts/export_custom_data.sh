@@ -28,7 +28,7 @@ set -euo pipefail
 DB="isfdb"
 DB_PREV="${DB}_prev"
 MYSQL_USER="root"
-MYSQL_PASS=""
+MYSQL_PASS="Bpw591968$"
 OUTPUT=""
 
 while [[ $# -gt 0 ]]; do
