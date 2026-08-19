@@ -508,6 +508,13 @@ def _find_copy_links_issue(issue):
         ]
 
 
+def _goodreads_url(book):
+    title   = quote_plus(book.get("title_title") or "")
+    authors = quote_plus(book.get("authors") or "")
+    q = f"{title}+{authors}" if authors else title
+    return f"https://www.goodreads.com/search?q={q}"
+
+
 def _find_copy_links(book):
     """Build bookseller/library search links for a book, preferring ISBN."""
     isbn    = (book.get("pub_isbn") or "").strip()
@@ -552,6 +559,7 @@ def book_detail(request, title_id):
     return render(request, "magazine/book_detail.html", {
         "book": book, "editions": editions, "contents": contents, "reviews": reviews,
         "find_copy_links": _find_copy_links(book),
+        "goodreads_url":   _goodreads_url(book),
         "col_status":      col_status,
         "col_item_type":   "book",
         "col_item_id":     title_id,
