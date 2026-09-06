@@ -54,11 +54,14 @@ fi
 echo "Step 1: Exporting custom data from '$DB' to '$OUTPUT' ..."
 
 # auth_user: data only (migrate will recreate the table structure)
-mysqldump $MYSQL_OPTS --no-create-info --skip-add-drop-table \
+# --set-gtid-purged=OFF suppresses the SET @@GLOBAL.GTID_PURGED statement that
+# mysqldump adds by default, which causes an error on import when the target
+# server already has GTID history.
+mysqldump $MYSQL_OPTS --set-gtid-purged=OFF --no-create-info --skip-add-drop-table \
   "$DB" auth_user > "$OUTPUT"
 
 # Our custom tables: full DDL + data so they are recreated from scratch
-mysqldump $MYSQL_OPTS --add-drop-table \
+mysqldump $MYSQL_OPTS --set-gtid-purged=OFF --add-drop-table \
   "$DB" collection_tokens collection_items user_collection_items >> "$OUTPUT"
 
 echo "  Custom data saved to: $OUTPUT"
