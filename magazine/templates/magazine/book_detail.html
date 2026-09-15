@@ -145,9 +145,32 @@
 
   </div>
 
-  {# ── Right column: Notes / Awards / Reviews accordions + external links ── #}
-  {% if book.title_note or book.pub_note or book.awards or reviews or book.webpages %}
+  {# ── Right column: Synopsis / Notes / Awards / Reviews accordions + external links ── #}
+  {% if book.synopsis or book.title_note or book.pub_note or book.awards or reviews or book.webpages %}
   <div class="col-lg-8">
+
+    {% if book.synopsis %}
+    <div class="accordion mb-2" id="synopsisAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button ps-2 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#synopsisPanel"
+                  aria-expanded="true"
+                  aria-controls="synopsisPanel">
+            Synopsis
+          </button>
+        </h2>
+        <div id="synopsisPanel" class="accordion-collapse collapse show"
+             data-bs-parent="#synopsisAccordion">
+          <div class="accordion-body px-2 pt-2">
+            <p class="mb-0">{{ book.synopsis }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
 
     {% if book.title_note or book.pub_note %}
     <div class="accordion mb-2" id="notesAccordion">

@@ -742,6 +742,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
             pub.publisher_name,
             n.note_note        AS pub_note,
             tn.note_note       AS title_note,
+            sn.note_note       AS synopsis,
             t.title_id,
             t.title_title,
             t.title_ttype,
@@ -776,6 +777,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
         LEFT JOIN publishers pub      ON pub.publisher_id = p.publisher_id
         LEFT JOIN notes n             ON n.note_id = p.note_id
         LEFT JOIN notes tn            ON tn.note_id = t.note_id
+        LEFT JOIN notes sn            ON sn.note_id = t.title_synopsis
         LEFT JOIN canonical_author ca_all ON ca_all.title_id = t.title_id
         LEFT JOIN authors a_all       ON a_all.author_id = ca_all.author_id
         LEFT JOIN pub_content pc_cv   ON pc_cv.pub_id = p.pub_id
@@ -790,7 +792,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
           {f"AND p.pub_id = {int(pub_id)}" if pub_id else ""}
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
                  p.pub_catalog, p.pub_isbn, p.pub_price, p.pub_ptype, p.pub_pages, p.pub_frontimage,
-                 pub.publisher_name, n.note_note, tn.note_note,
+                 pub.publisher_name, n.note_note, tn.note_note, sn.note_note,
                  t.title_id, t.title_title, t.title_ttype,
                  t.series_id, t.title_seriesnum, t.title_seriesnum_2
         ORDER BY p.pub_year, p.pub_id
@@ -808,6 +810,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
     row["cover_artist_list"] = _make_author_list(row.get("cover_artist"), row.get("cover_artist_ids"))
     row["pub_note"]          = _rewrite_isfdb_links(row.get("pub_note") or "")
     row["title_note"]        = _rewrite_isfdb_links(row.get("title_note") or "")
+    row["synopsis"]          = (row.get("synopsis") or "").strip()
 
     # Series
     if row.get("series_id"):
