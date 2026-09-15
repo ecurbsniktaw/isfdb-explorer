@@ -153,16 +153,16 @@
     <div class="accordion mb-2" id="synopsisAccordion">
       <div class="accordion-item border-0">
         <h2 class="accordion-header h5 mb-0">
-          <button class="accordion-button ps-2 shadow-none fw-semibold"
+          <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target="#synopsisPanel"
-                  aria-expanded="true"
+                  aria-expanded="false"
                   aria-controls="synopsisPanel">
             Synopsis
           </button>
         </h2>
-        <div id="synopsisPanel" class="accordion-collapse collapse show"
+        <div id="synopsisPanel" class="accordion-collapse collapse"
              data-bs-parent="#synopsisAccordion">
           <div class="accordion-body px-2 pt-2">
             <p class="mb-0">{{ book.synopsis }}</p>
