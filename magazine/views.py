@@ -524,6 +524,7 @@ def _find_copy_links(book):
         return [
             {"label": "AbeBooks",     "url": f"https://www.abebooks.com/servlet/SearchResults?isbn={isbn}"},
             {"label": "Amazon",       "url": f"https://www.amazon.com/s?k={isbn}"},
+            {"label": "eBay",         "url": f"https://www.ebay.com/sch/i.html?_nkw={isbn}"},
             {"label": "ThriftBooks",  "url": f"https://www.thriftbooks.com/browse/?b.search={isbn}"},
             {"label": "WorldCat",     "url": f"https://www.worldcat.org/isbn/{isbn}"},
             {"label": "Open Library", "url": f"https://openlibrary.org/isbn/{isbn}"},
@@ -533,6 +534,7 @@ def _find_copy_links(book):
         return [
             {"label": "AbeBooks",     "url": f"https://www.abebooks.com/servlet/SearchResults?an={authors}&tn={title}"},
             {"label": "Amazon",       "url": f"https://www.amazon.com/s?k={q}"},
+            {"label": "eBay",         "url": f"https://www.ebay.com/sch/i.html?_nkw={q}"},
             {"label": "ThriftBooks",  "url": f"https://www.thriftbooks.com/browse/?b.search={q}"},
             {"label": "WorldCat",     "url": f"https://www.worldcat.org/search?q={q}"},
             {"label": "Open Library", "url": f"https://openlibrary.org/search?q={q}"},
