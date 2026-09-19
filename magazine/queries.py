@@ -1543,6 +1543,26 @@ def find_artists(cursor, name: str, search_type: str = "full",
     return results
 
 
+def _author_like_param(name: str) -> str:
+    """
+    Convert a user-supplied name into a SQL LIKE pattern.
+
+    If the name contains * or ?, they are treated as wildcards (* → %, ? → _)
+    and the pattern is used as-is (anchored by the user).  Any literal % or _
+    in the input are escaped first so they are not misinterpreted.
+
+    If no wildcards are present, the pattern becomes %name% (substring match),
+    preserving the existing behaviour.
+    """
+    has_wildcards = "*" in name or "?" in name
+    # Escape SQL special chars that aren't user-supplied wildcards
+    safe = name.replace("%", r"\%").replace("_", r"\_")
+    if has_wildcards:
+        safe = safe.replace("*", "%").replace("?", "_")
+        return safe
+    return f"%{safe}%"
+
+
 def find_authors(cursor, name: str, search_type: str = "full") -> list:
     """
     Return authors whose canonical name matches the given string.
@@ -1551,18 +1571,23 @@ def find_authors(cursor, name: str, search_type: str = "full") -> list:
         'full' — match anywhere in the full name (default)
         'last' — match against the last word of the name only
 
+    Wildcard characters:
+        *  matches any sequence of characters
+        ?  matches exactly one character
+
+    Without wildcards the search is a plain substring match (contains).
+
     Returns a list of dicts with keys:
         author_id, author_canonical, author_legalname,
         birth_year (int|None), death_year (int|None), title_count (int|None)
     Ordered alphabetically by author_canonical.
     """
     clean = name.replace(".", "")
+    param = _author_like_param(clean)
     if search_type == "last":
         where = "REPLACE(SUBSTRING_INDEX(a.author_canonical, ' ', -1), '.', '') LIKE %s"
-        param = f"%{clean}%"
     else:
         where = "REPLACE(a.author_canonical, '.', '') LIKE %s"
-        param = f"%{clean}%"
 
     cursor.execute(f"""
         SELECT
