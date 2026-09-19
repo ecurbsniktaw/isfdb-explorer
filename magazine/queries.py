@@ -1362,9 +1362,9 @@ def find_titles(cursor, title: str, match_type: str = "exact",
     """
     Search for titles by name with optional filters.
 
-    Wildcard matching: if the search string contains '*', it is treated as a
-    wildcard matching zero or more characters (e.g. 'Slan*' matches anything
-    starting with 'slan').  Without '*' an exact case-insensitive match is used.
+    Wildcard matching: * matches any sequence of characters, ? matches exactly
+    one character (e.g. 'Slan*' or 'Fo?ndation').  Without wildcards an exact
+    case-insensitive match is used.
 
     content_type: 'all'     — novels, collections, short fiction, etc.
                   'book'    — books only (NOVEL, COLLECTION, ANTHOLOGY, …)
@@ -1388,11 +1388,11 @@ def find_titles(cursor, title: str, match_type: str = "exact",
 
     type_placeholders = ", ".join(["%s"] * len(type_list))
 
-    # Wildcard: * → SQL %; escape any pre-existing SQL wildcard chars first
-    if '*' in title:
+    # Wildcard: * → SQL %, ? → SQL _; escape any pre-existing SQL wildcard chars first
+    if '*' in title or '?' in title:
         safe = title.replace('%', r'\%').replace('_', r'\_')
         title_clause = "LOWER(t.title_title) LIKE LOWER(%s)"
-        title_param  = safe.replace('*', '%')
+        title_param  = safe.replace('*', '%').replace('?', '_')
     else:
         title_clause = "LOWER(t.title_title) = LOWER(%s)"
         title_param  = title

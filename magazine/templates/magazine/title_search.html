@@ -17,6 +17,7 @@
         <label for="q" class="form-label fw-semibold">Title</label>
         <input type="text" id="q" name="q" class="form-control"
                value="{{ query }}" placeholder="e.g. Foundation or Slan*" autofocus required>
+        <div class="form-text">Exact match unless wildcards are used. Use <code>*</code> for any characters, <code>?</code> for one character (e.g. <code>Slan*</code>, <code>Fo?ndation</code>).</div>
       </div>
       <div class="col-auto">
         <button type="submit" class="btn btn-primary">Search</button>
