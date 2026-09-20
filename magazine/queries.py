@@ -1243,7 +1243,16 @@ def get_all_magazines(cursor) -> list:
 
 
 def search_magazines(cursor, query: str) -> list:
-    """Return magazines whose name contains the given string (case-insensitive)."""
+    """
+    Return magazines whose name matches the given string (case-insensitive).
+
+    Wildcard characters:
+        *  matches any sequence of characters
+        ?  matches exactly one character
+
+    Without wildcards the search is a plain substring match (contains).
+    """
+    param = _author_like_param(query)
     cursor.execute("""
         SELECT
             SUBSTRING_INDEX(pub_title, ',', 1)  AS mag_name,
@@ -1258,7 +1267,7 @@ def search_magazines(cursor, query: str) -> list:
         HAVING mag_name NOT LIKE '%%&#%%'
            AND mag_name LIKE %s
         ORDER BY mag_name
-    """, (f"%{query}%",))
+    """, (param,))
     return cursor.fetchall()
 
 
