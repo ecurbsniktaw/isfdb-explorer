@@ -9,7 +9,7 @@
 
 {# ── Search form ────────────────────────────────────────────────────────── #}
 <form method="get" action="{% url 'new_award_list' %}" class="mb-4">
-  <div class="input-group" style="max-width:480px;">
+  <div class="input-group mb-2" style="max-width:480px;">
     <input type="text" name="q" value="{{ query }}" class="form-control"
            placeholder="Search award name…" autofocus>
     <button class="btn btn-primary" type="submit">Search</button>
@@ -17,6 +17,7 @@
       <a href="{% url 'new_award_list' %}" class="btn btn-outline-secondary">Clear</a>
     {% endif %}
   </div>
+  <div class="form-text mb-2">Use <code>*</code> for any characters, <code>?</code> for one character (e.g. <code>Hugo*</code>).</div>
 </form>
 
 {# ── Search results ─────────────────────────────────────────────────────── #}

@@ -1,3 +1,4 @@
+import fnmatch
 import json
 import random
 import uuid as _uuid
@@ -879,8 +880,13 @@ def new_award_list(request):
                       if a["award_type_name"] and a["award_type_name"][0].isalpha()})
 
     if query:
-        displayed = [a for a in all_awards
-                     if query.lower() in a["award_type_name"].lower()]
+        if "*" in query or "?" in query:
+            pat = query.lower()
+            displayed = [a for a in all_awards
+                         if fnmatch.fnmatch(a["award_type_name"].lower(), pat)]
+        else:
+            displayed = [a for a in all_awards
+                         if query.lower() in a["award_type_name"].lower()]
     elif letter:
         displayed = [a for a in all_awards
                      if a["award_type_name"].upper().startswith(letter)]
