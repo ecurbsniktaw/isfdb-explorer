@@ -1498,12 +1498,11 @@ def find_artists(cursor, name: str, search_type: str = "full",
     Ordered alphabetically by author_canonical.
     """
     clean = name.replace(".", "")
+    param = _author_like_param(clean)
     if search_type == "last":
         where = "REPLACE(SUBSTRING_INDEX(author_canonical, ' ', -1), '.', '') LIKE %s"
-        param = f"%{clean}%"
     else:
         where = "REPLACE(author_canonical, '.', '') LIKE %s"
-        param = f"%{clean}%"
 
     # Phase 1: cheap name scan — no joins, just the authors table
     cursor.execute(f"""
@@ -2051,7 +2050,8 @@ def get_series_by_letter(cursor, letter: str, limit: int = 300) -> tuple:
 
 
 def search_series(cursor, query: str) -> list:
-    """Return series whose name contains the query string (case-insensitive)."""
+    """Return series whose name matches the query string.
+    Supports * and ? wildcards; plain text is a substring match."""
     cursor.execute("""
         SELECT s.series_id, s.series_title, COUNT(t.title_id) AS title_count
         FROM series s
@@ -2062,12 +2062,13 @@ def search_series(cursor, query: str) -> list:
         HAVING title_count >= 1
         ORDER BY s.series_title
         LIMIT 300
-    """, (f"%{query}%",))
+    """, (_author_like_param(query),))
     return cursor.fetchall()
 
 
 def search_pub_series(cursor, query: str) -> list:
-    """Return publication series whose name contains the query string."""
+    """Return publication series whose name matches the query string.
+    Supports * and ? wildcards; plain text is a substring match."""
     cursor.execute("""
         SELECT ps.pub_series_id, ps.pub_series_name,
                COUNT(DISTINCT p.pub_id) AS pub_count
@@ -2077,7 +2078,7 @@ def search_pub_series(cursor, query: str) -> list:
         GROUP BY ps.pub_series_id, ps.pub_series_name
         ORDER BY ps.pub_series_name
         LIMIT 100
-    """, (f"%{query}%",))
+    """, (_author_like_param(query),))
     return cursor.fetchall()
 
 
@@ -2305,14 +2306,15 @@ def get_all_award_types(cursor) -> list:
 
 
 def search_award_types(cursor, name: str) -> list:
-    """Return award types whose name contains the given string."""
+    """Return award types whose name matches the given string.
+    Supports * and ? wildcards; plain text is a substring match."""
     cursor.execute("""
         SELECT award_type_id, award_type_name
         FROM award_types
         WHERE award_type_name LIKE %s
           AND award_type_name NOT LIKE '%%&#%%'
         ORDER BY award_type_name
-    """, (f"%{name}%",))
+    """, (_author_like_param(name),))
     return cursor.fetchall()
 
 
@@ -2597,8 +2599,9 @@ def get_publisher_count(cursor) -> int:
 
 def find_publishers(cursor, name: str) -> list:
     """
-    Return publishers whose name contains the given string (case-insensitive),
+    Return publishers whose name matches the given string (case-insensitive),
     ordered by publication count descending.
+    Supports * and ? wildcards; plain text is a substring match.
 
     Returns a list of dicts with keys:
         publisher_id, publisher_name, pub_count
@@ -2612,7 +2615,7 @@ def find_publishers(cursor, name: str) -> list:
         GROUP BY p.publisher_id, p.publisher_name
         ORDER BY pub_count DESC
         LIMIT 200
-    """, (f"%{name}%",))
+    """, (_author_like_param(name),))
     return cursor.fetchall()
 
 

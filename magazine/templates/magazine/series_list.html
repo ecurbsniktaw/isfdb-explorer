@@ -29,7 +29,7 @@
       <label class="form-check-label" for="st_author">Author name</label>
     </div>
   </div>
-  <div class="input-group" style="max-width:480px;">
+  <div class="input-group mb-2" style="max-width:480px;">
     <input type="text" name="q" value="{{ query }}" class="form-control" id="series-search-input"
            placeholder="{% if search_type == 'author' %}Search for series by an author…{% else %}Search by series name…{% endif %}"
            autofocus>
@@ -38,6 +38,7 @@
       <a href="{% url 'series_list' %}" class="btn btn-outline-secondary">Clear</a>
     {% endif %}
   </div>
+  <div class="form-text mb-2">Use <code>*</code> for any characters, <code>?</code> for one character (e.g. <code>Foundation*</code>).</div>
 </form>
 
 {# ── Author search results ───────────────────────────────────────────────── #}
