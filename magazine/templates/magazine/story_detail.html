@@ -189,8 +189,10 @@
     {% if story.webpages %}
     <div class="d-flex flex-wrap gap-2 mt-2 justify-content-center">
       {% for page in story.webpages %}
+        {% if "gutenberg" not in page.url %}
         <a href="{{ page.url }}" target="_blank" rel="noopener"
            class="btn btn-sm btn-outline-secondary">{{ page.label }}</a>
+        {% endif %}
       {% endfor %}
     </div>
     {% endif %}
