@@ -51,13 +51,21 @@ FICTION_TYPES = ("SHORTFICTION", "NOVEL", "SERIAL", "POEM", "CHAPBOOK")
 
 # Human-readable labels for well-known domains used in the webpages table
 _WEBPAGE_LABELS = {
-    "en.wikipedia.org":        "Wikipedia",
-    "imdb.com":                "IMDb",
-    "www.imdb.com":            "IMDb",
-    "sf-encyclopedia.com":     "SF Encyclopedia",
-    "www.sf-encyclopedia.com": "SF Encyclopedia",
-    "isfdb.org":               "ISFDB",
-    "www.isfdb.org":           "ISFDB",
+    "en.wikipedia.org":           "Wikipedia",
+    "imdb.com":                   "IMDb",
+    "www.imdb.com":               "IMDb",
+    "sf-encyclopedia.com":        "SF Encyclopedia",
+    "www.sf-encyclopedia.com":    "SF Encyclopedia",
+    "isfdb.org":                  "ISFDB",
+    "www.isfdb.org":              "ISFDB",
+    "gutenberg.org":              "Gutenberg",
+    "www.gutenberg.org":          "Gutenberg",
+    "gutenberg.net.au":           "Gutenberg (AU)",
+    "www.gutenberg.net.au":       "Gutenberg (AU)",
+    "gutenberg.ca":               "Gutenberg (CA)",
+    "www.gutenberg.ca":           "Gutenberg (CA)",
+    "projekt-gutenberg.org":      "Projekt Gutenberg",
+    "www.projekt-gutenberg.org":  "Projekt Gutenberg",
 }
 
 

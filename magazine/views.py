@@ -516,6 +516,19 @@ def _goodreads_url(book):
     return f"https://www.goodreads.com/search?q={q}"
 
 
+def _gutenberg_url(item):
+    """Return a Gutenberg URL for item.
+    Uses an existing direct URL from webpages if present; otherwise a search URL."""
+    for page in item.get("webpages") or []:
+        url = page.get("url") or ""
+        if "gutenberg" in url.lower():
+            return url
+    title   = quote_plus(item.get("title_title") or "")
+    authors = quote_plus(item.get("authors") or "")
+    q = f"{title}+{authors}" if authors else title
+    return f"https://www.gutenberg.org/ebooks/search/?query={q}"
+
+
 def _find_copy_links(book):
     """Build bookseller/library search links for a book, preferring ISBN."""
     isbn    = (book.get("pub_isbn") or "").strip()
@@ -567,6 +580,7 @@ def book_detail(request, title_id):
         "book": book, "editions": editions, "contents": contents, "reviews": reviews,
         "find_copy_links": _find_copy_links(book),
         "goodreads_url":   _goodreads_url(book),
+        "gutenberg_url":   _gutenberg_url(book),
         "col_status":      col_status,
         "col_item_type":   "book",
         "col_item_id":     title_id,
@@ -824,7 +838,10 @@ def story_detail(request, title_id):
         cursor.close()
     if not story:
         raise Http404(f"No title found for title_id={title_id}")
-    return render(request, "magazine/story_detail.html", {"story": story})
+    return render(request, "magazine/story_detail.html", {
+        "story":         story,
+        "gutenberg_url": _gutenberg_url(story),
+    })
 
 
 def award_list(request):
