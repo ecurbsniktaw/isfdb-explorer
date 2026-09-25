@@ -18,14 +18,22 @@
       <p class="text-muted small mb-3">All non-empty criteria are combined with AND.</p>
 
       {% for row in rows %}
-      <div class="row g-2 align-items-center mb-3">
+      <div class="row g-2 align-items-center mb-3 adv-row">
         <div class="col-auto">
           <select name="field{{ forloop.counter }}" class="form-select adv-field" data-row="{{ forloop.counter }}">
-            <option value="author" {% if row.field == "author" %}selected{% endif %}>Author</option>
-            <option value="year"   {% if row.field == "year"   %}selected{% endif %}>Year published</option>
+            <option value="language" {% if row.field == "language" %}selected{% endif %}>Language</option>
+            <option value="author"   {% if row.field == "author"   %}selected{% endif %}>Author</option>
+            <option value="year"     {% if row.field == "year"     %}selected{% endif %}>Year published</option>
           </select>
         </div>
         <div class="col-auto">
+          {% if row.field == "language" %}
+          <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
+            <option value="any" {% if row.op == "any" or not row.op %}selected{% endif %}>Any</option>
+            <option value="17" {% if row.op == "17" %}selected{% endif %}>English</option>
+            {% for lang in languages %}{% if lang.lang_id != "17" %}<option value="{{ lang.lang_id }}" {% if row.op == lang.lang_id %}selected{% endif %}>{{ lang.lang_name }}</option>{% endif %}{% endfor %}
+          </select>
+          {% else %}
           <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
             <option value="is_anything" {% if row.op == "is_anything" or not row.op %}selected{% endif %}>is anything</option>
             {% if row.field == "year" %}
@@ -38,11 +46,12 @@
               <option value="ends_with"   {% if row.op == "ends_with"   %}selected{% endif %}>ends with</option>
             {% endif %}
           </select>
+          {% endif %}
         </div>
-        <div class="col">
+        <div class="col adv-val-wrap"{% if row.field == "language" %} style="display:none;"{% endif %}>
           <input type="text" name="val{{ forloop.counter }}" value="{{ row.val }}"
                  class="form-control adv-val" placeholder="enter value…"
-                 {% if row.op == "is_anything" or not row.op %}disabled{% endif %}>
+                 {% if row.field == "language" or row.op == "is_anything" or not row.op %}disabled{% endif %}>
         </div>
       </div>
       {% endfor %}
@@ -118,23 +127,48 @@
     {value: 'exactly', label: 'is exactly'},
     {value: 'after',   label: 'is after'},
   ];
-
-  function syncVal(opSel) {
-    var valEl = opSel.closest('.row').querySelector('.adv-val');
-    if (!valEl) return;
-    var isAny = opSel.value === 'is_anything';
-    valEl.disabled = isAny;
-    if (isAny) valEl.value = '';
-  }
+  var langOps = [
+    {value: 'any', label: 'Any'},
+    {value: '17',  label: 'English'},
+    {% for lang in languages %}{% if lang.lang_id != "17" %}{value: '{{ lang.lang_id }}', label: '{{ lang.lang_name|escapejs }}'},
+    {% endif %}{% endfor %}
+  ];
 
   function setOps(fieldSel) {
     var row   = fieldSel.dataset.row;
     var opSel = document.getElementById('adv-op' + row);
-    var ops   = fieldSel.value === 'year' ? yearOps : authorOps;
+    var ops;
+    if (fieldSel.value === 'language') {
+      ops = langOps;
+    } else if (fieldSel.value === 'year') {
+      ops = yearOps;
+    } else {
+      ops = authorOps;
+    }
     opSel.innerHTML = ops.map(function (o) {
       return '<option value="' + o.value + '">' + o.label + '</option>';
     }).join('');
     syncVal(opSel);
+  }
+
+  function syncVal(opSel) {
+    var rowEl   = opSel.closest('.adv-row');
+    var valWrap = rowEl ? rowEl.querySelector('.adv-val-wrap') : null;
+    if (!valWrap) return;
+    var fieldSel = rowEl.querySelector('.adv-field');
+    var isLang   = fieldSel && fieldSel.value === 'language';
+    if (isLang) {
+      valWrap.style.display = 'none';
+      var valEl = valWrap.querySelector('.adv-val');
+      if (valEl) { valEl.disabled = true; valEl.value = ''; }
+    } else {
+      valWrap.style.display = '';
+      var valEl = valWrap.querySelector('.adv-val');
+      if (!valEl) return;
+      var isAny = opSel.value === 'is_anything';
+      valEl.disabled = isAny;
+      if (isAny) valEl.value = '';
+    }
   }
 
   document.querySelectorAll('.adv-field').forEach(function (sel) {

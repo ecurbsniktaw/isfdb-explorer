@@ -614,42 +614,63 @@
       <form method="get" action="{% url 'title_advanced_search' %}">
         <div class="modal-body">
           <p class="text-muted small mb-3">All non-empty criteria are combined with AND.</p>
-          <div class="row g-2 align-items-center mb-3">
+          <div class="row g-2 align-items-center mb-3 adv-row">
             <div class="col-auto">
               <select name="field1" class="form-select adv-field" data-row="1">
-                <option value="author" selected>Author</option>
+                <option value="language" selected>Language</option>
+                <option value="author">Author</option>
                 <option value="year">Year published</option>
               </select>
             </div>
             <div class="col-auto">
               <select name="op1" class="form-select adv-op" id="adv-op1">
+                <option value="any" selected>Any</option>
+                <option value="17">English</option>
+                {% for lang in languages %}{% if lang.lang_id != "17" %}<option value="{{ lang.lang_id }}">{{ lang.lang_name }}</option>{% endif %}{% endfor %}
+              </select>
+            </div>
+            <div class="col adv-val-wrap" style="display:none;">
+              <input type="text" name="val1" class="form-control adv-val" placeholder="enter value…" disabled>
+            </div>
+          </div>
+          <div class="row g-2 align-items-center mb-3 adv-row">
+            <div class="col-auto">
+              <select name="field2" class="form-select adv-field" data-row="2">
+                <option value="language">Language</option>
+                <option value="author" selected>Author</option>
+                <option value="year">Year published</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <select name="op2" class="form-select adv-op" id="adv-op2">
                 <option value="is_anything" selected>is anything</option>
                 <option value="equals">equals</option>
                 <option value="starts_with">starts with</option>
                 <option value="ends_with">ends with</option>
               </select>
             </div>
-            <div class="col">
-              <input type="text" name="val1" class="form-control adv-val" placeholder="enter value…" disabled>
+            <div class="col adv-val-wrap">
+              <input type="text" name="val2" class="form-control adv-val" placeholder="enter value…" disabled>
             </div>
           </div>
-          <div class="row g-2 align-items-center mb-3">
+          <div class="row g-2 align-items-center mb-3 adv-row">
             <div class="col-auto">
-              <select name="field2" class="form-select adv-field" data-row="2">
+              <select name="field3" class="form-select adv-field" data-row="3">
+                <option value="language">Language</option>
                 <option value="author">Author</option>
                 <option value="year" selected>Year published</option>
               </select>
             </div>
             <div class="col-auto">
-              <select name="op2" class="form-select adv-op" id="adv-op2">
+              <select name="op3" class="form-select adv-op" id="adv-op3">
                 <option value="is_anything" selected>is anything</option>
                 <option value="before">is before</option>
                 <option value="exactly">is exactly</option>
                 <option value="after">is after</option>
               </select>
             </div>
-            <div class="col">
-              <input type="text" name="val2" class="form-control adv-val" placeholder="enter value…" disabled>
+            <div class="col adv-val-wrap">
+              <input type="text" name="val3" class="form-control adv-val" placeholder="enter value…" disabled>
             </div>
           </div>
         </div>
@@ -678,11 +699,24 @@
     {value: 'exactly', label: 'is exactly'},
     {value: 'after',   label: 'is after'},
   ];
+  var langOps = [
+    {value: 'any', label: 'Any'},
+    {value: '17',  label: 'English'},
+    {% for lang in languages %}{% if lang.lang_id != "17" %}{value: '{{ lang.lang_id }}', label: '{{ lang.lang_name|escapejs }}'},
+    {% endif %}{% endfor %}
+  ];
 
   function setOps(fieldSel) {
     var row   = fieldSel.dataset.row;
     var opSel = document.getElementById('adv-op' + row);
-    var ops   = fieldSel.value === 'year' ? yearOps : authorOps;
+    var ops;
+    if (fieldSel.value === 'language') {
+      ops = langOps;
+    } else if (fieldSel.value === 'year') {
+      ops = yearOps;
+    } else {
+      ops = authorOps;
+    }
     opSel.innerHTML = ops.map(function (o) {
       return '<option value="' + o.value + '">' + o.label + '</option>';
     }).join('');
@@ -690,12 +724,23 @@
   }
 
   function syncVal(opSel) {
-    var row    = opSel.id.replace('adv-op', '');
-    var valEl  = opSel.closest('.row').querySelector('.adv-val');
-    if (!valEl) return;
-    var isAny  = opSel.value === 'is_anything';
-    valEl.disabled = isAny;
-    if (isAny) valEl.value = '';
+    var rowEl   = opSel.closest('.adv-row');
+    var valWrap = rowEl ? rowEl.querySelector('.adv-val-wrap') : null;
+    if (!valWrap) return;
+    var fieldSel = rowEl.querySelector('.adv-field');
+    var isLang   = fieldSel && fieldSel.value === 'language';
+    if (isLang) {
+      valWrap.style.display = 'none';
+      var valEl = valWrap.querySelector('.adv-val');
+      if (valEl) { valEl.disabled = true; valEl.value = ''; }
+    } else {
+      valWrap.style.display = '';
+      var valEl = valWrap.querySelector('.adv-val');
+      if (!valEl) return;
+      var isAny = opSel.value === 'is_anything';
+      valEl.disabled = isAny;
+      if (isAny) valEl.value = '';
+    }
   }
 
   document.querySelectorAll('.adv-field').forEach(function (sel) {

@@ -1476,6 +1476,145 @@ def find_titles(cursor, title: str, match_type: str = "exact",
 ADV_AUTHOR_OPS = {"equals", "starts_with", "ends_with"}
 ADV_YEAR_OPS   = {"before", "exactly", "after"}
 
+TITLE_LANGUAGES = [
+    {"lang_id": "1",   "lang_name": "Afrikaans"},
+    {"lang_id": "105", "lang_name": "Akkadian"},
+    {"lang_id": "2",   "lang_name": "Albanian"},
+    {"lang_id": "74",  "lang_name": "Amharic"},
+    {"lang_id": "3",   "lang_name": "Ancient Greek"},
+    {"lang_id": "4",   "lang_name": "Arabic"},
+    {"lang_id": "5",   "lang_name": "Armenian"},
+    {"lang_id": "109", "lang_name": "Asturian/Bable"},
+    {"lang_id": "6",   "lang_name": "Azerbaijani"},
+    {"lang_id": "7",   "lang_name": "Basque"},
+    {"lang_id": "8",   "lang_name": "Belarusian"},
+    {"lang_id": "9",   "lang_name": "Bengali"},
+    {"lang_id": "75",  "lang_name": "Bosnian"},
+    {"lang_id": "159", "lang_name": "Breton"},
+    {"lang_id": "10",  "lang_name": "Bulgarian"},
+    {"lang_id": "11",  "lang_name": "Burmese"},
+    {"lang_id": "12",  "lang_name": "Catalan"},
+    {"lang_id": "168", "lang_name": "Cebuano"},
+    {"lang_id": "13",  "lang_name": "Chinese"},
+    {"lang_id": "160", "lang_name": "Cornish"},
+    {"lang_id": "31",  "lang_name": "Croatian"},
+    {"lang_id": "14",  "lang_name": "Czech"},
+    {"lang_id": "15",  "lang_name": "Danish"},
+    {"lang_id": "16",  "lang_name": "Dutch"},
+    {"lang_id": "17",  "lang_name": "English"},
+    {"lang_id": "18",  "lang_name": "Esperanto"},
+    {"lang_id": "19",  "lang_name": "Estonian"},
+    {"lang_id": "162", "lang_name": "Faroese"},
+    {"lang_id": "20",  "lang_name": "Filipino"},
+    {"lang_id": "21",  "lang_name": "Finnish"},
+    {"lang_id": "22",  "lang_name": "French"},
+    {"lang_id": "23",  "lang_name": "Frisian"},
+    {"lang_id": "24",  "lang_name": "Galician"},
+    {"lang_id": "25",  "lang_name": "Georgian"},
+    {"lang_id": "26",  "lang_name": "German"},
+    {"lang_id": "27",  "lang_name": "Greek"},
+    {"lang_id": "154", "lang_name": "Guarani"},
+    {"lang_id": "28",  "lang_name": "Gujarati"},
+    {"lang_id": "76",  "lang_name": "Hausa"},
+    {"lang_id": "77",  "lang_name": "Hawaiian"},
+    {"lang_id": "29",  "lang_name": "Hebrew"},
+    {"lang_id": "30",  "lang_name": "Hindi"},
+    {"lang_id": "32",  "lang_name": "Hungarian"},
+    {"lang_id": "33",  "lang_name": "Icelandic"},
+    {"lang_id": "34",  "lang_name": "Indonesian"},
+    {"lang_id": "153", "lang_name": "Interlingua"},
+    {"lang_id": "35",  "lang_name": "Irish"},
+    {"lang_id": "36",  "lang_name": "Italian"},
+    {"lang_id": "37",  "lang_name": "Japanese"},
+    {"lang_id": "78",  "lang_name": "Javanese"},
+    {"lang_id": "79",  "lang_name": "Judeo-Arabic"},
+    {"lang_id": "80",  "lang_name": "Karen"},
+    {"lang_id": "165", "lang_name": "Kashubian"},
+    {"lang_id": "38",  "lang_name": "Kazakh"},
+    {"lang_id": "39",  "lang_name": "Khmer"},
+    {"lang_id": "157", "lang_name": "Klingon"},
+    {"lang_id": "41",  "lang_name": "Korean"},
+    {"lang_id": "125", "lang_name": "Kurdish"},
+    {"lang_id": "40",  "lang_name": "Kyrgyz"},
+    {"lang_id": "81",  "lang_name": "Ladino"},
+    {"lang_id": "43",  "lang_name": "Latin"},
+    {"lang_id": "42",  "lang_name": "Latvian"},
+    {"lang_id": "44",  "lang_name": "Lithuanian"},
+    {"lang_id": "111", "lang_name": "Low German"},
+    {"lang_id": "166", "lang_name": "Lower Sorbian"},
+    {"lang_id": "45",  "lang_name": "Macedonian"},
+    {"lang_id": "155", "lang_name": "Maithili"},
+    {"lang_id": "46",  "lang_name": "Malay"},
+    {"lang_id": "47",  "lang_name": "Malayalam"},
+    {"lang_id": "82",  "lang_name": "Maltese"},
+    {"lang_id": "48",  "lang_name": "Marathi"},
+    {"lang_id": "104", "lang_name": "Mayan language"},
+    {"lang_id": "101", "lang_name": "Middle English"},
+    {"lang_id": "110", "lang_name": "Middle French"},
+    {"lang_id": "102", "lang_name": "Middle High German"},
+    {"lang_id": "83",  "lang_name": "Minangkabau"},
+    {"lang_id": "150", "lang_name": "Mirandese"},
+    {"lang_id": "49",  "lang_name": "Mongolian"},
+    {"lang_id": "149", "lang_name": "Montenegrin"},
+    {"lang_id": "158", "lang_name": "Nahuatl language"},
+    {"lang_id": "112", "lang_name": "Nepali"},
+    {"lang_id": "50",  "lang_name": "Norwegian"},
+    {"lang_id": "107", "lang_name": "Norwegian (Bokmal)"},
+    {"lang_id": "108", "lang_name": "Norwegian (Nynorsk)"},
+    {"lang_id": "84",  "lang_name": "Nyanja"},
+    {"lang_id": "161", "lang_name": "Occitan (post 1500)"},
+    {"lang_id": "99",  "lang_name": "Old English"},
+    {"lang_id": "100", "lang_name": "Old French"},
+    {"lang_id": "115", "lang_name": "Old Norse"},
+    {"lang_id": "142", "lang_name": "Oriya"},
+    {"lang_id": "85",  "lang_name": "Panjabi"},
+    {"lang_id": "113", "lang_name": "Pashto/Pushto"},
+    {"lang_id": "51",  "lang_name": "Persian"},
+    {"lang_id": "52",  "lang_name": "Polish"},
+    {"lang_id": "53",  "lang_name": "Portuguese"},
+    {"lang_id": "156", "lang_name": "Romance language"},
+    {"lang_id": "54",  "lang_name": "Romanian"},
+    {"lang_id": "55",  "lang_name": "Russian"},
+    {"lang_id": "170", "lang_name": "Sami language"},
+    {"lang_id": "86",  "lang_name": "Samoan"},
+    {"lang_id": "95",  "lang_name": "Sanskrit"},
+    {"lang_id": "98",  "lang_name": "Scots"},
+    {"lang_id": "56",  "lang_name": "Scottish Gaelic"},
+    {"lang_id": "60",  "lang_name": "Serbian"},
+    {"lang_id": "96",  "lang_name": "Serbo-Croatian Cyrillic"},
+    {"lang_id": "97",  "lang_name": "Serbo-Croatian Roman"},
+    {"lang_id": "114", "lang_name": "Shona"},
+    {"lang_id": "87",  "lang_name": "Sindhi"},
+    {"lang_id": "61",  "lang_name": "Sinhalese"},
+    {"lang_id": "57",  "lang_name": "Slovak"},
+    {"lang_id": "58",  "lang_name": "Slovenian"},
+    {"lang_id": "88",  "lang_name": "Somali"},
+    {"lang_id": "152", "lang_name": "South American Indian language"},
+    {"lang_id": "145", "lang_name": "Southern Sotho"},
+    {"lang_id": "59",  "lang_name": "Spanish"},
+    {"lang_id": "89",  "lang_name": "Sundanese"},
+    {"lang_id": "90",  "lang_name": "Swahili"},
+    {"lang_id": "62",  "lang_name": "Swedish"},
+    {"lang_id": "91",  "lang_name": "Tagalog"},
+    {"lang_id": "64",  "lang_name": "Tamil"},
+    {"lang_id": "92",  "lang_name": "Tatar"},
+    {"lang_id": "93",  "lang_name": "Telugu"},
+    {"lang_id": "65",  "lang_name": "Thai"},
+    {"lang_id": "66",  "lang_name": "Tibetan"},
+    {"lang_id": "67",  "lang_name": "Turkish"},
+    {"lang_id": "94",  "lang_name": "Uighur"},
+    {"lang_id": "68",  "lang_name": "Ukrainian"},
+    {"lang_id": "167", "lang_name": "Upper Sorbian"},
+    {"lang_id": "69",  "lang_name": "Urdu"},
+    {"lang_id": "70",  "lang_name": "Uzbek"},
+    {"lang_id": "71",  "lang_name": "Vietnamese"},
+    {"lang_id": "72",  "lang_name": "Welsh"},
+    {"lang_id": "169", "lang_name": "Yakut"},
+    {"lang_id": "73",  "lang_name": "Yiddish"},
+    {"lang_id": "103", "lang_name": "Yoruba"},
+    {"lang_id": "135", "lang_name": "Zulu"},
+]
+
 
 def _year_join_sql_and_params(op, yr):
     """
@@ -1546,12 +1685,13 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
     Advanced title search driven by a list of criterion rows.
 
     Each row is a dict with keys:
-        field — 'author' or 'year'
-        op    — author: 'equals'|'starts_with'|'ends_with'|'is_anything'
-                year:   'before'|'exactly'|'after'|'is_anything'
-        val   — value entered by the user
+        field — 'author', 'year', or 'language'
+        op    — author:   'equals'|'starts_with'|'ends_with'|'is_anything'
+                year:     'before'|'exactly'|'after'|'is_anything'
+                language: 'any' or a lang_id string (e.g. '17' for English)
+        val   — value entered by the user (unused for language field)
 
-    Rows with op='is_anything' or blank val are skipped.
+    Rows with op='is_anything'/'any' or blank val (except language) are skipped.
     Active rows are ANDed together.
 
     Year conditions use a pubs-first derived table so the indexed pub_year
@@ -1566,11 +1706,21 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
     author_param     = None
     year_join_sql    = ""
     year_join_params = []
+    lang_where_sql   = ""
+    lang_param       = None
 
     for crit in rows:
         field = crit.get("field", "")
         op    = crit.get("op", "")
         val   = (crit.get("val") or "").strip()
+
+        if field == "language":
+            if op == "any" or not op.isdigit():
+                continue
+            lang_where_sql = "AND t.title_language = %s"
+            lang_param     = int(op)
+            continue
+
         if op == "is_anything" or not val:
             continue
 
@@ -1597,11 +1747,12 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
 
     type_placeholders = ", ".join(["%s"] * len(_SEARCHABLE_TYPES))
     # Parameter order matches SQL text order:
-    #   year derived table params → type IN params → author WHERE param
+    #   year derived table params → type IN params → author WHERE param → lang WHERE param
     all_params = (
         *year_join_params,
         *_SEARCHABLE_TYPES,
         *([author_param] if author_param is not None else []),
+        *([lang_param]   if lang_param   is not None else []),
     )
 
     if count_only:
@@ -1613,6 +1764,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
                 {author_join_sql}
                 WHERE t.title_ttype IN ({type_placeholders})
                 {author_where_sql}
+                {lang_where_sql}
             ) sub
         """, all_params)
         result = cursor.fetchone()
@@ -1626,6 +1778,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
         {author_join_sql}
         WHERE t.title_ttype IN ({type_placeholders})
         {author_where_sql}
+        {lang_where_sql}
         LIMIT {limit}
     """, all_params)
     title_ids = [r["title_id"] for r in cursor.fetchall()]
