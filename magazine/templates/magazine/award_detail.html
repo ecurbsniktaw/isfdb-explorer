@@ -75,12 +75,12 @@
                       <td>
                         {% if e.title_id %}
                           {% if e.is_book %}
-                            <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                            <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                           {% else %}
-                            <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                            <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                           {% endif %}
                         {% else %}
-                          {{ e.title }}
+                          {{ e.title |unescape_html }}
                         {% endif %}
                       </td>
                       <td class="text-muted small">{{ e.author }}</td>

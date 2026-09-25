@@ -133,9 +133,9 @@ function authorPhotoMissing(img) {
                     </td>
                     <td>
                       {% if row.title_id %}
-                        <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
+                        <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title |unescape_html }}</a>
                       {% else %}
-                        {{ row.title_title }}
+                        {{ row.title_title |unescape_html }}
                       {% endif %}
                       {% if row.pen_name %}<span class="text-muted small"> (as {{ row.pen_name }})</span>{% endif %}
                     </td>
@@ -186,7 +186,7 @@ function authorPhotoMissing(img) {
                     <td>
                       <span class="badge text-bg-secondary badge-type fw-normal">{{ row.type_label }}</span>
                     </td>
-                    <td><a href="{% url 'book_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a></td>
+                    <td><a href="{% url 'book_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title |unescape_html }}</a></td>
                     <td class="text-muted">
                       {% for a in row.author_list %}
                         {% if not forloop.first %} &amp; {% endif %}
@@ -234,7 +234,7 @@ function authorPhotoMissing(img) {
                   <tr>
                     <td class="text-muted small">{{ row.pub_year }}</td>
                     <td>
-                      <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
+                      <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title |unescape_html }}</a>
                     </td>
                     <td class="text-muted small">{{ row.pub_title }}</td>
                   </tr>
@@ -306,9 +306,9 @@ function authorPhotoMissing(img) {
                   <td class="text-muted small">{{ aw.category }}</td>
                   <td class="text-muted small">
                     {% if aw.title_id %}
-                      <a href="{% url 'story_detail' aw.title_id %}" class="text-decoration-none text-muted">{{ aw.title_title }}</a>
+                      <a href="{% url 'story_detail' aw.title_id %}" class="text-decoration-none text-muted">{{ aw.title_title |unescape_html }}</a>
                     {% else %}
-                      {{ aw.title_title }}
+                      {{ aw.title_title |unescape_html }}
                     {% endif %}
                   </td>
                   <td>
@@ -465,7 +465,7 @@ function authorPhotoMissing(img) {
                   {% endif %}
                 </td>
                 <td class="text-muted small">
-                  <a href="{% url 'story_detail' art.title_id %}" class="text-decoration-none text-muted">{{ art.title_title }}</a>
+                  <a href="{% url 'story_detail' art.title_id %}" class="text-decoration-none text-muted">{{ art.title_title |unescape_html }}</a>
                 </td>
               </tr>
               {% endfor %}
@@ -517,7 +517,7 @@ function authorPhotoMissing(img) {
                   {% endif %}
                 </td>
                 <td class="text-muted small">
-                  <a href="{% url 'story_detail' art.title_id %}" class="text-decoration-none text-muted">{{ art.title_title }}</a>
+                  <a href="{% url 'story_detail' art.title_id %}" class="text-decoration-none text-muted">{{ art.title_title |unescape_html }}</a>
                 </td>
               </tr>
               {% endfor %}

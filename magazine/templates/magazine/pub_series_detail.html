@@ -56,9 +56,9 @@
         <td class="text-muted">{{ t.series_num|default:"" }}</td>
         <td>
           {% if t.title_ttype == "SHORTFICTION" or t.title_ttype == "POEM" %}
-            <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title }}</a>
+            <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title |unescape_html }}</a>
           {% else %}
-            <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title }}</a>
+            <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title |unescape_html }}</a>
           {% endif %}
         </td>
         <td>

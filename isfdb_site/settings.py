@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
             ],
+            'builtins': ['magazine.templatetags.isfdb_extras'],
         },
     },
 ]

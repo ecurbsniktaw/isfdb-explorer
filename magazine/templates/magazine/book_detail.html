@@ -1,7 +1,7 @@
 {% extends "magazine/base.html" %}
 {% load humanize %}
 
-{% block title %}{{ book.title_title }} — ISFDB Explorer{% endblock %}
+{% block title %}{{ book.title_title |unescape_html }} — ISFDB Explorer{% endblock %}
 
 {% block content %}
 
@@ -19,7 +19,7 @@
       <div class="flex-shrink-0">
         <a href="#" data-bs-toggle="modal" data-bs-target="#coverModal" style="display:block;">
           <img src="{{ book.pub_frontimage }}"
-               alt="Cover of {{ book.title_title }}"
+               alt="Cover of {{ book.title_title |unescape_html }}"
                class="rounded shadow-sm"
                style="max-width:100px; max-height:150px; object-fit:cover; cursor:zoom-in;">
         </a>
@@ -27,7 +27,7 @@
       {% endif %}
 
       <div>
-        <h1 class="h2 mb-1">{{ book.title_title }}</h1>
+        <h1 class="h2 mb-1">{{ book.title_title |unescape_html }}</h1>
         <p class="text-muted mb-0">
           {% for a in book.author_list %}
             {% if not forloop.first %} &amp; {% endif %}
@@ -353,7 +353,7 @@
         <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
                 data-bs-dismiss="modal" aria-label="Close"></button>
         <img src="{{ book.pub_frontimage }}"
-             alt="Cover of {{ book.title_title }}"
+             alt="Cover of {{ book.title_title |unescape_html }}"
              class="img-fluid rounded shadow">
       </div>
     </div>
@@ -392,7 +392,7 @@
               <tr>
                 <td class="text-muted small">{{ item.pubc_page|default:"" }}</td>
                 <td>
-                  <a href="{% url 'story_detail' item.title_id %}" class="text-decoration-none">{{ item.title_title }}</a>
+                  <a href="{% url 'story_detail' item.title_id %}" class="text-decoration-none">{{ item.title_title |unescape_html }}</a>
                 </td>
                 <td class="text-muted small">
                   {% for a in item.author_list %}

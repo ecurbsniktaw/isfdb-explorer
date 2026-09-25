@@ -61,9 +61,9 @@
         <td class="text-muted">{{ t.series_label }}</td>
         <td>
           {% if t.is_book %}
-            <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title }}</a>
+            <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title |unescape_html }}</a>
           {% else %}
-            <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title }}</a>
+            <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title |unescape_html }}</a>
           {% endif %}
         </td>
         <td>

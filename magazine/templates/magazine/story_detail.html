@@ -1,7 +1,7 @@
 {% extends "magazine/base.html" %}
 {% load humanize %}
 
-{% block title %}{{ story.title_title }} — ISFDB Explorer{% endblock %}
+{% block title %}{{ story.title_title |unescape_html }} — ISFDB Explorer{% endblock %}
 
 {% block content %}
 
@@ -43,7 +43,7 @@
     {% endif %}
 
     <div>
-      <h1 class="h2 mb-1">{{ story.title_title }}</h1>
+      <h1 class="h2 mb-1">{{ story.title_title |unescape_html }}</h1>
       <p class="text-muted mb-3">
         {% for a in story.author_list %}
           {% if not forloop.first %} &amp; {% endif %}

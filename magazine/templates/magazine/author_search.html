@@ -81,9 +81,9 @@
               <td class="text-muted small">{{ row.kind }}</td>
               <td>
                 {% if row.title_id %}
-                  <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
+                  <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title |unescape_html }}</a>
                 {% else %}
-                  {{ row.title_title }}
+                  {{ row.title_title |unescape_html }}
                 {% endif %}
               </td>
               <td class="text-muted">

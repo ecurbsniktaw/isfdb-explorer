@@ -143,12 +143,12 @@
     <span>
       {% if e.title_id %}
         {% if e.is_book %}
-          <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title }}</a>
+          <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title |unescape_html }}</a>
         {% else %}
-          <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title }}</a>
+          <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title |unescape_html }}</a>
         {% endif %}
       {% else %}
-        <span class="fw-semibold">{{ e.title }}</span>
+        <span class="fw-semibold">{{ e.title |unescape_html }}</span>
       {% endif %}
       {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
     </span>
@@ -180,11 +180,11 @@
             <span>
               {% if e.title_id %}
                 {% if e.is_book %}
-                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% else %}
-                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% endif %}
-              {% else %}{{ e.title }}{% endif %}
+              {% else %}{{ e.title |unescape_html }}{% endif %}
               {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
             </span>
           </div>
@@ -218,11 +218,11 @@
             <span>
               {% if e.title_id %}
                 {% if e.is_book %}
-                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% else %}
-                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% endif %}
-              {% else %}{{ e.title }}{% endif %}
+              {% else %}{{ e.title |unescape_html }}{% endif %}
               {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
             </span>
           </div>
@@ -256,11 +256,11 @@
             <span>
               {% if e.title_id %}
                 {% if e.is_book %}
-                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% else %}
-                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% endif %}
-              {% else %}{{ e.title }}{% endif %}
+              {% else %}{{ e.title |unescape_html }}{% endif %}
               {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
             </span>
           </div>
@@ -291,12 +291,12 @@
     <span>
       {% if e.title_id %}
         {% if e.is_book %}
-          <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title }}</a>
+          <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title |unescape_html }}</a>
         {% else %}
-          <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title }}</a>
+          <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none fw-semibold">{{ e.title |unescape_html }}</a>
         {% endif %}
       {% else %}
-        <span class="fw-semibold">{{ e.title }}</span>
+        <span class="fw-semibold">{{ e.title |unescape_html }}</span>
       {% endif %}
       {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
     </span>
@@ -328,12 +328,12 @@
             <span>
               {% if e.title_id %}
                 {% if e.is_book %}
-                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% else %}
-                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% endif %}
               {% else %}
-                {{ e.title }}
+                {{ e.title |unescape_html }}
               {% endif %}
               {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
             </span>
@@ -368,12 +368,12 @@
             <span>
               {% if e.title_id %}
                 {% if e.is_book %}
-                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% else %}
-                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% endif %}
               {% else %}
-                {{ e.title }}
+                {{ e.title |unescape_html }}
               {% endif %}
               {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
             </span>
@@ -408,12 +408,12 @@
             <span>
               {% if e.title_id %}
                 {% if e.is_book %}
-                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'book_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% else %}
-                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title }}</a>
+                  <a href="{% url 'story_detail' e.title_id %}" class="text-decoration-none">{{ e.title |unescape_html }}</a>
                 {% endif %}
               {% else %}
-                {{ e.title }}
+                {{ e.title |unescape_html }}
               {% endif %}
               {% if e.author %}<span class="text-muted small ms-1">{{ e.author }}</span>{% endif %}
             </span>

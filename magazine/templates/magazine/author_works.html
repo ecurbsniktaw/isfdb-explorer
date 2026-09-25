@@ -42,9 +42,9 @@
         </td>
         <td>
           {% if row.title_id %}
-            <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title }}</a>
+            <a href="{% url 'story_detail' row.title_id %}" class="text-decoration-none">{{ row.title_title |unescape_html }}</a>
           {% else %}
-            {{ row.title_title }}
+            {{ row.title_title |unescape_html }}
           {% endif %}
           {% if row.pen_name %}<span class="text-muted small"> (as {{ row.pen_name }})</span>{% endif %}
         </td>
