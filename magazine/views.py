@@ -45,6 +45,7 @@ from .queries import (
     get_publisher_detail, get_publisher_books_by_year,
     get_publisher_books_by_author, get_publisher_all_authors,
     format_date, NARRATIVE_TYPES,
+    advanced_search_titles, ADV_AUTHOR_OPS, ADV_YEAR_OPS,
 )
 from .collection_queries import (
     get_collection_status, toggle_collection_item, get_full_collection,
@@ -827,6 +828,46 @@ def title_search(request):
         context["total"]  = len(titles)
 
     return render(request, "magazine/title_search.html", context)
+
+
+def title_advanced_search(request):
+    """Advanced title search: filter by author and/or year published."""
+    _VALID_FIELDS = {"author", "year"}
+    _VALID_OPS    = ADV_AUTHOR_OPS | ADV_YEAR_OPS
+
+    rows = []
+    for i in (1, 2):
+        field = request.GET.get(f"field{i}", "author")
+        op    = request.GET.get(f"op{i}", "")
+        val   = request.GET.get(f"val{i}", "").strip()
+        if field not in _VALID_FIELDS:
+            field = "author"
+        if op not in _VALID_OPS:
+            op = ""
+        rows.append({"field": field, "op": op, "val": val})
+
+    action = request.GET.get("action", "find")
+    if action not in ("find", "count"):
+        action = "find"
+
+    submitted = any(r["val"] for r in rows)
+    count, titles = 0, []
+    if submitted:
+        cursor = _dict_cursor()
+        try:
+            count, titles = advanced_search_titles(cursor, rows,
+                                                   limit=500,
+                                                   count_only=(action == "count"))
+        finally:
+            cursor.close()
+
+    return render(request, "magazine/title_advanced_search.html", {
+        "rows":      rows,
+        "action":    action,
+        "submitted": submitted,
+        "count":     count,
+        "titles":    titles,
+    })
 
 
 def story_detail(request, title_id):

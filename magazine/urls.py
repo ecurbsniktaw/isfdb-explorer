@@ -18,6 +18,7 @@ urlpatterns = [
     path("author/<int:author_id>/works/", views.author_works, name="author_works"),
     path("titles/", views.title_list, name="title_list"),
     path("titles/search/", views.title_search, name="title_search"),
+    path("titles/advanced-search/", views.title_advanced_search, name="title_advanced_search"),
     path("book/<int:title_id>/", views.book_detail, name="book_detail"),
     path("story/<int:title_id>/", views.story_detail, name="story_detail"),
     path("magazines/", views.magazine_list, name="magazine_list"),

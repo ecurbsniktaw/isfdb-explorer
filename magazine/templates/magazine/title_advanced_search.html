@@ -1,0 +1,134 @@
+{% extends "magazine/base.html" %}
+{% load humanize %}
+
+{% block title %}Advanced Title Search — ISFDB Explorer{% endblock %}
+
+{% block content %}
+
+<div class="mb-3">
+  <a href="{% url 'title_list' %}" class="text-decoration-none">&larr; Titles</a>
+</div>
+
+<h1 class="h3 mb-4">Advanced Title Search</h1>
+
+{# ── Search form ─────────────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <form method="get" action="{% url 'title_advanced_search' %}">
+      <p class="text-muted small mb-3">All non-empty criteria are combined with AND.</p>
+
+      {% for row in rows %}
+      <div class="row g-2 align-items-center mb-3">
+        <div class="col-auto">
+          <select name="field{{ forloop.counter }}" class="form-select adv-field" data-row="{{ forloop.counter }}">
+            <option value="author" {% if row.field == "author" %}selected{% endif %}>Author</option>
+            <option value="year"   {% if row.field == "year"   %}selected{% endif %}>Year published</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
+            {% if row.field == "year" %}
+              <option value="before"  {% if row.op == "before"  %}selected{% endif %}>is before</option>
+              <option value="exactly" {% if row.op == "exactly" %}selected{% endif %}>is exactly</option>
+              <option value="after"   {% if row.op == "after"   %}selected{% endif %}>is after</option>
+            {% else %}
+              <option value="equals"      {% if row.op == "equals"      %}selected{% endif %}>equals</option>
+              <option value="starts_with" {% if row.op == "starts_with" %}selected{% endif %}>starts with</option>
+              <option value="ends_with"   {% if row.op == "ends_with"   %}selected{% endif %}>ends with</option>
+            {% endif %}
+          </select>
+        </div>
+        <div class="col">
+          <input type="text" name="val{{ forloop.counter }}" value="{{ row.val }}"
+                 class="form-control" placeholder="enter value…">
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="d-flex gap-2">
+        <button type="submit" name="action" value="count" class="btn btn-outline-primary">Count Titles</button>
+        <button type="submit" name="action" value="find"  class="btn btn-primary">Find Titles</button>
+        <a href="{% url 'title_advanced_search' %}" class="btn btn-outline-secondary ms-auto">Clear</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ── Results ─────────────────────────────────────────────────────────────── #}
+{% if submitted %}
+  {% if action == "count" %}
+    <p class="fs-5">{{ count|intcomma }} title{{ count|pluralize }} match your criteria.</p>
+  {% else %}
+    {% if titles %}
+      <p class="text-muted mb-3">
+        {{ count|intcomma }} title{{ count|pluralize }} found{% if count == 500 %} (limit reached — refine your criteria){% endif %}.
+      </p>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Author(s)</th>
+              <th>First published</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in titles %}
+            <tr>
+              <td>
+                {% if t.is_book %}
+                  <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title }}</a>
+                {% else %}
+                  <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title }}</a>
+                {% endif %}
+              </td>
+              <td class="text-nowrap text-muted small">{{ t.type_label }}</td>
+              <td>
+                {% for a in t.author_list %}
+                  {% if a.id %}<a href="{% url 'author_detail' a.id %}">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}{% if not forloop.last %} &amp; {% endif %}
+                {% endfor %}
+              </td>
+              <td class="text-nowrap">{{ t.first_year|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted">No titles found matching your criteria.</p>
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+<script>
+(function () {
+  var authorOps = [
+    {value: 'equals',      label: 'equals'},
+    {value: 'starts_with', label: 'starts with'},
+    {value: 'ends_with',   label: 'ends with'},
+  ];
+  var yearOps = [
+    {value: 'before',  label: 'is before'},
+    {value: 'exactly', label: 'is exactly'},
+    {value: 'after',   label: 'is after'},
+  ];
+
+  function setOps(fieldSel, preserveVal) {
+    var row   = fieldSel.dataset.row;
+    var opSel = document.getElementById('adv-op' + row);
+    var cur   = preserveVal ? opSel.value : '';
+    var ops   = fieldSel.value === 'year' ? yearOps : authorOps;
+    opSel.innerHTML = ops.map(function (o) {
+      return '<option value="' + o.value + '"' +
+             (o.value === cur ? ' selected' : '') + '>' + o.label + '</option>';
+    }).join('');
+  }
+
+  document.querySelectorAll('.adv-field').forEach(function (sel) {
+    sel.addEventListener('change', function () { setOps(this, false); });
+  });
+})();
+</script>
+
+{% endblock %}

@@ -1472,6 +1472,131 @@ def find_titles(cursor, title: str, match_type: str = "exact",
     return rows
 
 
+# Valid operators for the advanced title search form
+ADV_AUTHOR_OPS = {"equals", "starts_with", "ends_with"}
+ADV_YEAR_OPS   = {"before", "exactly", "after"}
+
+
+def advanced_search_titles(cursor, rows, limit=500, count_only=False):
+    """
+    Advanced title search driven by a list of criterion rows.
+
+    Each row is a dict with keys:
+        field   — 'author' or 'year'
+        op      — for author: 'equals' | 'starts_with' | 'ends_with'
+                  for year:   'before' | 'exactly' | 'after'
+        val     — string value supplied by the user
+
+    Rows whose val is blank are ignored.  The non-blank rows are ANDed together.
+
+    count_only=True runs a COUNT(*) query instead of fetching rows.
+
+    Returns (count, titles) where:
+        count  — total number of matching titles (int)
+        titles — list of dicts (empty when count_only=True)
+    """
+    where_clauses = []
+    having_clauses = []
+    where_params = []
+    having_params = []
+
+    for row in rows:
+        field = row.get("field", "")
+        op    = row.get("op", "")
+        val   = (row.get("val") or "").strip()
+        if not val:
+            continue
+
+        if field == "author" and op in ADV_AUTHOR_OPS:
+            if op == "equals":
+                pattern = val
+                cond = "LOWER(a2.author_canonical) = LOWER(%s)"
+            elif op == "starts_with":
+                pattern = val.replace("%", r"\%").replace("_", r"\_") + "%"
+                cond = "LOWER(a2.author_canonical) LIKE LOWER(%s)"
+            else:  # ends_with
+                pattern = "%" + val.replace("%", r"\%").replace("_", r"\_")
+                cond = "LOWER(a2.author_canonical) LIKE LOWER(%s)"
+            where_clauses.append(f"""
+                EXISTS (
+                    SELECT 1 FROM canonical_author ca2
+                    JOIN authors a2 ON a2.author_id = ca2.author_id
+                    WHERE ca2.title_id = t.title_id AND {cond}
+                )""")
+            where_params.append(pattern)
+
+        elif field == "year" and op in ADV_YEAR_OPS and val.isdigit():
+            yr = int(val)
+            if op == "before":
+                having_clauses.append("MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) < %s")
+            elif op == "exactly":
+                having_clauses.append("MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) = %s")
+            else:  # after
+                having_clauses.append("MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) > %s")
+            having_params.append(yr)
+
+    if not where_clauses and not having_clauses:
+        return 0, []
+
+    where_sql  = " AND ".join(where_clauses)
+    having_sql = " AND ".join(having_clauses)
+    if where_sql:
+        where_sql = "AND " + where_sql
+    if having_sql:
+        having_sql = "HAVING " + having_sql
+
+    type_placeholders = ", ".join(["%s"] * len(_SEARCHABLE_TYPES))
+
+    if count_only:
+        cursor.execute(f"""
+            SELECT COUNT(*) AS cnt FROM (
+                SELECT t.title_id
+                FROM titles t
+                LEFT JOIN pub_content pc ON pc.title_id = t.title_id
+                LEFT JOIN pubs p         ON p.pub_id    = pc.pub_id
+                WHERE t.title_ttype IN ({type_placeholders})
+                {where_sql}
+                GROUP BY t.title_id
+                {having_sql}
+            ) sub
+        """, (*_SEARCHABLE_TYPES, *where_params, *having_params))
+        row = cursor.fetchone()
+        return (row["cnt"] if row else 0), []
+
+    cursor.execute(f"""
+        SELECT
+            t.title_id,
+            t.title_title,
+            t.title_ttype,
+            t.title_storylen,
+            MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) AS first_year,
+            GROUP_CONCAT(
+                DISTINCT a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & '
+            ) AS authors,
+            GROUP_CONCAT(
+                DISTINCT a.author_id ORDER BY ca.ca_id SEPARATOR ','
+            ) AS author_ids
+        FROM titles t
+        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
+        LEFT JOIN authors a           ON a.author_id  = ca.author_id
+        LEFT JOIN pub_content pc      ON pc.title_id  = t.title_id
+        LEFT JOIN pubs p              ON p.pub_id     = pc.pub_id
+        WHERE t.title_ttype IN ({type_placeholders})
+        {where_sql}
+        GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen
+        {having_sql}
+        ORDER BY t.title_title, first_year
+        LIMIT {limit}
+    """, (*_SEARCHABLE_TYPES, *where_params, *having_params))
+
+    titles = cursor.fetchall()
+    for row in titles:
+        row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["author_list"] = _make_author_list(row.get("authors"), row.get("author_ids"))
+        row["is_book"]     = row["title_ttype"] in _BOOK_SEARCH_TYPES
+    return len(titles), titles
+
+
 def get_author_count(cursor) -> int:
     """Return the total number of authors/artists in the database (excluding HTML-entity names)."""
     cursor.execute(
