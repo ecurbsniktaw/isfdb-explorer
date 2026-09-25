@@ -617,37 +617,39 @@
           <div class="row g-2 align-items-center mb-3">
             <div class="col-auto">
               <select name="field1" class="form-select adv-field" data-row="1">
-                <option value="author">Author</option>
+                <option value="author" selected>Author</option>
                 <option value="year">Year published</option>
               </select>
             </div>
             <div class="col-auto">
               <select name="op1" class="form-select adv-op" id="adv-op1">
+                <option value="is_anything" selected>is anything</option>
                 <option value="equals">equals</option>
                 <option value="starts_with">starts with</option>
                 <option value="ends_with">ends with</option>
               </select>
             </div>
             <div class="col">
-              <input type="text" name="val1" class="form-control" placeholder="enter value…">
+              <input type="text" name="val1" class="form-control adv-val" placeholder="enter value…" disabled>
             </div>
           </div>
           <div class="row g-2 align-items-center mb-3">
             <div class="col-auto">
               <select name="field2" class="form-select adv-field" data-row="2">
                 <option value="author">Author</option>
-                <option value="year">Year published</option>
+                <option value="year" selected>Year published</option>
               </select>
             </div>
             <div class="col-auto">
               <select name="op2" class="form-select adv-op" id="adv-op2">
-                <option value="equals">equals</option>
-                <option value="starts_with">starts with</option>
-                <option value="ends_with">ends with</option>
+                <option value="is_anything" selected>is anything</option>
+                <option value="before">is before</option>
+                <option value="exactly">is exactly</option>
+                <option value="after">is after</option>
               </select>
             </div>
             <div class="col">
-              <input type="text" name="val2" class="form-control" placeholder="enter value…">
+              <input type="text" name="val2" class="form-control adv-val" placeholder="enter value…" disabled>
             </div>
           </div>
         </div>
@@ -663,28 +665,45 @@
 
 <script>
 (function () {
+  var anythingOp = {value: 'is_anything', label: 'is anything'};
   var authorOps = [
+    anythingOp,
     {value: 'equals',      label: 'equals'},
     {value: 'starts_with', label: 'starts with'},
     {value: 'ends_with',   label: 'ends with'},
   ];
   var yearOps = [
+    anythingOp,
     {value: 'before',  label: 'is before'},
     {value: 'exactly', label: 'is exactly'},
     {value: 'after',   label: 'is after'},
   ];
 
   function setOps(fieldSel) {
-    var row  = fieldSel.dataset.row;
+    var row   = fieldSel.dataset.row;
     var opSel = document.getElementById('adv-op' + row);
-    var ops  = fieldSel.value === 'year' ? yearOps : authorOps;
+    var ops   = fieldSel.value === 'year' ? yearOps : authorOps;
     opSel.innerHTML = ops.map(function (o) {
       return '<option value="' + o.value + '">' + o.label + '</option>';
     }).join('');
+    syncVal(opSel);
+  }
+
+  function syncVal(opSel) {
+    var row    = opSel.id.replace('adv-op', '');
+    var valEl  = opSel.closest('.row').querySelector('.adv-val');
+    if (!valEl) return;
+    var isAny  = opSel.value === 'is_anything';
+    valEl.disabled = isAny;
+    if (isAny) valEl.value = '';
   }
 
   document.querySelectorAll('.adv-field').forEach(function (sel) {
     sel.addEventListener('change', function () { setOps(this); });
+  });
+
+  document.querySelectorAll('.adv-op').forEach(function (sel) {
+    sel.addEventListener('change', function () { syncVal(this); });
   });
 })();
 </script>

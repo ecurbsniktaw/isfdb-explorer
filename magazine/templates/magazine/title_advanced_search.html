@@ -27,6 +27,7 @@
         </div>
         <div class="col-auto">
           <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
+            <option value="is_anything" {% if row.op == "is_anything" or not row.op %}selected{% endif %}>is anything</option>
             {% if row.field == "year" %}
               <option value="before"  {% if row.op == "before"  %}selected{% endif %}>is before</option>
               <option value="exactly" {% if row.op == "exactly" %}selected{% endif %}>is exactly</option>
@@ -40,7 +41,8 @@
         </div>
         <div class="col">
           <input type="text" name="val{{ forloop.counter }}" value="{{ row.val }}"
-                 class="form-control" placeholder="enter value…">
+                 class="form-control adv-val" placeholder="enter value…"
+                 {% if row.op == "is_anything" or not row.op %}disabled{% endif %}>
         </div>
       </div>
       {% endfor %}
@@ -103,30 +105,44 @@
 
 <script>
 (function () {
+  var anythingOp = {value: 'is_anything', label: 'is anything'};
   var authorOps = [
+    anythingOp,
     {value: 'equals',      label: 'equals'},
     {value: 'starts_with', label: 'starts with'},
     {value: 'ends_with',   label: 'ends with'},
   ];
   var yearOps = [
+    anythingOp,
     {value: 'before',  label: 'is before'},
     {value: 'exactly', label: 'is exactly'},
     {value: 'after',   label: 'is after'},
   ];
 
-  function setOps(fieldSel, preserveVal) {
+  function syncVal(opSel) {
+    var valEl = opSel.closest('.row').querySelector('.adv-val');
+    if (!valEl) return;
+    var isAny = opSel.value === 'is_anything';
+    valEl.disabled = isAny;
+    if (isAny) valEl.value = '';
+  }
+
+  function setOps(fieldSel) {
     var row   = fieldSel.dataset.row;
     var opSel = document.getElementById('adv-op' + row);
-    var cur   = preserveVal ? opSel.value : '';
     var ops   = fieldSel.value === 'year' ? yearOps : authorOps;
     opSel.innerHTML = ops.map(function (o) {
-      return '<option value="' + o.value + '"' +
-             (o.value === cur ? ' selected' : '') + '>' + o.label + '</option>';
+      return '<option value="' + o.value + '">' + o.label + '</option>';
     }).join('');
+    syncVal(opSel);
   }
 
   document.querySelectorAll('.adv-field').forEach(function (sel) {
-    sel.addEventListener('change', function () { setOps(this, false); });
+    sel.addEventListener('change', function () { setOps(this); });
+  });
+
+  document.querySelectorAll('.adv-op').forEach(function (sel) {
+    sel.addEventListener('change', function () { syncVal(this); });
   });
 })();
 </script>

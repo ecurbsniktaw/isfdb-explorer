@@ -832,25 +832,26 @@ def title_search(request):
 
 def title_advanced_search(request):
     """Advanced title search: filter by author and/or year published."""
-    _VALID_FIELDS = {"author", "year"}
-    _VALID_OPS    = ADV_AUTHOR_OPS | ADV_YEAR_OPS
+    _VALID_FIELDS   = {"author", "year"}
+    _VALID_OPS      = ADV_AUTHOR_OPS | ADV_YEAR_OPS | {"is_anything"}
+    _FIELD_DEFAULTS = {1: "author", 2: "year"}
 
     rows = []
     for i in (1, 2):
-        field = request.GET.get(f"field{i}", "author")
-        op    = request.GET.get(f"op{i}", "")
+        field = request.GET.get(f"field{i}", _FIELD_DEFAULTS[i])
+        op    = request.GET.get(f"op{i}", "is_anything")
         val   = request.GET.get(f"val{i}", "").strip()
         if field not in _VALID_FIELDS:
-            field = "author"
+            field = _FIELD_DEFAULTS[i]
         if op not in _VALID_OPS:
-            op = ""
+            op = "is_anything"
         rows.append({"field": field, "op": op, "val": val})
 
     action = request.GET.get("action", "find")
     if action not in ("find", "count"):
         action = "find"
 
-    submitted = any(r["val"] for r in rows)
+    submitted = "action" in request.GET
     count, titles = 0, []
     if submitted:
         cursor = _dict_cursor()

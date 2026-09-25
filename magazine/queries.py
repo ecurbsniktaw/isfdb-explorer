@@ -1504,6 +1504,8 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
         field = row.get("field", "")
         op    = row.get("op", "")
         val   = (row.get("val") or "").strip()
+        if op == "is_anything":
+            continue
         if not val:
             continue
 
@@ -1534,9 +1536,6 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
             else:  # after
                 having_clauses.append("MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) > %s")
             having_params.append(yr)
-
-    if not where_clauses and not having_clauses:
-        return 0, []
 
     where_sql  = " AND ".join(where_clauses)
     having_sql = " AND ".join(having_clauses)
