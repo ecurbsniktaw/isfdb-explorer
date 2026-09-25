@@ -1477,91 +1477,164 @@ ADV_AUTHOR_OPS = {"equals", "starts_with", "ends_with"}
 ADV_YEAR_OPS   = {"before", "exactly", "after"}
 
 
+def _year_join_sql_and_params(op, yr):
+    """
+    Return (join_sql, params) that adds a derived-table JOIN to titles (alias 't')
+    restricting to titles whose first valid publication year satisfies the condition.
+
+    Uses range comparisons on the indexed pubs.pub_year column (stored as YYYY-MM-00)
+    instead of YEAR() so the pub_date index can be used.
+
+    Date boundary logic:
+      'before N'  → pub_year in (0000-12-00, NNNN-00-00)   i.e. year 1..N-1
+      'after N'   → pub_year > NNNN-12-00                  i.e. year N+1..
+      'exactly N' → pub_year in [NNNN-00-00, NNNN+1-00-00) i.e. year N
+    """
+    n4   = f"{yr:04d}"
+    n4p1 = f"{yr + 1:04d}"
+
+    if op == "before":
+        # Any pub in range → first pub is also before N (range is monotone)
+        return (
+            """JOIN (
+                SELECT DISTINCT pc.title_id
+                FROM pubs p JOIN pub_content pc ON pc.pub_id = p.pub_id
+                WHERE p.pub_year > '0000-12-00' AND p.pub_year < %s
+            ) yr_f ON yr_f.title_id = t.title_id""",
+            [f"{n4}-00-00"],
+        )
+
+    elif op == "after":
+        # Has a pub after N AND no pub at-or-before N
+        return (
+            """JOIN (
+                SELECT DISTINCT pc.title_id
+                FROM pubs p JOIN pub_content pc ON pc.pub_id = p.pub_id
+                WHERE p.pub_year > %s
+                  AND NOT EXISTS (
+                      SELECT 1 FROM pub_content pc2
+                      JOIN pubs p2 ON p2.pub_id = pc2.pub_id
+                      WHERE pc2.title_id = pc.title_id
+                        AND p2.pub_year > '0000-12-00'
+                        AND p2.pub_year <= %s
+                  )
+            ) yr_f ON yr_f.title_id = t.title_id""",
+            [f"{n4}-12-00", f"{n4}-12-00"],
+        )
+
+    else:  # exactly
+        # Has a pub in year N AND no pub before year N
+        return (
+            """JOIN (
+                SELECT DISTINCT pc.title_id
+                FROM pubs p JOIN pub_content pc ON pc.pub_id = p.pub_id
+                WHERE p.pub_year >= %s AND p.pub_year < %s
+                  AND NOT EXISTS (
+                      SELECT 1 FROM pub_content pc2
+                      JOIN pubs p2 ON p2.pub_id = pc2.pub_id
+                      WHERE pc2.title_id = pc.title_id
+                        AND p2.pub_year > '0000-12-00'
+                        AND p2.pub_year < %s
+                  )
+            ) yr_f ON yr_f.title_id = t.title_id""",
+            [f"{n4}-00-00", f"{n4p1}-00-00", f"{n4}-00-00"],
+        )
+
+
 def advanced_search_titles(cursor, rows, limit=500, count_only=False):
     """
     Advanced title search driven by a list of criterion rows.
 
     Each row is a dict with keys:
-        field   — 'author' or 'year'
-        op      — for author: 'equals' | 'starts_with' | 'ends_with'
-                  for year:   'before' | 'exactly' | 'after'
-        val     — string value supplied by the user
+        field — 'author' or 'year'
+        op    — author: 'equals'|'starts_with'|'ends_with'|'is_anything'
+                year:   'before'|'exactly'|'after'|'is_anything'
+        val   — value entered by the user
 
-    Rows whose val is blank are ignored.  The non-blank rows are ANDed together.
+    Rows with op='is_anything' or blank val are skipped.
+    Active rows are ANDed together.
 
-    count_only=True runs a COUNT(*) query instead of fetching rows.
+    Year conditions use a pubs-first derived table so the indexed pub_year
+    column is hit with a range scan rather than scanning all titles.
+    The find path runs two queries: a fast title_id filter (LIMIT limit),
+    then a detail fetch for only those ids.
 
-    Returns (count, titles) where:
-        count  — total number of matching titles (int)
-        titles — list of dicts (empty when count_only=True)
+    Returns (count, titles).  count_only=True returns (n, []) without rows.
     """
-    where_clauses = []
-    having_clauses = []
-    where_params = []
-    having_params = []
+    author_join_sql  = ""
+    author_where_sql = ""
+    author_param     = None
+    year_join_sql    = ""
+    year_join_params = []
 
-    for row in rows:
-        field = row.get("field", "")
-        op    = row.get("op", "")
-        val   = (row.get("val") or "").strip()
-        if op == "is_anything":
-            continue
-        if not val:
+    for crit in rows:
+        field = crit.get("field", "")
+        op    = crit.get("op", "")
+        val   = (crit.get("val") or "").strip()
+        if op == "is_anything" or not val:
             continue
 
         if field == "author" and op in ADV_AUTHOR_OPS:
+            # Join to canonical_author + authors so MySQL can hit the canonical
+            # index on author_canonical.  author_canonical uses latin1_swedish_ci
+            # (case-insensitive), so no LOWER() wrapper is needed — wrapping it
+            # would prevent index use and force a 2M+ row title scan.
+            author_join_sql = """
+                JOIN canonical_author ca ON ca.title_id = t.title_id
+                JOIN authors a           ON a.author_id  = ca.author_id"""
             if op == "equals":
-                pattern = val
-                cond = "LOWER(a2.author_canonical) = LOWER(%s)"
+                author_param     = val
+                author_where_sql = "AND a.author_canonical = %s"
             elif op == "starts_with":
-                pattern = val.replace("%", r"\%").replace("_", r"\_") + "%"
-                cond = "LOWER(a2.author_canonical) LIKE LOWER(%s)"
+                author_param     = val.replace("%", r"\%").replace("_", r"\_") + "%"
+                author_where_sql = "AND a.author_canonical LIKE %s"
             else:  # ends_with
-                pattern = "%" + val.replace("%", r"\%").replace("_", r"\_")
-                cond = "LOWER(a2.author_canonical) LIKE LOWER(%s)"
-            where_clauses.append(f"""
-                EXISTS (
-                    SELECT 1 FROM canonical_author ca2
-                    JOIN authors a2 ON a2.author_id = ca2.author_id
-                    WHERE ca2.title_id = t.title_id AND {cond}
-                )""")
-            where_params.append(pattern)
+                author_param     = "%" + val.replace("%", r"\%").replace("_", r"\_")
+                author_where_sql = "AND a.author_canonical LIKE %s"
 
         elif field == "year" and op in ADV_YEAR_OPS and val.isdigit():
-            yr = int(val)
-            if op == "before":
-                having_clauses.append("MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) < %s")
-            elif op == "exactly":
-                having_clauses.append("MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) = %s")
-            else:  # after
-                having_clauses.append("MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) > %s")
-            having_params.append(yr)
-
-    where_sql  = " AND ".join(where_clauses)
-    having_sql = " AND ".join(having_clauses)
-    if where_sql:
-        where_sql = "AND " + where_sql
-    if having_sql:
-        having_sql = "HAVING " + having_sql
+            year_join_sql, year_join_params = _year_join_sql_and_params(op, int(val))
 
     type_placeholders = ", ".join(["%s"] * len(_SEARCHABLE_TYPES))
+    # Parameter order matches SQL text order:
+    #   year derived table params → type IN params → author WHERE param
+    all_params = (
+        *year_join_params,
+        *_SEARCHABLE_TYPES,
+        *([author_param] if author_param is not None else []),
+    )
 
     if count_only:
         cursor.execute(f"""
             SELECT COUNT(*) AS cnt FROM (
-                SELECT t.title_id
+                SELECT DISTINCT t.title_id
                 FROM titles t
-                LEFT JOIN pub_content pc ON pc.title_id = t.title_id
-                LEFT JOIN pubs p         ON p.pub_id    = pc.pub_id
+                {year_join_sql}
+                {author_join_sql}
                 WHERE t.title_ttype IN ({type_placeholders})
-                {where_sql}
-                GROUP BY t.title_id
-                {having_sql}
+                {author_where_sql}
             ) sub
-        """, (*_SEARCHABLE_TYPES, *where_params, *having_params))
-        row = cursor.fetchone()
-        return (row["cnt"] if row else 0), []
+        """, all_params)
+        result = cursor.fetchone()
+        return (result["cnt"] if result else 0), []
 
+    # Step 1: fast title_id filter — starts from pubs for year, JOIN for author
+    cursor.execute(f"""
+        SELECT DISTINCT t.title_id
+        FROM titles t
+        {year_join_sql}
+        {author_join_sql}
+        WHERE t.title_ttype IN ({type_placeholders})
+        {author_where_sql}
+        LIMIT {limit}
+    """, all_params)
+    title_ids = [r["title_id"] for r in cursor.fetchall()]
+
+    if not title_ids:
+        return 0, []
+
+    # Step 2: fetch display data only for the matched ids (at most `limit` rows)
+    id_placeholders = ", ".join(["%s"] * len(title_ids))
     cursor.execute(f"""
         SELECT
             t.title_id,
@@ -1580,19 +1653,16 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
         LEFT JOIN authors a           ON a.author_id  = ca.author_id
         LEFT JOIN pub_content pc      ON pc.title_id  = t.title_id
         LEFT JOIN pubs p              ON p.pub_id     = pc.pub_id
-        WHERE t.title_ttype IN ({type_placeholders})
-        {where_sql}
+        WHERE t.title_id IN ({id_placeholders})
         GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen
-        {having_sql}
         ORDER BY t.title_title, first_year
-        LIMIT {limit}
-    """, (*_SEARCHABLE_TYPES, *where_params, *having_params))
+    """, title_ids)
 
     titles = cursor.fetchall()
-    for row in titles:
-        row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
-        row["author_list"] = _make_author_list(row.get("authors"), row.get("author_ids"))
-        row["is_book"]     = row["title_ttype"] in _BOOK_SEARCH_TYPES
+    for title in titles:
+        title["type_label"]  = TITLE_TYPE_LABELS.get(title["title_ttype"], title["title_ttype"] or "")
+        title["author_list"] = _make_author_list(title.get("authors"), title.get("author_ids"))
+        title["is_book"]     = title["title_ttype"] in _BOOK_SEARCH_TYPES
     return len(titles), titles
 
 
