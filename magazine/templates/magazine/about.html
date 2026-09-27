@@ -111,6 +111,66 @@
 
 <hr class="my-4">
 
+<h2 class="h5 mb-3">Understanding the Data</h2>
+
+<p>The ISFDB organizes its records around two central concepts: <em>titles</em> and <em>publications</em>.</p>
+
+<p>A <strong>title</strong> represents a work — a novel, short story, essay, or poem. A <strong>publication</strong> represents a specific edition or appearance of that work: a particular book printing, a magazine issue, or an ebook release. One title can have many publications. The same novel published fifty times has one title record and fifty publication records. When you browse a magazine issue you are looking at a publication; when you click through to a story you reach its title record, which lists every publication that story has appeared in.</p>
+
+<h3 class="h6 mt-4 mb-2">Types of titles</h3>
+
+<p>The database tracks many kinds of records beyond written fiction. The table below shows all the title types and their approximate counts:</p>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header fw-semibold text-bg-light">Included in title search</div>
+      <table class="table table-sm mb-0">
+        <tbody>
+          <tr><td>Short fiction</td><td class="text-end text-muted">747,906</td></tr>
+          <tr><td>Essays</td><td class="text-end text-muted">398,942</td></tr>
+          <tr><td>Novels</td><td class="text-end text-muted">275,008</td></tr>
+          <tr><td>Poems</td><td class="text-end text-muted">148,233</td></tr>
+          <tr><td>Chapbooks</td><td class="text-end text-muted">65,507</td></tr>
+          <tr><td>Collections</td><td class="text-end text-muted">37,137</td></tr>
+          <tr><td>Anthologies</td><td class="text-end text-muted">29,041</td></tr>
+          <tr><td>Serials</td><td class="text-end text-muted">22,665</td></tr>
+          <tr><td>Nonfiction books</td><td class="text-end text-muted">19,485</td></tr>
+          <tr><td>Omnibuses</td><td class="text-end text-muted">15,749</td></tr>
+          <tr class="table-light fw-semibold"><td>Total</td><td class="text-end">1,759,673</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header fw-semibold text-bg-light">Not included in title search</div>
+      <table class="table table-sm mb-0">
+        <tbody>
+          <tr><td>Interior artwork</td><td class="text-end text-muted">323,773</td></tr>
+          <tr><td>Cover artwork</td><td class="text-end text-muted">274,374</td></tr>
+          <tr><td>Reviews</td><td class="text-end text-muted">149,306</td></tr>
+          <tr><td>Editor credits</td><td class="text-end text-muted">23,429</td></tr>
+          <tr><td>Interviews</td><td class="text-end text-muted">17,959</td></tr>
+          <tr class="table-light fw-semibold"><td>Total</td><td class="text-end">788,841</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<p>The title search and advanced search on this site cover the ten content types in the left column — the works that readers seek out. Art credits, reviews, interviews, and editor records are part of the bibliographic record but are not included in search results. This is why the count returned by a broad title search (about 1.76 million) is lower than the total shown in the stats above (about 2.55 million).</p>
+
+<h3 class="h6 mt-4 mb-2">Languages</h3>
+
+<p>Titles are recorded in their original language. The database covers works in 136 languages, though English makes up the large majority (about 1.93 million titles). You can narrow any title search to a specific language using the Language filter in the <a href="{% url 'title_advanced_search' %}">advanced title search</a>.</p>
+
+<h3 class="h6 mt-4 mb-2">"First published" dates</h3>
+
+<p>The "First published" year shown in search results is the year of the earliest publication of that title recorded in the ISFDB — not necessarily the actual publication date. For well-documented works these match, but older or less widely covered titles may show a later date if earlier editions haven't been catalogued yet.</p>
+
+<hr class="my-4">
+
 <h2 class="h5 mb-3">About This Project</h2>
 
 <p>This web site is a hobby project that combines two things that I have enjoyed for most of my life: Science Fiction and Computer Programming. I started programming (in Fortran II) 60 years ago, and started reading Science Fiction more like 70 years ago.</p>
