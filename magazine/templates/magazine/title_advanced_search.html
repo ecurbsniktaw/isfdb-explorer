@@ -81,6 +81,7 @@
               <th>Title</th>
               <th>Type</th>
               <th>Author(s)</th>
+              <th>Language</th>
               <th>First published</th>
             </tr>
           </thead>
@@ -100,6 +101,7 @@
                   {% if a.id %}<a href="{% url 'author_detail' a.id %}">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}{% if not forloop.last %} &amp; {% endif %}
                 {% endfor %}
               </td>
+              <td class="text-nowrap text-muted small">{{ t.lang_name|default:"" }}</td>
               <td class="text-nowrap">{{ t.first_year|default:"—" }}</td>
             </tr>
             {% endfor %}

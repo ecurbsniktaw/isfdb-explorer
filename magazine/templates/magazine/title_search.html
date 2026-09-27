@@ -256,10 +256,11 @@
       <table class="table table-sm table-hover toc-table">
         <thead class="table-light">
           <tr>
-            <th style="width:35%">Title</th>
-            <th style="width:30%">Author(s)</th>
+            <th style="width:32%">Title</th>
+            <th style="width:28%">Author(s)</th>
             <th style="width:10%">Type</th>
             <th style="width:10%">Length</th>
+            <th style="width:10%">Language</th>
             <th style="width:10%">Year</th>
           </tr>
         </thead>
@@ -281,6 +282,7 @@
             </td>
             <td class="text-muted small">{{ t.type_label }}</td>
             <td class="text-muted small">{{ t.length_label }}</td>
+            <td class="text-muted small">{{ t.lang_name|default:"" }}</td>
             <td class="text-muted small">{{ t.first_year|default:"" }}</td>
           </tr>
           {% endfor %}

@@ -1443,6 +1443,7 @@ def find_titles(cursor, title: str, match_type: str = "exact",
             t.title_title,
             t.title_ttype,
             t.title_storylen,
+            l.lang_name,
             MIN(YEAR(p.pub_year)) AS first_year,
             GROUP_CONCAT(
                 DISTINCT a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & '
@@ -1451,14 +1452,15 @@ def find_titles(cursor, title: str, match_type: str = "exact",
                 DISTINCT a.author_id ORDER BY ca.ca_id SEPARATOR ','
             ) AS author_ids
         FROM titles t
-        LEFT JOIN canonical_author ca ON ca.title_id  = t.title_id
+        LEFT JOIN languages l         ON l.lang_id     = t.title_language
+        LEFT JOIN canonical_author ca ON ca.title_id   = t.title_id
         LEFT JOIN authors a           ON a.author_id   = ca.author_id
         LEFT JOIN pub_content pc      ON pc.title_id   = t.title_id
         LEFT JOIN pubs p              ON p.pub_id      = pc.pub_id
                                      AND YEAR(p.pub_year) > 0
         WHERE {title_clause}
           AND t.title_ttype IN ({type_placeholders}){extra_where}
-        GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen
+        GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen, l.lang_name
         ORDER BY t.title_title, first_year
         LIMIT 200
     """
@@ -1794,6 +1796,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
             t.title_title,
             t.title_ttype,
             t.title_storylen,
+            l.lang_name,
             MIN(CASE WHEN YEAR(p.pub_year) > 0 THEN YEAR(p.pub_year) END) AS first_year,
             GROUP_CONCAT(
                 DISTINCT a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & '
@@ -1802,12 +1805,13 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
                 DISTINCT a.author_id ORDER BY ca.ca_id SEPARATOR ','
             ) AS author_ids
         FROM titles t
-        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
-        LEFT JOIN authors a           ON a.author_id  = ca.author_id
-        LEFT JOIN pub_content pc      ON pc.title_id  = t.title_id
-        LEFT JOIN pubs p              ON p.pub_id     = pc.pub_id
+        LEFT JOIN languages l         ON l.lang_id    = t.title_language
+        LEFT JOIN canonical_author ca ON ca.title_id  = t.title_id
+        LEFT JOIN authors a           ON a.author_id   = ca.author_id
+        LEFT JOIN pub_content pc      ON pc.title_id   = t.title_id
+        LEFT JOIN pubs p              ON p.pub_id      = pc.pub_id
         WHERE t.title_id IN ({id_placeholders})
-        GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen
+        GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen, l.lang_name
         ORDER BY t.title_title, first_year
     """, title_ids)
 
