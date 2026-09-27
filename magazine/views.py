@@ -799,7 +799,7 @@ def title_search(request):
     content_type = request.GET.get("content_type", "all")
     title_type   = request.GET.get("title_type", "").strip().upper()
     length       = request.GET.get("length", "").strip()
-    language     = request.GET.get("language", "17").strip()
+    language     = request.GET.get("language", "").strip()
     juvenile     = bool(request.GET.get("juvenile"))
     novelization = bool(request.GET.get("novelization"))
     non_genre    = bool(request.GET.get("non_genre"))
@@ -808,11 +808,11 @@ def title_search(request):
     if content_type not in ("all", "book", "fiction"):   content_type = "all"
     if title_type   not in _VALID_TITLE_TYPES:           title_type   = ""
     if length       not in ("novelette", "novella", "short story"): length = ""
-    lang_id = int(language) if language.isdigit() else 17
+    lang_id = int(language) if language.isdigit() else 0  # 0 = any language
 
     context = {
         "query": query, "content_type": content_type,
-        "title_type": title_type, "length": length, "language": str(lang_id),
+        "title_type": title_type, "length": length, "language": language,
         "juvenile": juvenile, "novelization": novelization,
         "non_genre": non_genre, "graphic": graphic,
     }

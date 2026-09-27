@@ -28,12 +28,12 @@
          data-bs-toggle="collapse"
          href="#tsMoreOptions"
          role="button"
-         aria-expanded="{% if title_type or length or language != '17' or juvenile or novelization or non_genre or graphic %}true{% else %}false{% endif %}"
+         aria-expanded="{% if title_type or length or language or juvenile or novelization or non_genre or graphic %}true{% else %}false{% endif %}"
          aria-controls="tsMoreOptions">
-        More options <i class="bi bi-chevron-{% if title_type or length or language != '17' or juvenile or novelization or non_genre or graphic %}up{% else %}down{% endif %}" id="tsMoreOptionsChevron"></i>
+        More options <i class="bi bi-chevron-{% if title_type or length or language or juvenile or novelization or non_genre or graphic %}up{% else %}down{% endif %}" id="tsMoreOptionsChevron"></i>
       </a>
     </div>
-    <div class="{% if title_type or length or language != '17' or juvenile or novelization or non_genre or graphic %}show{% endif %} collapse mt-3" id="tsMoreOptions">
+    <div class="{% if title_type or length or language or juvenile or novelization or non_genre or graphic %}show{% endif %} collapse mt-3" id="tsMoreOptions">
       <div class="row g-3 mb-3">
         <div class="col-auto">
           <label for="ts-type" class="form-label fw-semibold small mb-1">Title Type</label>
@@ -68,6 +68,7 @@
         <div class="col-auto">
           <label for="ts-lang" class="form-label fw-semibold small mb-1">Language</label>
           <select class="form-select form-select-sm" id="ts-lang" name="language">
+            <option value=""    {% if not language       %}selected{% endif %}>Any</option>
             <option value="17"  {% if language == "17"  %}selected{% endif %}>English</option>
             <option value="1"   {% if language == "1"   %}selected{% endif %}>Afrikaans</option>
             <option value="105" {% if language == "105" %}selected{% endif %}>Akkadian</option>
