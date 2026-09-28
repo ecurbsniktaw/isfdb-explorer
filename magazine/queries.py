@@ -1479,6 +1479,13 @@ ADV_AUTHOR_OPS = {"equals", "starts_with", "ends_with"}
 ADV_TITLE_OPS  = {"equals", "starts_with", "ends_with", "contains"}
 ADV_YEAR_OPS   = {"before", "exactly", "after"}
 
+_SEARCHABLE_TYPE_SET = set(_SEARCHABLE_TYPES)
+ADV_SEARCHABLE_TYPES = sorted(
+    [{"type_id": k, "label": v} for k, v in TITLE_TYPE_LABELS.items()
+     if k in _SEARCHABLE_TYPE_SET],
+    key=lambda x: x["label"],
+)
+
 TITLE_LANGUAGES = [
     {"lang_id": "1",   "lang_name": "Afrikaans"},
     {"lang_id": "105", "lang_name": "Akkadian"},
@@ -1705,9 +1712,11 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
 
     Returns (count, titles).  count_only=True returns (n, []) without rows.
     """
-    title_where_sql  = ""
-    title_param      = None
-    author_join_sql  = ""
+    title_where_sql      = ""
+    title_param          = None
+    type_filter_sql      = ""
+    type_filter_param    = None
+    author_join_sql      = ""
     author_where_sql = ""
     author_param     = None
     year_join_sql    = ""
@@ -1728,6 +1737,11 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
             continue
 
         if op == "is_anything" or not val:
+            continue
+
+        if field == "type" and op in _SEARCHABLE_TYPE_SET:
+            type_filter_sql   = "AND t.title_ttype = %s"
+            type_filter_param = op
             continue
 
         if field == "title" and op in ADV_TITLE_OPS:
@@ -1768,13 +1782,14 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
 
     type_placeholders = ", ".join(["%s"] * len(_SEARCHABLE_TYPES))
     # Parameter order matches SQL text order:
-    #   year derived table params → type IN params → title/author/lang WHERE params
+    #   year derived table params → type IN params → title/type/author/lang WHERE params
     all_params = (
         *year_join_params,
         *_SEARCHABLE_TYPES,
-        *([title_param]  if title_param  is not None else []),
-        *([author_param] if author_param is not None else []),
-        *([lang_param]   if lang_param   is not None else []),
+        *([title_param]       if title_param       is not None else []),
+        *([type_filter_param] if type_filter_param is not None else []),
+        *([author_param]      if author_param      is not None else []),
+        *([lang_param]        if lang_param        is not None else []),
     )
 
     if count_only:
@@ -1786,6 +1801,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
                 {author_join_sql}
                 WHERE t.title_ttype IN ({type_placeholders})
                 {title_where_sql}
+                {type_filter_sql}
                 {author_where_sql}
                 {lang_where_sql}
             ) sub
@@ -1801,6 +1817,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
         {author_join_sql}
         WHERE t.title_ttype IN ({type_placeholders})
         {title_where_sql}
+        {type_filter_sql}
         {author_where_sql}
         {lang_where_sql}
         LIMIT {limit}

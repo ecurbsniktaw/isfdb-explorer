@@ -621,6 +621,7 @@
                 <option value="language" selected>Language</option>
                 <option value="title">Title</option>
                 <option value="author">Author</option>
+                <option value="type">Type</option>
                 <option value="year">Year published</option>
               </select>
             </div>
@@ -641,6 +642,7 @@
                 <option value="language">Language</option>
                 <option value="title" selected>Title</option>
                 <option value="author">Author</option>
+                <option value="type">Type</option>
                 <option value="year">Year published</option>
               </select>
             </div>
@@ -663,6 +665,7 @@
                 <option value="language">Language</option>
                 <option value="title">Title</option>
                 <option value="author" selected>Author</option>
+                <option value="type">Type</option>
                 <option value="year">Year published</option>
               </select>
             </div>
@@ -684,11 +687,32 @@
                 <option value="language">Language</option>
                 <option value="title">Title</option>
                 <option value="author">Author</option>
-                <option value="year" selected>Year published</option>
+                <option value="type" selected>Type</option>
+                <option value="year">Year published</option>
               </select>
             </div>
             <div class="col-auto">
               <select name="op4" class="form-select adv-op" id="adv-op4">
+                <option value="is_anything" selected>is anything</option>
+                {% for t in searchable_types %}<option value="{{ t.type_id }}">{{ t.label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col adv-val-wrap" style="display:none;">
+              <input type="text" name="val4" class="form-control adv-val" placeholder="enter value…" disabled>
+            </div>
+          </div>
+          <div class="row g-2 align-items-center mb-3 adv-row">
+            <div class="col-auto">
+              <select name="field5" class="form-select adv-field" data-row="5">
+                <option value="language">Language</option>
+                <option value="title">Title</option>
+                <option value="author">Author</option>
+                <option value="type">Type</option>
+                <option value="year" selected>Year published</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <select name="op5" class="form-select adv-op" id="adv-op5">
                 <option value="is_anything" selected>is anything</option>
                 <option value="before">is before</option>
                 <option value="exactly">is exactly</option>
@@ -696,7 +720,7 @@
               </select>
             </div>
             <div class="col adv-val-wrap">
-              <input type="text" name="val4" class="form-control adv-val" placeholder="enter value…" disabled>
+              <input type="text" name="val5" class="form-control adv-val" placeholder="enter value…" disabled>
             </div>
           </div>
         </div>
@@ -713,6 +737,11 @@
 <script>
 (function () {
   var anythingOp = {value: 'is_anything', label: 'is anything'};
+  var typeOps = [
+    anythingOp,
+    {% for t in searchable_types %}{value: '{{ t.type_id }}', label: '{{ t.label }}'},
+    {% endfor %}
+  ];
   var titleOps = [
     anythingOp,
     {value: 'equals',      label: 'equals'},
@@ -745,6 +774,8 @@
     var ops;
     if (fieldSel.value === 'language') {
       ops = langOps;
+    } else if (fieldSel.value === 'type') {
+      ops = typeOps;
     } else if (fieldSel.value === 'year') {
       ops = yearOps;
     } else if (fieldSel.value === 'title') {
@@ -762,9 +793,10 @@
     var rowEl   = opSel.closest('.adv-row');
     var valWrap = rowEl ? rowEl.querySelector('.adv-val-wrap') : null;
     if (!valWrap) return;
-    var fieldSel = rowEl.querySelector('.adv-field');
-    var isLang   = fieldSel && fieldSel.value === 'language';
-    if (isLang) {
+    var fieldSel  = rowEl.querySelector('.adv-field');
+    var fieldVal  = fieldSel ? fieldSel.value : '';
+    var isNoInput = fieldVal === 'language' || fieldVal === 'type';
+    if (isNoInput) {
       valWrap.style.display = 'none';
       var valEl = valWrap.querySelector('.adv-val');
       if (valEl) { valEl.disabled = true; valEl.value = ''; }

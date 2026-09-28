@@ -45,7 +45,8 @@ from .queries import (
     get_publisher_detail, get_publisher_books_by_year,
     get_publisher_books_by_author, get_publisher_all_authors,
     format_date, NARRATIVE_TYPES,
-    advanced_search_titles, ADV_AUTHOR_OPS, ADV_TITLE_OPS, ADV_YEAR_OPS, TITLE_LANGUAGES,
+    advanced_search_titles, ADV_AUTHOR_OPS, ADV_TITLE_OPS, ADV_YEAR_OPS,
+    ADV_SEARCHABLE_TYPES, TITLE_LANGUAGES,
 )
 from .collection_queries import (
     get_collection_status, toggle_collection_item, get_full_collection,
@@ -782,8 +783,9 @@ def random_item(request, kind):
 def title_list(request):
     """Titles landing page with search form and selected title cards."""
     return render(request, "magazine/title_list.html", {
-        "db_stats":  django_settings.DB_STATS,
-        "languages": TITLE_LANGUAGES,
+        "db_stats":         django_settings.DB_STATS,
+        "languages":        TITLE_LANGUAGES,
+        "searchable_types": ADV_SEARCHABLE_TYPES,
     })
 
 
@@ -833,13 +835,15 @@ def title_search(request):
 
 def title_advanced_search(request):
     """Advanced title search: filter by language, author, and/or year published."""
-    _VALID_FIELDS   = {"title", "author", "year", "language"}
-    _VALID_OPS      = ADV_TITLE_OPS | ADV_AUTHOR_OPS | ADV_YEAR_OPS | {"is_anything"}
-    _FIELD_DEFAULTS = {1: "language", 2: "title", 3: "author", 4: "year"}
-    _OP_DEFAULTS    = {1: "any", 2: "is_anything", 3: "is_anything", 4: "is_anything"}
+    _VALID_FIELDS      = {"title", "author", "year", "language", "type"}
+    _VALID_OPS         = ADV_TITLE_OPS | ADV_AUTHOR_OPS | ADV_YEAR_OPS | {"is_anything"}
+    _VALID_TYPES       = {t["type_id"] for t in ADV_SEARCHABLE_TYPES}
+    _FIELD_DEFAULTS    = {1: "language", 2: "title", 3: "author", 4: "type", 5: "year"}
+    _OP_DEFAULTS       = {1: "any", 2: "is_anything", 3: "is_anything",
+                          4: "is_anything", 5: "is_anything"}
 
     rows = []
-    for i in (1, 2, 3, 4):
+    for i in (1, 2, 3, 4, 5):
         field = request.GET.get(f"field{i}", _FIELD_DEFAULTS[i])
         op    = request.GET.get(f"op{i}", _OP_DEFAULTS[i])
         val   = request.GET.get(f"val{i}", "").strip()
@@ -848,6 +852,9 @@ def title_advanced_search(request):
         if field == "language":
             if op != "any" and not op.isdigit():
                 op = "any"
+        elif field == "type":
+            if op != "is_anything" and op not in _VALID_TYPES:
+                op = "is_anything"
         else:
             if op not in _VALID_OPS:
                 op = "is_anything"
@@ -869,12 +876,13 @@ def title_advanced_search(request):
             cursor.close()
 
     return render(request, "magazine/title_advanced_search.html", {
-        "rows":      rows,
-        "action":    action,
-        "submitted": submitted,
-        "count":     count,
-        "titles":    titles,
-        "languages": TITLE_LANGUAGES,
+        "rows":             rows,
+        "action":           action,
+        "submitted":        submitted,
+        "count":            count,
+        "titles":           titles,
+        "languages":        TITLE_LANGUAGES,
+        "searchable_types": ADV_SEARCHABLE_TYPES,
     })
 
 
