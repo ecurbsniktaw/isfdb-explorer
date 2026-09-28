@@ -45,7 +45,7 @@ from .queries import (
     get_publisher_detail, get_publisher_books_by_year,
     get_publisher_books_by_author, get_publisher_all_authors,
     format_date, NARRATIVE_TYPES,
-    advanced_search_titles, ADV_AUTHOR_OPS, ADV_YEAR_OPS, TITLE_LANGUAGES,
+    advanced_search_titles, ADV_AUTHOR_OPS, ADV_TITLE_OPS, ADV_YEAR_OPS, TITLE_LANGUAGES,
 )
 from .collection_queries import (
     get_collection_status, toggle_collection_item, get_full_collection,
@@ -833,9 +833,9 @@ def title_search(request):
 
 def title_advanced_search(request):
     """Advanced title search: filter by language, author, and/or year published."""
-    _VALID_FIELDS   = {"author", "year", "language"}
-    _VALID_OPS      = ADV_AUTHOR_OPS | ADV_YEAR_OPS | {"is_anything"}
-    _FIELD_DEFAULTS = {1: "language", 2: "author", 3: "year"}
+    _VALID_FIELDS   = {"title", "author", "year", "language"}
+    _VALID_OPS      = ADV_TITLE_OPS | ADV_AUTHOR_OPS | ADV_YEAR_OPS | {"is_anything"}
+    _FIELD_DEFAULTS = {1: "language", 2: "title", 3: "author"}
     _OP_DEFAULTS    = {1: "any", 2: "is_anything", 3: "is_anything"}
 
     rows = []

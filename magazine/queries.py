@@ -1476,6 +1476,7 @@ def find_titles(cursor, title: str, match_type: str = "exact",
 
 # Valid operators for the advanced title search form
 ADV_AUTHOR_OPS = {"equals", "starts_with", "ends_with"}
+ADV_TITLE_OPS  = {"equals", "starts_with", "ends_with", "contains"}
 ADV_YEAR_OPS   = {"before", "exactly", "after"}
 
 TITLE_LANGUAGES = [
@@ -1687,8 +1688,9 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
     Advanced title search driven by a list of criterion rows.
 
     Each row is a dict with keys:
-        field — 'author', 'year', or 'language'
-        op    — author:   'equals'|'starts_with'|'ends_with'|'is_anything'
+        field — 'title', 'author', 'year', or 'language'
+        op    — title:    'equals'|'starts_with'|'ends_with'|'contains'|'is_anything'
+                author:   'equals'|'starts_with'|'ends_with'|'is_anything'
                 year:     'before'|'exactly'|'after'|'is_anything'
                 language: 'any' or a lang_id string (e.g. '17' for English)
         val   — value entered by the user (unused for language field)
@@ -1703,6 +1705,8 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
 
     Returns (count, titles).  count_only=True returns (n, []) without rows.
     """
+    title_where_sql  = ""
+    title_param      = None
     author_join_sql  = ""
     author_where_sql = ""
     author_param     = None
@@ -1726,7 +1730,22 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
         if op == "is_anything" or not val:
             continue
 
-        if field == "author" and op in ADV_AUTHOR_OPS:
+        if field == "title" and op in ADV_TITLE_OPS:
+            escaped = val.replace("%", r"\%").replace("_", r"\_")
+            if op == "equals":
+                title_param     = val
+                title_where_sql = "AND t.title_title = %s"
+            elif op == "starts_with":
+                title_param     = escaped + "%"
+                title_where_sql = "AND t.title_title LIKE %s"
+            elif op == "ends_with":
+                title_param     = "%" + escaped
+                title_where_sql = "AND t.title_title LIKE %s"
+            else:  # contains
+                title_param     = "%" + escaped + "%"
+                title_where_sql = "AND t.title_title LIKE %s"
+
+        elif field == "author" and op in ADV_AUTHOR_OPS:
             # Join to canonical_author + authors so MySQL can hit the canonical
             # index on author_canonical.  author_canonical uses latin1_swedish_ci
             # (case-insensitive), so no LOWER() wrapper is needed — wrapping it
@@ -1749,10 +1768,11 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
 
     type_placeholders = ", ".join(["%s"] * len(_SEARCHABLE_TYPES))
     # Parameter order matches SQL text order:
-    #   year derived table params → type IN params → author WHERE param → lang WHERE param
+    #   year derived table params → type IN params → title/author/lang WHERE params
     all_params = (
         *year_join_params,
         *_SEARCHABLE_TYPES,
+        *([title_param]  if title_param  is not None else []),
         *([author_param] if author_param is not None else []),
         *([lang_param]   if lang_param   is not None else []),
     )
@@ -1765,6 +1785,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
                 {year_join_sql}
                 {author_join_sql}
                 WHERE t.title_ttype IN ({type_placeholders})
+                {title_where_sql}
                 {author_where_sql}
                 {lang_where_sql}
             ) sub
@@ -1779,6 +1800,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
         {year_join_sql}
         {author_join_sql}
         WHERE t.title_ttype IN ({type_placeholders})
+        {title_where_sql}
         {author_where_sql}
         {lang_where_sql}
         LIMIT {limit}

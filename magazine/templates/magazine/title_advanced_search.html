@@ -22,6 +22,7 @@
         <div class="col-auto">
           <select name="field{{ forloop.counter }}" class="form-select adv-field" data-row="{{ forloop.counter }}">
             <option value="language" {% if row.field == "language" %}selected{% endif %}>Language</option>
+            <option value="title"    {% if row.field == "title"    %}selected{% endif %}>Title</option>
             <option value="author"   {% if row.field == "author"   %}selected{% endif %}>Author</option>
             <option value="year"     {% if row.field == "year"     %}selected{% endif %}>Year published</option>
           </select>
@@ -40,6 +41,11 @@
               <option value="before"  {% if row.op == "before"  %}selected{% endif %}>is before</option>
               <option value="exactly" {% if row.op == "exactly" %}selected{% endif %}>is exactly</option>
               <option value="after"   {% if row.op == "after"   %}selected{% endif %}>is after</option>
+            {% elif row.field == "title" %}
+              <option value="equals"      {% if row.op == "equals"      %}selected{% endif %}>equals</option>
+              <option value="starts_with" {% if row.op == "starts_with" %}selected{% endif %}>starts with</option>
+              <option value="ends_with"   {% if row.op == "ends_with"   %}selected{% endif %}>ends with</option>
+              <option value="contains"    {% if row.op == "contains"    %}selected{% endif %}>contains</option>
             {% else %}
               <option value="equals"      {% if row.op == "equals"      %}selected{% endif %}>equals</option>
               <option value="starts_with" {% if row.op == "starts_with" %}selected{% endif %}>starts with</option>
@@ -117,6 +123,13 @@
 <script>
 (function () {
   var anythingOp = {value: 'is_anything', label: 'is anything'};
+  var titleOps = [
+    anythingOp,
+    {value: 'equals',      label: 'equals'},
+    {value: 'starts_with', label: 'starts with'},
+    {value: 'ends_with',   label: 'ends with'},
+    {value: 'contains',    label: 'contains'},
+  ];
   var authorOps = [
     anythingOp,
     {value: 'equals',      label: 'equals'},
@@ -144,6 +157,8 @@
       ops = langOps;
     } else if (fieldSel.value === 'year') {
       ops = yearOps;
+    } else if (fieldSel.value === 'title') {
+      ops = titleOps;
     } else {
       ops = authorOps;
     }

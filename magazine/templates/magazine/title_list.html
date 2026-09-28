@@ -619,6 +619,7 @@
             <div class="col-auto">
               <select name="field1" class="form-select adv-field" data-row="1">
                 <option value="language" selected>Language</option>
+                <option value="title">Title</option>
                 <option value="author">Author</option>
                 <option value="year">Year published</option>
               </select>
@@ -638,7 +639,8 @@
             <div class="col-auto">
               <select name="field2" class="form-select adv-field" data-row="2">
                 <option value="language">Language</option>
-                <option value="author" selected>Author</option>
+                <option value="title" selected>Title</option>
+                <option value="author">Author</option>
                 <option value="year">Year published</option>
               </select>
             </div>
@@ -648,6 +650,7 @@
                 <option value="equals">equals</option>
                 <option value="starts_with">starts with</option>
                 <option value="ends_with">ends with</option>
+                <option value="contains">contains</option>
               </select>
             </div>
             <div class="col adv-val-wrap">
@@ -658,8 +661,9 @@
             <div class="col-auto">
               <select name="field3" class="form-select adv-field" data-row="3">
                 <option value="language">Language</option>
-                <option value="author">Author</option>
-                <option value="year" selected>Year published</option>
+                <option value="title">Title</option>
+                <option value="author" selected>Author</option>
+                <option value="year">Year published</option>
               </select>
             </div>
             <div class="col-auto">
@@ -688,6 +692,13 @@
 <script>
 (function () {
   var anythingOp = {value: 'is_anything', label: 'is anything'};
+  var titleOps = [
+    anythingOp,
+    {value: 'equals',      label: 'equals'},
+    {value: 'starts_with', label: 'starts with'},
+    {value: 'ends_with',   label: 'ends with'},
+    {value: 'contains',    label: 'contains'},
+  ];
   var authorOps = [
     anythingOp,
     {value: 'equals',      label: 'equals'},
@@ -715,6 +726,8 @@
       ops = langOps;
     } else if (fieldSel.value === 'year') {
       ops = yearOps;
+    } else if (fieldSel.value === 'title') {
+      ops = titleOps;
     } else {
       ops = authorOps;
     }
