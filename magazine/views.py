@@ -835,11 +835,11 @@ def title_advanced_search(request):
     """Advanced title search: filter by language, author, and/or year published."""
     _VALID_FIELDS   = {"title", "author", "year", "language"}
     _VALID_OPS      = ADV_TITLE_OPS | ADV_AUTHOR_OPS | ADV_YEAR_OPS | {"is_anything"}
-    _FIELD_DEFAULTS = {1: "language", 2: "title", 3: "author"}
-    _OP_DEFAULTS    = {1: "any", 2: "is_anything", 3: "is_anything"}
+    _FIELD_DEFAULTS = {1: "language", 2: "title", 3: "author", 4: "year"}
+    _OP_DEFAULTS    = {1: "any", 2: "is_anything", 3: "is_anything", 4: "is_anything"}
 
     rows = []
-    for i in (1, 2, 3):
+    for i in (1, 2, 3, 4):
         field = request.GET.get(f"field{i}", _FIELD_DEFAULTS[i])
         op    = request.GET.get(f"op{i}", _OP_DEFAULTS[i])
         val   = request.GET.get(f"val{i}", "").strip()

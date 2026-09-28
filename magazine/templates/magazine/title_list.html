@@ -669,13 +669,34 @@
             <div class="col-auto">
               <select name="op3" class="form-select adv-op" id="adv-op3">
                 <option value="is_anything" selected>is anything</option>
+                <option value="equals">equals</option>
+                <option value="starts_with">starts with</option>
+                <option value="ends_with">ends with</option>
+              </select>
+            </div>
+            <div class="col adv-val-wrap">
+              <input type="text" name="val3" class="form-control adv-val" placeholder="enter value…" disabled>
+            </div>
+          </div>
+          <div class="row g-2 align-items-center mb-3 adv-row">
+            <div class="col-auto">
+              <select name="field4" class="form-select adv-field" data-row="4">
+                <option value="language">Language</option>
+                <option value="title">Title</option>
+                <option value="author">Author</option>
+                <option value="year" selected>Year published</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <select name="op4" class="form-select adv-op" id="adv-op4">
+                <option value="is_anything" selected>is anything</option>
                 <option value="before">is before</option>
                 <option value="exactly">is exactly</option>
                 <option value="after">is after</option>
               </select>
             </div>
             <div class="col adv-val-wrap">
-              <input type="text" name="val3" class="form-control adv-val" placeholder="enter value…" disabled>
+              <input type="text" name="val4" class="form-control adv-val" placeholder="enter value…" disabled>
             </div>
           </div>
         </div>
