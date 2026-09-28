@@ -1736,12 +1736,13 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
             lang_param     = int(op)
             continue
 
-        if op == "is_anything" or not val:
+        if field == "type":
+            if op in _SEARCHABLE_TYPE_SET:
+                type_filter_sql   = "AND t.title_ttype = %s"
+                type_filter_param = op
             continue
 
-        if field == "type" and op in _SEARCHABLE_TYPE_SET:
-            type_filter_sql   = "AND t.title_ttype = %s"
-            type_filter_param = op
+        if op == "is_anything" or not val:
             continue
 
         if field == "title" and op in ADV_TITLE_OPS:
