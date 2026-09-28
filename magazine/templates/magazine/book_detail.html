@@ -188,8 +188,8 @@
         <div id="notesPanel" class="accordion-collapse collapse"
              data-bs-parent="#notesAccordion">
           <div class="accordion-body px-2 pt-2">
-            {% if book.title_note %}<p class="mb-2">{{ book.title_note|safe }}</p>{% endif %}
-            {% if book.pub_note %}<p class="mb-0 text-muted small">{{ book.pub_note|safe }}</p>{% endif %}
+            {% if book.title_note %}<p class="mb-2">{{ book.title_note|expand_templates|safe }}</p>{% endif %}
+            {% if book.pub_note %}<p class="mb-0 text-muted small">{{ book.pub_note|expand_templates|safe }}</p>{% endif %}
           </div>
         </div>
       </div>

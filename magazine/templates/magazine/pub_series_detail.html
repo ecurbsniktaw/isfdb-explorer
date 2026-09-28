@@ -20,7 +20,7 @@
   {% if pub_series.pub_series_note or pub_series.webpages %}
   <div class="col-lg-8">
     {% if pub_series.pub_series_note %}
-    <div class="text-muted mb-3">{{ pub_series.pub_series_note|safe }}</div>
+    <div class="text-muted mb-3">{{ pub_series.pub_series_note|expand_templates|safe }}</div>
     {% endif %}
     {% if pub_series.webpages %}
     <div class="d-flex flex-wrap gap-2">

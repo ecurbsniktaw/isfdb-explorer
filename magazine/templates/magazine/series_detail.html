@@ -24,7 +24,7 @@
   {% if series.series_note or series.webpages %}
   <div class="col-lg-8">
     {% if series.series_note %}
-    <div class="text-muted mb-3">{{ series.series_note|safe }}</div>
+    <div class="text-muted mb-3">{{ series.series_note|expand_templates|safe }}</div>
     {% endif %}
     {% if series.webpages %}
     <div class="d-flex flex-wrap gap-2">

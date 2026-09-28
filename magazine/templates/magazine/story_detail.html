@@ -135,7 +135,7 @@
         </h2>
         <div id="notesPanel" class="accordion-collapse collapse"
              data-bs-parent="#notesAccordion">
-          <div class="accordion-body px-2 pt-1">{{ story.title_note|safe }}</div>
+          <div class="accordion-body px-2 pt-1">{{ story.title_note|expand_templates|safe }}</div>
         </div>
       </div>
     </div>
