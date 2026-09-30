@@ -864,14 +864,25 @@ def title_advanced_search(request):
     if action not in ("find", "count"):
         action = "find"
 
+    has_synopsis  = bool(request.GET.get("has_synopsis"))
+    on_archive    = bool(request.GET.get("on_archive"))
+    has_cover     = bool(request.GET.get("has_cover"))
+    has_wikipedia = bool(request.GET.get("has_wikipedia"))
+
     submitted = "action" in request.GET
     count, titles = 0, []
     if submitted:
         cursor = _dict_cursor()
         try:
-            count, titles = advanced_search_titles(cursor, rows,
-                                                   limit=500,
-                                                   count_only=(action == "count"))
+            count, titles = advanced_search_titles(
+                cursor, rows,
+                limit=500,
+                count_only=(action == "count"),
+                has_synopsis=has_synopsis,
+                on_archive=on_archive,
+                has_cover=has_cover,
+                has_wikipedia=has_wikipedia,
+            )
         finally:
             cursor.close()
 
@@ -883,6 +894,10 @@ def title_advanced_search(request):
         "titles":           titles,
         "languages":        TITLE_LANGUAGES,
         "searchable_types": ADV_SEARCHABLE_TYPES,
+        "has_synopsis":     has_synopsis,
+        "on_archive":       on_archive,
+        "has_cover":        has_cover,
+        "has_wikipedia":    has_wikipedia,
     })
 
 

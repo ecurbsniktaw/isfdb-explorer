@@ -1690,20 +1690,29 @@ def _year_join_sql_and_params(op, yr):
         )
 
 
-def advanced_search_titles(cursor, rows, limit=500, count_only=False):
+def advanced_search_titles(cursor, rows, limit=500, count_only=False,
+                           has_synopsis=False, on_archive=False,
+                           has_cover=False, has_wikipedia=False):
     """
     Advanced title search driven by a list of criterion rows.
 
     Each row is a dict with keys:
-        field — 'title', 'author', 'year', or 'language'
+        field — 'title', 'author', 'year', 'language', or 'type'
         op    — title:    'equals'|'starts_with'|'ends_with'|'contains'|'is_anything'
                 author:   'equals'|'starts_with'|'ends_with'|'is_anything'
                 year:     'before'|'exactly'|'after'|'is_anything'
                 language: 'any' or a lang_id string (e.g. '17' for English)
-        val   — value entered by the user (unused for language field)
+                type:     'is_anything' or a title_ttype string (e.g. 'NOVEL')
+        val   — value entered by the user (unused for language/type fields)
 
-    Rows with op='is_anything'/'any' or blank val (except language) are skipped.
+    Rows with op='is_anything'/'any' or blank val (except language/type) are skipped.
     Active rows are ANDed together.
+
+    Boolean keyword args add extra WHERE conditions:
+        has_synopsis  — title_synopsis is non-empty
+        on_archive    — at least one webpages row links to archive.org
+        has_cover     — at least one publication has a cover image (pub_frontimage)
+        has_wikipedia — at least one webpages row links to Wikipedia
 
     Year conditions use a pubs-first derived table so the indexed pub_year
     column is hit with a range scan rather than scanning all titles.
@@ -1781,6 +1790,12 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
         elif field == "year" and op in ADV_YEAR_OPS and val.isdigit():
             year_join_sql, year_join_params = _year_join_sql_and_params(op, int(val))
 
+    # Checkbox conditions (no extra params — literals embedded in SQL)
+    synopsis_sql   = "AND (t.title_synopsis IS NOT NULL AND t.title_synopsis != '')" if has_synopsis  else ""
+    archive_sql    = "AND EXISTS (SELECT 1 FROM webpages w WHERE w.title_id = t.title_id AND w.url LIKE '%%archive.org%%')" if on_archive   else ""
+    cover_sql      = "AND EXISTS (SELECT 1 FROM pub_content pc JOIN pubs p ON p.pub_id = pc.pub_id WHERE pc.title_id = t.title_id AND p.pub_frontimage IS NOT NULL AND p.pub_frontimage != '')" if has_cover    else ""
+    wikipedia_sql  = "AND EXISTS (SELECT 1 FROM webpages w WHERE w.title_id = t.title_id AND w.url LIKE '%%wikipedia%%')"    if has_wikipedia else ""
+
     type_placeholders = ", ".join(["%s"] * len(_SEARCHABLE_TYPES))
     # Parameter order matches SQL text order:
     #   year derived table params → type IN params → title/type/author/lang WHERE params
@@ -1805,6 +1820,10 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
                 {type_filter_sql}
                 {author_where_sql}
                 {lang_where_sql}
+                {synopsis_sql}
+                {archive_sql}
+                {cover_sql}
+                {wikipedia_sql}
             ) sub
         """, all_params)
         result = cursor.fetchone()
@@ -1821,6 +1840,10 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False):
         {type_filter_sql}
         {author_where_sql}
         {lang_where_sql}
+        {synopsis_sql}
+        {archive_sql}
+        {cover_sql}
+        {wikipedia_sql}
         LIMIT {limit}
     """, all_params)
     title_ids = [r["title_id"] for r in cursor.fetchall()]
