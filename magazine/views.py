@@ -27,7 +27,8 @@ User = get_user_model()
 from .queries import (
     find_issues, get_issue_meta, get_contents, get_archive_links, get_adjacent_issues,
     get_author_fiction, get_author_detail, get_author_works, get_author_books, get_author_poems,
-    get_book_detail, get_book_editions, get_book_contents, get_book_reviews, get_story_detail, find_titles,
+    get_book_detail, get_book_editions, get_book_contents, get_book_reviews,
+    get_title_tags, get_titles_by_tag, get_story_detail, find_titles,
     get_magazine_issues_by_name, get_magazine_group_info,
     get_all_magazines, get_magazine_issues, search_magazines,
     find_authors, find_artists, get_author_count, get_author_art, author_has_series,
@@ -574,12 +575,13 @@ def book_detail(request, title_id):
         editions   = get_book_editions(cursor, title_id, book["pub_id"])
         contents   = get_book_contents(cursor, book["pub_id"])
         reviews    = get_book_reviews(cursor, title_id)
+        tags       = get_title_tags(cursor, title_id)
         col_status = (get_user_collection_status(cursor, request.user.id, "book", title_id)
                       if request.user.is_authenticated else _NO_COL_STATUS)
     finally:
         cursor.close()
     return render(request, "magazine/book_detail.html", {
-        "book": book, "editions": editions, "contents": contents, "reviews": reviews,
+        "book": book, "editions": editions, "contents": contents, "reviews": reviews, "tags": tags,
         "find_copy_links": _find_copy_links(book),
         "goodreads_url":   _goodreads_url(book),
         "gutenberg_url":   _gutenberg_url(book),
@@ -913,6 +915,22 @@ def story_detail(request, title_id):
     return render(request, "magazine/story_detail.html", {
         "story":         story,
         "gutenberg_url": _gutenberg_url(story),
+    })
+
+
+def tag_detail(request, tag_name):
+    """List all titles tagged with the given tag name."""
+    cursor = _dict_cursor()
+    try:
+        canonical, titles = get_titles_by_tag(cursor, tag_name)
+    finally:
+        cursor.close()
+    if canonical is None:
+        raise Http404(f"No tag found: {tag_name!r}")
+    return render(request, "magazine/tag_detail.html", {
+        "tag_name": canonical,
+        "titles":   titles,
+        "count":    len(titles),
     })
 
 

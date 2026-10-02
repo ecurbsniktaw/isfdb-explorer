@@ -21,6 +21,7 @@ urlpatterns = [
     path("titles/advanced-search/", views.title_advanced_search, name="title_advanced_search"),
     path("book/<int:title_id>/", views.book_detail, name="book_detail"),
     path("story/<int:title_id>/", views.story_detail, name="story_detail"),
+    path("tag/<str:tag_name>/", views.tag_detail, name="tag_detail"),
     path("magazines/", views.magazine_list, name="magazine_list"),
     path("magazines/group/<str:group_slug>/", views.magazine_group, name="magazine_group"),
     path("magazines/browse/", views.magazine_issues_by_name, name="magazine_issues_by_name"),

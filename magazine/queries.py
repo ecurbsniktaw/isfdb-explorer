@@ -1124,6 +1124,18 @@ def get_book_reviews(cursor, title_id: int) -> list:
     return rows
 
 
+def get_title_tags(cursor, title_id: int) -> list:
+    """Return tag names for a title, sorted alphabetically (case-insensitive)."""
+    cursor.execute("""
+        SELECT t.tag_name
+        FROM tag_mapping tm
+        JOIN tags t ON t.tag_id = tm.tag_id
+        WHERE tm.title_id = %s
+        ORDER BY t.tag_name
+    """, (title_id,))
+    return [row["tag_name"] for row in cursor.fetchall()]
+
+
 def get_book_editions(cursor, title_id: int, exclude_pub_id: int) -> list:
     """
     Return all English-language editions of a title except the one already
@@ -1472,6 +1484,48 @@ def find_titles(cursor, title: str, match_type: str = "exact",
         row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
         row["is_book"]      = row["title_ttype"] in _BOOK_SEARCH_TYPES
     return rows
+
+
+def get_titles_by_tag(cursor, tag_name: str) -> tuple[str | None, list]:
+    """Return (canonical_tag_name, titles) for all titles with the given tag."""
+    cursor.execute("""
+        SELECT tg.tag_name AS canonical_name,
+               t.title_id,
+               t.title_title,
+               t.title_ttype,
+               t.title_storylen,
+               l.lang_name,
+               MIN(YEAR(p.pub_year)) AS first_year,
+               GROUP_CONCAT(
+                   DISTINCT a.author_canonical ORDER BY ca.ca_id SEPARATOR ' & '
+               ) AS authors,
+               GROUP_CONCAT(
+                   DISTINCT a.author_id ORDER BY ca.ca_id SEPARATOR ','
+               ) AS author_ids
+        FROM tags tg
+        JOIN tag_mapping tm           ON tm.tag_id   = tg.tag_id
+        JOIN titles t                 ON t.title_id  = tm.title_id
+        LEFT JOIN languages l         ON l.lang_id   = t.title_language
+        LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
+        LEFT JOIN authors a           ON a.author_id = ca.author_id
+        LEFT JOIN pub_content pc      ON pc.title_id = t.title_id
+        LEFT JOIN pubs p              ON p.pub_id    = pc.pub_id
+                                     AND YEAR(p.pub_year) > 0
+        WHERE tg.tag_name = %s
+        GROUP BY tg.tag_name, t.title_id, t.title_title, t.title_ttype,
+                 t.title_storylen, l.lang_name
+        ORDER BY t.title_title, first_year
+    """, (tag_name,))
+    rows = cursor.fetchall()
+    if not rows:
+        return None, []
+    canonical = rows[0]["canonical_name"]
+    for row in rows:
+        row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
+        row["author_list"] = _make_author_list(row.get("authors"), row.get("author_ids"))
+        row["is_book"]     = row["title_ttype"] in _BOOK_SEARCH_TYPES
+        row.pop("canonical_name", None)
+    return canonical, rows
 
 
 # Valid operators for the advanced title search form
