@@ -3117,11 +3117,18 @@ def get_publisher_detail(cursor, publisher_id: int) -> dict | None:
 
     row["pub_note"] = _clean_publisher_note(row.get("pub_note") or "")
 
-    # Total publication count (all ctypes)
-    cursor.execute(
-        "SELECT COUNT(*) AS cnt FROM pubs WHERE publisher_id = %s",
-        (publisher_id,)
-    )
+    # Count distinct book titles published by this publisher
+    type_placeholders = ", ".join(["%s"] * len(_PUBLISHER_BOOK_TYPES))
+    cursor.execute(f"""
+        SELECT COUNT(DISTINCT t.title_id) AS cnt
+        FROM pubs p
+        JOIN pub_content pc ON pc.pub_id  = p.pub_id
+        JOIN titles t       ON t.title_id = pc.title_id
+                           AND t.title_ttype = p.pub_ctype
+        WHERE p.publisher_id = %s
+          AND p.pub_ctype IN ({type_placeholders})
+          AND YEAR(p.pub_year) > 0
+    """, (publisher_id, *_PUBLISHER_BOOK_TYPES))
     row["pub_count"] = cursor.fetchone()["cnt"]
 
     # External webpages
