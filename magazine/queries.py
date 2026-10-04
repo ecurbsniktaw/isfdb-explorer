@@ -3135,20 +3135,25 @@ def get_publisher_detail(cursor, publisher_id: int) -> dict | None:
         if r.get("url")
     ]
 
-    # Active years: years in which ≥1 book title was published
+    # Active years: year each title was *first* published by this publisher,
+    # counted per year (reprints in later years are not counted again).
     type_placeholders = ", ".join(["%s"] * len(_PUBLISHER_BOOK_TYPES))
     cursor.execute(f"""
-        SELECT YEAR(p.pub_year) AS yr, COUNT(DISTINCT t.title_id) AS title_cnt
-        FROM pubs p
-        JOIN pub_content pc ON pc.pub_id  = p.pub_id
-        JOIN titles t       ON t.title_id = pc.title_id
-                           AND t.title_ttype = p.pub_ctype
-        WHERE p.publisher_id = %s
-          AND p.pub_ctype IN ({type_placeholders})
-          AND YEAR(p.pub_year) > 0
-          AND YEAR(p.pub_year) < 8888
-        GROUP BY yr
-        ORDER BY yr
+        SELECT first_yr AS yr, COUNT(*) AS title_cnt
+        FROM (
+            SELECT t.title_id, MIN(YEAR(p.pub_year)) AS first_yr
+            FROM pubs p
+            JOIN pub_content pc ON pc.pub_id  = p.pub_id
+            JOIN titles t       ON t.title_id = pc.title_id
+                               AND t.title_ttype = p.pub_ctype
+            WHERE p.publisher_id = %s
+              AND p.pub_ctype IN ({type_placeholders})
+              AND YEAR(p.pub_year) > 0
+              AND YEAR(p.pub_year) < 8888
+            GROUP BY t.title_id
+        ) first_pub
+        GROUP BY first_yr
+        ORDER BY first_yr
     """, (publisher_id, *_PUBLISHER_BOOK_TYPES))
     row["active_years"] = cursor.fetchall()
 
@@ -3185,9 +3190,9 @@ def get_publisher_books_by_year(cursor, publisher_id: int, year: int) -> list:
         LEFT JOIN authors a           ON a.author_id  = ca.author_id
         WHERE p.publisher_id = %s
           AND p.pub_ctype IN ({type_placeholders})
-          AND YEAR(p.pub_year) = %s
           AND YEAR(p.pub_year) > 0
         GROUP BY t.title_id, t.title_title, t.title_ttype
+        HAVING MIN(YEAR(p.pub_year)) = %s
         ORDER BY t.title_title
     """, (publisher_id, *_PUBLISHER_BOOK_TYPES, year))
     rows = cursor.fetchall()
