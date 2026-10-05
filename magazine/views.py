@@ -45,6 +45,7 @@ from .queries import (
     find_publishers, get_publisher_count,
     get_publisher_detail, get_publisher_books_by_year,
     get_publisher_books_by_author, get_publisher_all_authors,
+    get_publisher_magazines,
     format_date, NARRATIVE_TYPES,
     advanced_search_titles, ADV_AUTHOR_OPS, ADV_TITLE_OPS, ADV_YEAR_OPS,
     ADV_SEARCHABLE_TYPES, TITLE_LANGUAGES,
@@ -716,6 +717,8 @@ def publisher_detail(request, publisher_id):
         all_authors   = []
         selected_year = None
 
+        magazines = get_publisher_magazines(cursor, publisher_id)
+
         if year_param and year_param.isdigit():
             selected_year = int(year_param)
             year_books = get_publisher_books_by_year(cursor, publisher_id, selected_year)
@@ -743,15 +746,16 @@ def publisher_detail(request, publisher_id):
         year_rows = []
 
     return render(request, "magazine/publisher_detail.html", {
-        "publisher":       publisher,
-        "year_param":      year_param,
-        "author_param":    author_param,
+        "publisher":        publisher,
+        "year_param":       year_param,
+        "author_param":     author_param,
         "show_all_authors": show_all_authors,
-        "selected_year":   selected_year,
-        "year_books":      year_books,
-        "author_books":    author_books,
-        "all_authors":     all_authors,
-        "year_rows":       year_rows,
+        "selected_year":    selected_year,
+        "year_books":       year_books,
+        "author_books":     author_books,
+        "all_authors":      all_authors,
+        "year_rows":        year_rows,
+        "magazines":        magazines,
     })
 
 

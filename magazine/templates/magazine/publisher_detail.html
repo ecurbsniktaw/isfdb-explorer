@@ -227,9 +227,35 @@
 {% endif %}
 
 {# ── Year grid ──────────────────────────────────────────────────────────── #}
+{% if magazines %}
+<h2 class="h5 mb-3">Magazines
+  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ magazines|length }}</span>
+</h2>
+<div class="table-responsive mb-4">
+  <table class="table table-sm table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Magazine</th>
+        <th style="width:15%">Issues</th>
+        <th style="width:20%">Years</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in magazines %}
+      <tr>
+        <td><a href="{% url 'magazine_issues_by_name' %}?name={{ m.mag_name|urlencode }}" class="text-decoration-none">{{ m.mag_name }}</a></td>
+        <td class="text-muted small">{{ m.issue_count }}</td>
+        <td class="text-muted small">{{ m.yr_first }}{% if m.yr_last != m.yr_first %}–{{ m.yr_last }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
 {% if publisher.active_years %}
 <div class="text-center">
-<h2 class="h5 mb-3">Active Years
+<h2 class="h5 mb-3">Active Years (Books)
   <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ publisher.active_years|length|intcomma }}</span>
 </h2>
 <table class="year-grid mb-4 mx-auto">

@@ -3210,6 +3210,26 @@ def get_publisher_books_by_year(cursor, publisher_id: int, year: int) -> list:
     return rows
 
 
+def get_publisher_magazines(cursor, publisher_id: int) -> list:
+    """
+    Return distinct magazine titles published by this publisher, with issue
+    count and year range, sorted by magazine name.
+    """
+    cursor.execute("""
+        SELECT SUBSTRING_INDEX(pub_title, ',', 1) AS mag_name,
+               COUNT(*)             AS issue_count,
+               MIN(YEAR(pub_year))  AS yr_first,
+               MAX(YEAR(pub_year))  AS yr_last
+        FROM pubs
+        WHERE publisher_id = %s
+          AND pub_ctype = 'MAGAZINE'
+          AND YEAR(pub_year) > 0
+        GROUP BY mag_name
+        ORDER BY mag_name
+    """, (publisher_id,))
+    return cursor.fetchall()
+
+
 def get_publisher_all_authors(cursor, publisher_id: int) -> list:
     """
     Return all authors who have at least one book published by this publisher,
