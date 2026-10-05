@@ -228,28 +228,44 @@
 
 {# ── Year grid ──────────────────────────────────────────────────────────── #}
 {% if magazines %}
-<h2 class="h5 mb-3">Magazines
-  <span class="badge text-bg-secondary fw-normal ms-1" style="font-size:.75em;">{{ magazines|length }}</span>
-</h2>
-<div class="table-responsive mb-4">
-  <table class="table table-sm table-hover">
-    <thead class="table-light">
-      <tr>
-        <th>Magazine</th>
-        <th style="width:15%">Issues</th>
-        <th style="width:20%">Years</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for m in magazines %}
-      <tr>
-        <td><a href="{% url 'magazine_issues_by_name' %}?name={{ m.mag_name|urlencode }}" class="text-decoration-none">{{ m.mag_name }}</a></td>
-        <td class="text-muted small">{{ m.issue_count }}</td>
-        <td class="text-muted small">{{ m.yr_first }}{% if m.yr_last != m.yr_first %}–{{ m.yr_last }}{% endif %}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="accordion mb-4" id="magazinesAccordion">
+  <div class="accordion-item border-0">
+    <h2 class="accordion-header h5 mb-0">
+      <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#magazinesPanel"
+              aria-expanded="false"
+              aria-controls="magazinesPanel">
+        Magazines <span class="badge text-bg-secondary fw-normal ms-2" style="font-size:.75em;">{{ magazines|length }}</span>
+      </button>
+    </h2>
+    <div id="magazinesPanel" class="accordion-collapse collapse"
+         data-bs-parent="#magazinesAccordion">
+      <div class="accordion-body px-2 pt-2">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Magazine</th>
+                <th style="width:15%">Issues</th>
+                <th style="width:20%">Years</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in magazines %}
+              <tr>
+                <td><a href="{% url 'magazine_issues_by_name' %}?name={{ m.mag_name|urlencode }}" class="text-decoration-none">{{ m.mag_name }}</a></td>
+                <td class="text-muted small">{{ m.issue_count }}</td>
+                <td class="text-muted small">{{ m.yr_first }}{% if m.yr_last != m.yr_first %}–{{ m.yr_last }}{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endif %}
 
