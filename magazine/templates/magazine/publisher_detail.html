@@ -21,7 +21,7 @@
 
 {# ── Heading ────────────────────────────────────────────────────────────── #}
 <h1 class="h3 mb-0">{{ publisher.publisher_name }}</h1>
-<p class="text-muted mb-3">{{ publisher.pub_count|intcomma }} title{{ publisher.pub_count|pluralize }}</p>
+<p class="text-muted mb-3">{{ publisher.pub_count|intcomma }} Book{{ publisher.pub_count|pluralize }}{% if total_mag_issues %}, {{ total_mag_issues|intcomma }} Magazine Issue{{ total_mag_issues|pluralize }}{% endif %}</p>
 
 <div class="row g-4 mb-4">
 

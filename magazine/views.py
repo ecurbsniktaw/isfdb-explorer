@@ -745,6 +745,8 @@ def publisher_detail(request, publisher_id):
     else:
         year_rows = []
 
+    total_mag_issues = sum(m["issue_count"] for m in magazines)
+
     return render(request, "magazine/publisher_detail.html", {
         "publisher":        publisher,
         "year_param":       year_param,
@@ -756,6 +758,7 @@ def publisher_detail(request, publisher_id):
         "all_authors":      all_authors,
         "year_rows":        year_rows,
         "magazines":        magazines,
+        "total_mag_issues": total_mag_issues,
     })
 
 
