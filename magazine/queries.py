@@ -747,6 +747,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
             p.pub_ptype,
             p.pub_pages,
             p.pub_frontimage,
+            pub.publisher_id,
             pub.publisher_name,
             n.note_note        AS pub_note,
             tn.note_note       AS title_note,

@@ -63,7 +63,7 @@
         {% if book.publisher_name %}
         <tr style="line-height:1.3;">
           <th class="text-muted fw-normal pe-4 py-1">Publisher</th>
-          <td class="py-1">{{ book.publisher_name }}</td>
+          <td class="py-1">{% if book.publisher_id %}<a href="{% url 'publisher_detail' book.publisher_id %}">{{ book.publisher_name }}</a>{% else %}{{ book.publisher_name }}{% endif %}</td>
         </tr>
         {% endif %}
         {% if book.format_label %}
