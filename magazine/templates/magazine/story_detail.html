@@ -96,7 +96,7 @@
   </div>
 
   {# ── Right column: synopsis / notes / awards / external links ──────────── #}
-  {% if story.synopsis or story.title_note or story.awards or story.webpages %}
+  {% if story.synopsis or story.title_note or story.awards or tags or story.webpages %}
   <div class="col-lg-8">
 
     {% if story.synopsis %}
@@ -180,6 +180,33 @@
                 {% endfor %}
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if tags %}
+    <div class="accordion mb-2" id="tagsAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h5 mb-0">
+          <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#tagsPanel"
+                  aria-expanded="false"
+                  aria-controls="tagsPanel">
+            Tags <span class="badge text-bg-secondary ms-2">{{ tags|length }}</span>
+          </button>
+        </h2>
+        <div id="tagsPanel" class="accordion-collapse collapse"
+             data-bs-parent="#tagsAccordion">
+          <div class="accordion-body px-2 pt-2">
+            <div class="d-flex flex-wrap gap-1">
+              {% for tag in tags %}
+              <a href="{% url 'tag_detail' tag %}" class="badge text-bg-light border text-dark fw-normal text-decoration-none">{{ tag }}</a>
+              {% endfor %}
+            </div>
           </div>
         </div>
       </div>

@@ -915,12 +915,14 @@ def story_detail(request, title_id):
     cursor = _dict_cursor()
     try:
         story = get_story_detail(cursor, title_id)
+        if not story:
+            raise Http404(f"No title found for title_id={title_id}")
+        tags = get_title_tags(cursor, title_id)
     finally:
         cursor.close()
-    if not story:
-        raise Http404(f"No title found for title_id={title_id}")
     return render(request, "magazine/story_detail.html", {
         "story":         story,
+        "tags":          tags,
         "gutenberg_url": _gutenberg_url(story),
     })
 
