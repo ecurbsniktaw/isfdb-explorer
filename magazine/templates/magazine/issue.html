@@ -77,7 +77,7 @@
         {% if issue.publisher_name %}
         <tr>
           <th class="text-muted fw-normal pe-3">Publisher</th>
-          <td>{{ issue.publisher_name }}</td>
+          <td>{% if issue.publisher_id %}<a href="{% url 'publisher_detail' issue.publisher_id %}">{{ issue.publisher_name }}</a>{% else %}{{ issue.publisher_name }}{% endif %}</td>
         </tr>
         {% endif %}
         {% if issue.pub_price %}
