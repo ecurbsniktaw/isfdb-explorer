@@ -1474,6 +1474,7 @@ def find_titles(cursor, title: str, match_type: str = "exact",
         WHERE {title_clause}
           AND t.title_ttype IN ({type_placeholders}){extra_where}
         GROUP BY t.title_id, t.title_title, t.title_ttype, t.title_storylen, l.lang_name
+        HAVING MIN(YEAR(p.pub_year)) IS NOT NULL
         ORDER BY t.title_title, first_year
         LIMIT 200
     """
@@ -1899,6 +1900,9 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         {archive_sql}
         {cover_sql}
         {wikipedia_sql}
+          AND EXISTS (SELECT 1 FROM pub_content pc2
+                      JOIN pubs p2 ON p2.pub_id = pc2.pub_id
+                      WHERE pc2.title_id = t.title_id AND YEAR(p2.pub_year) > 0)
         LIMIT {limit}
     """, all_params)
     title_ids = [r["title_id"] for r in cursor.fetchall()]
