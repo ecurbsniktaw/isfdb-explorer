@@ -13,40 +13,112 @@
 <p class="text-muted mb-4">{{ count|intcomma }} title{{ count|pluralize }}</p>
 
 {% if titles %}
-<div class="table-responsive">
-  <table class="table table-sm table-hover align-middle">
-    <thead class="table-light">
-      <tr>
-        <th>Title</th>
-        <th>Type</th>
-        <th>Author(s)</th>
-        <th>First published</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in titles %}
-      <tr>
-        <td>
-          {% if t.is_book %}
-            <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title|unescape_html }}</a>
-          {% else %}
-            <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title|unescape_html }}</a>
-          {% endif %}
-        </td>
-        <td class="text-nowrap text-muted small">{{ t.type_label }}</td>
-        <td>
-          {% for a in t.author_list %}
-            {% if a.id %}<a href="{% url 'author_detail' a.id %}">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}{% if not forloop.last %} &amp; {% endif %}
-          {% endfor %}
-        </td>
-        <td class="text-nowrap">{{ t.first_year|default:"—" }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="accordion" id="titlesAccordion">
+  <div class="accordion-item border-0">
+    <h2 class="accordion-header h5 mb-0">
+      <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#titlesPanel"
+              aria-expanded="false"
+              aria-controls="titlesPanel">
+        Titles <span class="badge text-bg-secondary ms-2">{{ count|intcomma }}</span>
+      </button>
+    </h2>
+    <div id="titlesPanel" class="accordion-collapse collapse"
+         data-bs-parent="#titlesAccordion">
+      <div class="accordion-body px-0 pt-2">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle toc-table" id="tagTitlesTable">
+            <thead class="table-light">
+              <tr>
+                <th data-col="0" style="cursor:pointer;">Title <span class="sort-icon">↕</span></th>
+                <th data-col="1" style="cursor:pointer;">Type <span class="sort-icon">↕</span></th>
+                <th data-col="2" style="cursor:pointer;">Author(s) <span class="sort-icon">↕</span></th>
+                <th data-col="3" style="cursor:pointer;">First published <span class="sort-icon">↕</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in titles %}
+              <tr>
+                <td>
+                  {% if t.is_book %}
+                    <a href="{% url 'book_detail' t.title_id %}">{{ t.title_title|unescape_html }}</a>
+                  {% else %}
+                    <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title|unescape_html }}</a>
+                  {% endif %}
+                </td>
+                <td class="text-nowrap text-muted small">{{ t.type_label }}</td>
+                <td>
+                  {% for a in t.author_list %}
+                    {% if a.id %}<a href="{% url 'author_detail' a.id %}">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}{% if not forloop.last %} &amp; {% endif %}
+                  {% endfor %}
+                </td>
+                <td class="text-nowrap">{{ t.first_year|default:"" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% else %}
 <p class="text-muted">No titles found for this tag.</p>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var table = document.getElementById('tagTitlesTable');
+  if (!table) return;
+
+  var tbody  = table.querySelector('tbody');
+  var ths    = table.querySelectorAll('thead th');
+  var sortCol = -1, sortAsc = true;
+
+  ths.forEach(function (th) {
+    th.addEventListener('click', function () {
+      var col = parseInt(th.dataset.col, 10);
+      if (sortCol === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortCol = col;
+        sortAsc = true;
+      }
+      sortTable(col, sortAsc);
+      ths.forEach(function (h) { h.querySelector('.sort-icon').textContent = '↕'; });
+      th.querySelector('.sort-icon').textContent = sortAsc ? '↑' : '↓';
+    });
+  });
+
+  function cellText(row, col) {
+    return row.cells[col] ? row.cells[col].textContent.trim() : '';
+  }
+
+  function sortTable(col, asc) {
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort(function (a, b) {
+      var av = cellText(a, col);
+      var bv = cellText(b, col);
+      // Numeric sort for year column (col 3); blank years sort last
+      if (col === 3) {
+        var an = parseInt(av, 10) || 0;
+        var bn = parseInt(bv, 10) || 0;
+        if (!an && !bn) return 0;
+        if (!an) return 1;
+        if (!bn) return -1;
+        return asc ? an - bn : bn - an;
+      }
+      return asc
+        ? av.localeCompare(bv, undefined, {sensitivity: 'base'})
+        : bv.localeCompare(av, undefined, {sensitivity: 'base'});
+    });
+    rows.forEach(function (r) { tbody.appendChild(r); });
+  }
+})();
+</script>
 {% endblock %}
