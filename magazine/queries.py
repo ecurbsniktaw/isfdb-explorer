@@ -3175,8 +3175,8 @@ def get_publisher_detail(cursor, publisher_id: int) -> dict | None:
 
 def get_publisher_books_by_year(cursor, publisher_id: int, year: int) -> list:
     """
-    Return all book titles published in `year` by this publisher, deduplicated
-    by title_id (showing the earliest pub_id).  Ordered alphabetically.
+    Return all book titles first published in `year` by this publisher.
+    pub_id is the specific publication from that year (not the global minimum).
     """
     type_placeholders = ", ".join(["%s"] * len(_PUBLISHER_BOOK_TYPES))
     cursor.execute(f"""
@@ -3184,7 +3184,7 @@ def get_publisher_books_by_year(cursor, publisher_id: int, year: int) -> list:
             t.title_id,
             t.title_title,
             t.title_ttype,
-            MIN(p.pub_id) AS pub_id,
+            MIN(CASE WHEN YEAR(p.pub_year) = %s THEN p.pub_id END) AS pub_id,
             GROUP_CONCAT(
                 DISTINCT a.author_canonical
                 ORDER BY ca.ca_id
@@ -3207,7 +3207,7 @@ def get_publisher_books_by_year(cursor, publisher_id: int, year: int) -> list:
         GROUP BY t.title_id, t.title_title, t.title_ttype
         HAVING MIN(YEAR(p.pub_year)) = %s
         ORDER BY t.title_title
-    """, (publisher_id, *_PUBLISHER_BOOK_TYPES, year))
+    """, (year, publisher_id, *_PUBLISHER_BOOK_TYPES, year))
     rows = cursor.fetchall()
     for row in rows:
         row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")

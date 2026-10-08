@@ -202,7 +202,7 @@
               {% for b in year_books %}
               <tr>
                 <td>
-                  <a href="{% url 'book_detail' b.title_id %}"
+                  <a href="{% url 'book_detail' b.title_id %}{% if b.pub_id %}?pub={{ b.pub_id }}{% endif %}"
                      class="text-decoration-none">{{ b.title_title |unescape_html }}</a>
                 </td>
                 <td class="text-muted small">

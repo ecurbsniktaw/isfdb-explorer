@@ -17,3 +17,9 @@ homeimages/
 
 # Claude Code local config
 .claude/settings.local.json
+mycode/analyze_ip.py
+scripts/custom_data_20260905_150808.sql
+scripts/custom_data_new.sql
+mycode/setstats.py
+mycode/setstats.py
+mycode/setstats.py
