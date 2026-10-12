@@ -24,39 +24,50 @@
 </p>
 
 <div class="modal fade" id="titleStatsModal" tabindex="-1" aria-labelledby="titleStatsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="titleStatsModalLabel">Titles by type</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body p-0">
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item d-flex justify-content-between">
-            <span>Total (all types)</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.total_titles|intcomma }}</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>&nbsp;&nbsp;— Novels</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.novels|intcomma }}</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>&nbsp;&nbsp;— Short fiction</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.short_fiction|intcomma }}</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>&nbsp;&nbsp;— Collections</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.collections|intcomma }}</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>&nbsp;&nbsp;— Anthologies</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.anthologies|intcomma }}</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>&nbsp;&nbsp;— Nonfiction</span>
-            <span class="badge text-bg-secondary rounded-pill">{{ db_stats.nonfiction|intcomma }}</span>
-          </li>
-        </ul>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="card">
+              <div class="card-header fw-semibold text-bg-light">Included in title search</div>
+              <table class="table table-sm mb-0">
+                <tbody>
+                  <tr><td>Short fiction</td><td class="text-end text-muted">747,906</td></tr>
+                  <tr><td>Essays</td><td class="text-end text-muted">398,942</td></tr>
+                  <tr><td>Novels</td><td class="text-end text-muted">275,008</td></tr>
+                  <tr><td>Poems</td><td class="text-end text-muted">148,233</td></tr>
+                  <tr><td>Chapbooks</td><td class="text-end text-muted">65,507</td></tr>
+                  <tr><td>Collections</td><td class="text-end text-muted">37,137</td></tr>
+                  <tr><td>Anthologies</td><td class="text-end text-muted">29,041</td></tr>
+                  <tr><td>Serials</td><td class="text-end text-muted">22,665</td></tr>
+                  <tr><td>Nonfiction books</td><td class="text-end text-muted">19,485</td></tr>
+                  <tr><td>Omnibuses</td><td class="text-end text-muted">15,749</td></tr>
+                  <tr class="table-light fw-semibold"><td>Total</td><td class="text-end">1,759,673</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="card">
+              <div class="card-header fw-semibold text-bg-light">Not included in title search</div>
+              <table class="table table-sm mb-0">
+                <tbody>
+                  <tr><td>Interior artwork</td><td class="text-end text-muted">323,773</td></tr>
+                  <tr><td>Cover artwork</td><td class="text-end text-muted">274,374</td></tr>
+                  <tr><td>Reviews</td><td class="text-end text-muted">149,306</td></tr>
+                  <tr><td>Editor credits</td><td class="text-end text-muted">23,429</td></tr>
+                  <tr><td>Interviews</td><td class="text-end text-muted">17,959</td></tr>
+                  <tr class="table-light fw-semibold"><td>Total</td><td class="text-end">788,841</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
