@@ -13,7 +13,7 @@
 
 {% if use_accordion %}
 
-{# ── Decade accordion ─────────────────────────────────────────────────────── #}
+{# ── Decade accordion (each decade opens into year sub-accordions) ─────────── #}
 <div class="accordion" id="decadeAccordion">
   {% for dec in decades %}
   <div class="accordion-item">
@@ -25,7 +25,7 @@
               aria-controls="collapse-{{ dec.decade }}">
         {{ dec.label }}
         <span class="ms-2 text-muted fw-normal small">
-          &mdash; {{ dec.issues|length }} issue{{ dec.issues|length|pluralize }}
+          &mdash; {{ dec.issue_count }} issue{{ dec.issue_count|pluralize }}
         </span>
       </button>
     </h2>
@@ -33,21 +33,57 @@
          class="accordion-collapse collapse"
          aria-labelledby="heading-{{ dec.decade }}"
          data-bs-parent="#decadeAccordion">
-      <div class="accordion-body p-0">
-        <table class="table table-sm table-hover mb-0">
-          <tbody>
-            {% for row in dec.issues %}
-            <tr>
-              <td style="width:12em; white-space:nowrap">
-                <a href="{% url 'issue_detail' row.pub_id %}" class="text-decoration-none">
-                  {{ row.formatted_date }}
-                </a>
-              </td>
-              <td class="text-muted small">{{ row.pub_title }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="accordion-body p-2">
+
+        {# ── Year sub-accordion ──────────────────────────────────────────── #}
+        <div class="accordion" id="yearAccordion-{{ dec.decade }}">
+          {% for yr in dec.years %}
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-{{ dec.decade }}-{{ yr.year }}">
+              <button class="accordion-button collapsed py-2" type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#collapse-{{ dec.decade }}-{{ yr.year }}"
+                      aria-expanded="false"
+                      aria-controls="collapse-{{ dec.decade }}-{{ yr.year }}">
+                {{ yr.label }}
+                <span class="ms-2 text-muted fw-normal small">
+                  &mdash; {{ yr.issues|length }} issue{{ yr.issues|length|pluralize }}
+                </span>
+              </button>
+            </h2>
+            <div id="collapse-{{ dec.decade }}-{{ yr.year }}"
+                 class="accordion-collapse collapse"
+                 aria-labelledby="heading-{{ dec.decade }}-{{ yr.year }}">
+              <div class="accordion-body pt-2 pb-1 px-2">
+                <div class="d-flex flex-wrap gap-2">
+                  {% for row in yr.issues %}
+                  <a href="{% url 'issue_detail' row.pub_id %}"
+                     class="text-decoration-none text-center"
+                     title="{{ row.pub_title }}"
+                     style="width:60px;">
+                    {% if row.pub_frontimage %}
+                      <img src="{{ row.pub_frontimage }}"
+                           alt="{{ row.pub_title }}"
+                           class="rounded shadow-sm d-block mb-1"
+                           style="width:60px; height:80px; object-fit:cover;">
+                    {% else %}
+                      <div class="rounded border d-flex align-items-center justify-content-center mb-1 text-muted"
+                           style="width:60px; height:80px; font-size:0.6rem; background:#f8f9fa;">
+                        no cover
+                      </div>
+                    {% endif %}
+                    <span class="small text-muted" style="font-size:0.75rem;">
+                      {{ row.month_abbr|default:row.formatted_date }}
+                    </span>
+                  </a>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
       </div>
     </div>
   </div>
@@ -56,28 +92,29 @@
 
 {% elif rows %}
 
-{# ── Flat list (small magazines) ──────────────────────────────────────────── #}
-<div class="table-responsive">
-  <table class="table table-sm table-hover toc-table">
-    <thead class="table-light">
-      <tr>
-        <th>Date</th>
-        <th>Title</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in rows %}
-      <tr>
-        <td style="white-space:nowrap">
-          <a href="{% url 'issue_detail' row.pub_id %}" class="text-decoration-none">
-            {{ row.formatted_date }}
-          </a>
-        </td>
-        <td class="text-muted small">{{ row.pub_title }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{# ── Flat grid (small magazines) ──────────────────────────────────────────── #}
+<div class="d-flex flex-wrap gap-2">
+  {% for row in rows %}
+  <a href="{% url 'issue_detail' row.pub_id %}"
+     class="text-decoration-none text-center"
+     title="{{ row.pub_title }}"
+     style="width:60px;">
+    {% if row.pub_frontimage %}
+      <img src="{{ row.pub_frontimage }}"
+           alt="{{ row.pub_title }}"
+           class="rounded shadow-sm d-block mb-1"
+           style="width:60px; height:80px; object-fit:cover;">
+    {% else %}
+      <div class="rounded border d-flex align-items-center justify-content-center mb-1 text-muted"
+           style="width:60px; height:80px; font-size:0.6rem; background:#f8f9fa;">
+        no cover
+      </div>
+    {% endif %}
+    <span class="small text-muted" style="font-size:0.75rem;">
+      {{ row.month_abbr|default:row.formatted_date }}
+    </span>
+  </a>
+  {% endfor %}
 </div>
 
 {% else %}

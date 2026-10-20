@@ -417,6 +417,27 @@ def magazine_group(request, group_slug):
     })
 
 
+def _build_decades(rows: list) -> list:
+    from collections import defaultdict
+    by_decade = defaultdict(lambda: defaultdict(list))
+    for r in rows:
+        decade = (r["pub_year"] // 10) * 10
+        by_decade[decade][r["pub_year"]].append(r)
+    decades = []
+    for decade in sorted(by_decade):
+        years = [
+            {"label": str(yr), "year": yr, "issues": by_decade[decade][yr]}
+            for yr in sorted(by_decade[decade])
+        ]
+        decades.append({
+            "label":       f"{decade}s",
+            "decade":      decade,
+            "years":       years,
+            "issue_count": sum(len(y["issues"]) for y in years),
+        })
+    return decades
+
+
 def magazine_issues_by_name(request):
     """Chronological list of all issues for one magazine, looked up by name."""
     mag_name = request.GET.get("name", "").strip()
@@ -433,19 +454,7 @@ def magazine_issues_by_name(request):
         raise Http404(f"No issues found for magazine {mag_name!r}")
 
     use_accordion = len(rows) > 50
-    decades = []
-    if use_accordion:
-        from collections import defaultdict
-        by_decade = defaultdict(list)
-        for r in rows:
-            decade = (r["pub_year"] // 10) * 10
-            by_decade[decade].append(r)
-        for decade in sorted(by_decade):
-            decades.append({
-                "label":  f"{decade}s",
-                "decade": decade,
-                "issues": by_decade[decade],
-            })
+    decades = _build_decades(rows) if use_accordion else []
 
     return render(request, "magazine/magazine_issues.html", {
         "mag_name":      mag_name,
@@ -467,21 +476,8 @@ def magazine_issues(request, mag_code):
     if mag_name is None:
         raise Http404(f"No magazine with code {mag_code!r}")
 
-    # Group by decade for large lists
     use_accordion = len(rows) > 50
-    decades = []
-    if use_accordion:
-        from collections import defaultdict
-        by_decade = defaultdict(list)
-        for r in rows:
-            decade = (r["pub_year"] // 10) * 10
-            by_decade[decade].append(r)
-        for decade in sorted(by_decade):
-            decades.append({
-                "label":  f"{decade}s",
-                "decade": decade,
-                "issues": by_decade[decade],
-            })
+    decades = _build_decades(rows) if use_accordion else []
 
     return render(request, "magazine/magazine_issues.html", {
         "mag_name":      mag_name,

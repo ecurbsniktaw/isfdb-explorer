@@ -1328,6 +1328,7 @@ def get_magazine_issues_by_name(cursor, mag_name: str) -> list:
         SELECT
             pub_id,
             pub_title,
+            pub_frontimage,
             YEAR(pub_year)  AS pub_year,
             MONTH(pub_year) AS pub_month
         FROM pubs
@@ -1335,9 +1336,12 @@ def get_magazine_issues_by_name(cursor, mag_name: str) -> list:
           AND pub_title LIKE %s
         ORDER BY pub_year, MONTH(pub_year), pub_title
     """, (f"{mag_name},%",))
+    _MONTH_ABBR = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     rows = cursor.fetchall()
     for r in rows:
         r["formatted_date"] = format_date(r["pub_year"], r["pub_month"])
+        r["month_abbr"] = _MONTH_ABBR[r["pub_month"]] if r["pub_month"] else ""
     return rows
 
 
@@ -1363,6 +1367,7 @@ def get_magazine_issues(cursor, mag_code: str) -> tuple:
         SELECT
             p.pub_id,
             p.pub_title,
+            p.pub_frontimage,
             YEAR(p.pub_year)  AS pub_year,
             MONTH(p.pub_year) AS pub_month
         FROM pubs p
@@ -1371,8 +1376,11 @@ def get_magazine_issues(cursor, mag_code: str) -> tuple:
     """, patterns)
     rows = cursor.fetchall()
 
+    _MONTH_ABBR = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     for r in rows:
         r["formatted_date"] = format_date(r["pub_year"], r["pub_month"])
+        r["month_abbr"] = _MONTH_ABBR[r["pub_month"]] if r["pub_month"] else ""
 
     return mag_name, rows
 
