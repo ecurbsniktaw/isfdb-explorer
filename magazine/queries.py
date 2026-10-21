@@ -1592,6 +1592,32 @@ ADV_AUTHOR_OPS = {"equals", "starts_with", "ends_with"}
 ADV_TITLE_OPS  = {"equals", "starts_with", "ends_with", "contains"}
 ADV_YEAR_OPS   = {"before", "exactly", "after"}
 
+ADV_PUB_FORMATS = [
+    ("hc",                    "Hardcover"),
+    ("tp",                    "Trade paperback"),
+    ("pb",                    "Paperback"),
+    ("digest",                "Digest"),
+    ("pulp",                  "Pulp"),
+    ("bedsheet",              "Bedsheet"),
+    ("tabloid",               "Tabloid"),
+    ("quarto",                "Quarto"),
+    ("octavo",                "Octavo"),
+    ("A4",                    "A4"),
+    ("A5",                    "A5"),
+    ("ph",                    "Pamphlet / hardcover"),
+    ("dos",                   "Dos-à-dos"),
+    ("ebook",                 "E-book"),
+    ("webzine",               "Webzine"),
+    ("audio CD",              "Audio CD"),
+    ("audio MP3 CD",          "Audio MP3 CD"),
+    ("audio cassette",        "Audio cassette"),
+    ("audio LP",              "Audio LP"),
+    ("digital audio download","Digital audio download"),
+    ("other",                 "Other"),
+    ("unknown",               "Unknown"),
+]
+_ADV_FORMAT_VALUES = {fmt for fmt, _ in ADV_PUB_FORMATS}
+
 _SEARCHABLE_TYPE_SET = set(_SEARCHABLE_TYPES)
 ADV_SEARCHABLE_TYPES = sorted(
     [{"type_id": k, "label": v} for k, v in TITLE_TYPE_LABELS.items()
@@ -1845,6 +1871,9 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
     year_join_params = []
     lang_where_sql   = ""
     lang_param       = None
+    format_join_sql  = ""
+    format_where_sql = ""
+    format_param     = None
 
     for crit in rows:
         field = crit.get("field", "")
@@ -1862,6 +1891,15 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
             if op in _SEARCHABLE_TYPE_SET:
                 type_filter_sql   = "AND t.title_ttype = %s"
                 type_filter_param = op
+            continue
+
+        if field == "format":
+            if op in _ADV_FORMAT_VALUES:
+                format_join_sql  = """
+                    JOIN pub_content pc_fmt ON pc_fmt.title_id = t.title_id
+                    JOIN pubs p_fmt         ON p_fmt.pub_id    = pc_fmt.pub_id"""
+                format_where_sql = "AND p_fmt.pub_ptype = %s"
+                format_param     = op
             continue
 
         if op == "is_anything" or not val:
@@ -1911,7 +1949,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
 
     type_placeholders = ", ".join(["%s"] * len(_SEARCHABLE_TYPES))
     # Parameter order matches SQL text order:
-    #   year derived table params → type IN params → title/type/author/lang WHERE params
+    #   year derived table params → type IN params → title/type/author/lang/format WHERE params
     all_params = (
         *year_join_params,
         *_SEARCHABLE_TYPES,
@@ -1919,6 +1957,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         *([type_filter_param] if type_filter_param is not None else []),
         *([author_param]      if author_param      is not None else []),
         *([lang_param]        if lang_param        is not None else []),
+        *([format_param]      if format_param      is not None else []),
     )
 
     if count_only:
@@ -1928,11 +1967,13 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
                 FROM titles t
                 {year_join_sql}
                 {author_join_sql}
+                {format_join_sql}
                 WHERE t.title_ttype IN ({type_placeholders})
                 {title_where_sql}
                 {type_filter_sql}
                 {author_where_sql}
                 {lang_where_sql}
+                {format_where_sql}
                 {synopsis_sql}
                 {archive_sql}
                 {cover_sql}
@@ -1948,11 +1989,13 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         FROM titles t
         {year_join_sql}
         {author_join_sql}
+        {format_join_sql}
         WHERE t.title_ttype IN ({type_placeholders})
         {title_where_sql}
         {type_filter_sql}
         {author_where_sql}
         {lang_where_sql}
+        {format_where_sql}
         {synopsis_sql}
         {archive_sql}
         {cover_sql}

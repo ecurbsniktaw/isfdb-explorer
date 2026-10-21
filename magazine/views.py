@@ -47,7 +47,7 @@ from .queries import (
     get_publisher_books_by_author, get_publisher_all_authors,
     get_publisher_magazines,
     format_date, NARRATIVE_TYPES,
-    advanced_search_titles, ADV_AUTHOR_OPS, ADV_TITLE_OPS, ADV_YEAR_OPS,
+    advanced_search_titles, ADV_AUTHOR_OPS, ADV_TITLE_OPS, ADV_YEAR_OPS, ADV_PUB_FORMATS,
     ADV_SEARCHABLE_TYPES, TITLE_LANGUAGES,
 )
 from .collection_queries import (
@@ -791,6 +791,7 @@ def title_list(request):
         "db_stats":         django_settings.DB_STATS,
         "languages":        TITLE_LANGUAGES,
         "searchable_types": ADV_SEARCHABLE_TYPES,
+        "pub_formats":      ADV_PUB_FORMATS,
     })
 
 
@@ -840,15 +841,16 @@ def title_search(request):
 
 def title_advanced_search(request):
     """Advanced title search: filter by language, author, and/or year published."""
-    _VALID_FIELDS      = {"title", "author", "year", "language", "type"}
+    _VALID_FIELDS      = {"title", "author", "year", "language", "type", "format"}
+    _VALID_FORMAT_OPS  = {fmt for fmt, _ in ADV_PUB_FORMATS}
     _VALID_OPS         = ADV_TITLE_OPS | ADV_AUTHOR_OPS | ADV_YEAR_OPS | {"is_anything"}
     _VALID_TYPES       = {t["type_id"] for t in ADV_SEARCHABLE_TYPES}
-    _FIELD_DEFAULTS    = {1: "language", 2: "title", 3: "author", 4: "type", 5: "year"}
+    _FIELD_DEFAULTS    = {1: "language", 2: "title", 3: "author", 4: "type", 5: "format", 6: "year"}
     _OP_DEFAULTS       = {1: "any", 2: "is_anything", 3: "is_anything",
-                          4: "is_anything", 5: "is_anything"}
+                          4: "is_anything", 5: "is_anything", 6: "is_anything"}
 
     rows = []
-    for i in (1, 2, 3, 4, 5):
+    for i in (1, 2, 3, 4, 5, 6):
         field = request.GET.get(f"field{i}", _FIELD_DEFAULTS[i])
         op    = request.GET.get(f"op{i}", _OP_DEFAULTS[i])
         val   = request.GET.get(f"val{i}", "").strip()
@@ -859,6 +861,9 @@ def title_advanced_search(request):
                 op = "any"
         elif field == "type":
             if op != "is_anything" and op not in _VALID_TYPES:
+                op = "is_anything"
+        elif field == "format":
+            if op != "is_anything" and op not in _VALID_FORMAT_OPS:
                 op = "is_anything"
         else:
             if op not in _VALID_OPS:
@@ -899,6 +904,7 @@ def title_advanced_search(request):
         "titles":           titles,
         "languages":        TITLE_LANGUAGES,
         "searchable_types": ADV_SEARCHABLE_TYPES,
+        "pub_formats":      ADV_PUB_FORMATS,
         "has_synopsis":     has_synopsis,
         "on_archive":       on_archive,
         "has_cover":        has_cover,

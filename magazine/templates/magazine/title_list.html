@@ -633,6 +633,7 @@
                 <option value="title">Title</option>
                 <option value="author">Author</option>
                 <option value="type">Type</option>
+                <option value="format">Format</option>
                 <option value="year">Year published</option>
               </select>
             </div>
@@ -654,6 +655,7 @@
                 <option value="title" selected>Title</option>
                 <option value="author">Author</option>
                 <option value="type">Type</option>
+                <option value="format">Format</option>
                 <option value="year">Year published</option>
               </select>
             </div>
@@ -677,6 +679,7 @@
                 <option value="title">Title</option>
                 <option value="author" selected>Author</option>
                 <option value="type">Type</option>
+                <option value="format">Format</option>
                 <option value="year">Year published</option>
               </select>
             </div>
@@ -699,6 +702,7 @@
                 <option value="title">Title</option>
                 <option value="author">Author</option>
                 <option value="type" selected>Type</option>
+                <option value="format">Format</option>
                 <option value="year">Year published</option>
               </select>
             </div>
@@ -719,11 +723,33 @@
                 <option value="title">Title</option>
                 <option value="author">Author</option>
                 <option value="type">Type</option>
-                <option value="year" selected>Year published</option>
+                <option value="format" selected>Format</option>
+                <option value="year">Year published</option>
               </select>
             </div>
             <div class="col-auto">
               <select name="op5" class="form-select adv-op" id="adv-op5">
+                <option value="is_anything" selected>is anything</option>
+                {% for fmt_id, fmt_label in pub_formats %}<option value="{{ fmt_id }}">{{ fmt_label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col adv-val-wrap" style="display:none;">
+              <input type="text" name="val5" class="form-control adv-val" placeholder="enter value…" disabled>
+            </div>
+          </div>
+          <div class="row g-2 align-items-center mb-3 adv-row">
+            <div class="col-auto">
+              <select name="field6" class="form-select adv-field" data-row="6">
+                <option value="language">Language</option>
+                <option value="title">Title</option>
+                <option value="author">Author</option>
+                <option value="type">Type</option>
+                <option value="format">Format</option>
+                <option value="year" selected>Year published</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <select name="op6" class="form-select adv-op" id="adv-op6">
                 <option value="is_anything" selected>is anything</option>
                 <option value="before">is before</option>
                 <option value="exactly">is exactly</option>
@@ -731,7 +757,7 @@
               </select>
             </div>
             <div class="col adv-val-wrap">
-              <input type="text" name="val5" class="form-control adv-val" placeholder="enter value…" disabled>
+              <input type="text" name="val6" class="form-control adv-val" placeholder="enter value…" disabled>
             </div>
           </div>
         </div>
@@ -781,6 +807,11 @@
     {% for t in searchable_types %}{value: '{{ t.type_id }}', label: '{{ t.label }}'},
     {% endfor %}
   ];
+  var formatOps = [
+    anythingOp,
+    {% for fmt_id, fmt_label in pub_formats %}{value: '{{ fmt_id }}', label: '{{ fmt_label }}'},
+    {% endfor %}
+  ];
   var titleOps = [
     anythingOp,
     {value: 'equals',      label: 'equals'},
@@ -815,6 +846,8 @@
       ops = langOps;
     } else if (fieldSel.value === 'type') {
       ops = typeOps;
+    } else if (fieldSel.value === 'format') {
+      ops = formatOps;
     } else if (fieldSel.value === 'year') {
       ops = yearOps;
     } else if (fieldSel.value === 'title') {
@@ -834,7 +867,7 @@
     if (!valWrap) return;
     var fieldSel  = rowEl.querySelector('.adv-field');
     var fieldVal  = fieldSel ? fieldSel.value : '';
-    var isNoInput = fieldVal === 'language' || fieldVal === 'type';
+    var isNoInput = fieldVal === 'language' || fieldVal === 'type' || fieldVal === 'format';
     if (isNoInput) {
       valWrap.style.display = 'none';
       var valEl = valWrap.querySelector('.adv-val');

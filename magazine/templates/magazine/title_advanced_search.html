@@ -25,6 +25,7 @@
             <option value="title"    {% if row.field == "title"    %}selected{% endif %}>Title</option>
             <option value="author"   {% if row.field == "author"   %}selected{% endif %}>Author</option>
             <option value="type"     {% if row.field == "type"     %}selected{% endif %}>Type</option>
+            <option value="format"   {% if row.field == "format"   %}selected{% endif %}>Format</option>
             <option value="year"     {% if row.field == "year"     %}selected{% endif %}>Year published</option>
           </select>
         </div>
@@ -39,6 +40,11 @@
           <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
             <option value="is_anything" {% if row.op == "is_anything" or not row.op %}selected{% endif %}>is anything</option>
             {% for t in searchable_types %}<option value="{{ t.type_id }}" {% if row.op == t.type_id %}selected{% endif %}>{{ t.label }}</option>{% endfor %}
+          </select>
+          {% elif row.field == "format" %}
+          <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
+            <option value="is_anything" {% if row.op == "is_anything" or not row.op %}selected{% endif %}>is anything</option>
+            {% for fmt_id, fmt_label in pub_formats %}<option value="{{ fmt_id }}" {% if row.op == fmt_id %}selected{% endif %}>{{ fmt_label }}</option>{% endfor %}
           </select>
           {% else %}
           <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
@@ -60,10 +66,10 @@
           </select>
           {% endif %}
         </div>
-        <div class="col adv-val-wrap"{% if row.field == "language" or row.field == "type" %} style="display:none;"{% endif %}>
+        <div class="col adv-val-wrap"{% if row.field == "language" or row.field == "type" or row.field == "format" %} style="display:none;"{% endif %}>
           <input type="text" name="val{{ forloop.counter }}" value="{{ row.val }}"
                  class="form-control adv-val" placeholder="enter value…"
-                 {% if row.field == "language" or row.field == "type" or row.op == "is_anything" or not row.op %}disabled{% endif %}>
+                 {% if row.field == "language" or row.field == "type" or row.field == "format" or row.op == "is_anything" or not row.op %}disabled{% endif %}>
         </div>
       </div>
       {% endfor %}
@@ -161,6 +167,11 @@
     {% for t in searchable_types %}{value: '{{ t.type_id }}', label: '{{ t.label }}'},
     {% endfor %}
   ];
+  var formatOps = [
+    {value: 'is_anything', label: 'is anything'},
+    {% for fmt_id, fmt_label in pub_formats %}{value: '{{ fmt_id }}', label: '{{ fmt_label }}'},
+    {% endfor %}
+  ];
   var titleOps = [
     anythingOp,
     {value: 'equals',      label: 'equals'},
@@ -195,6 +206,8 @@
       ops = langOps;
     } else if (fieldSel.value === 'type') {
       ops = typeOps;
+    } else if (fieldSel.value === 'format') {
+      ops = formatOps;
     } else if (fieldSel.value === 'year') {
       ops = yearOps;
     } else if (fieldSel.value === 'title') {
@@ -215,7 +228,7 @@
     var fieldSel   = rowEl.querySelector('.adv-field');
     var fieldVal   = fieldSel ? fieldSel.value : '';
     var isLang     = fieldVal === 'language';
-    var isNoInput  = isLang || fieldVal === 'type';
+    var isNoInput  = isLang || fieldVal === 'type' || fieldVal === 'format';
     if (isNoInput) {
       valWrap.style.display = 'none';
       var valEl = valWrap.querySelector('.adv-val');
