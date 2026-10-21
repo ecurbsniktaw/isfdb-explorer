@@ -72,9 +72,12 @@
                         no cover
                       </div>
                     {% endif %}
-                    <span class="small text-muted" style="font-size:0.75rem;">
+                    <span class="d-block text-muted" style="font-size:0.75rem; line-height:1.2;">
                       {{ row.month_abbr|default:row.formatted_date }}
                     </span>
+                    {% if row.country %}
+                    <span class="d-block text-muted" style="font-size:0.65rem; line-height:1.2;">{{ row.country }}</span>
+                    {% endif %}
                   </a>
                   {% endfor %}
                 </div>
@@ -110,9 +113,12 @@
         no cover
       </div>
     {% endif %}
-    <span class="small text-muted" style="font-size:0.75rem;">
+    <span class="d-block text-muted" style="font-size:0.75rem; line-height:1.2;">
       {{ row.month_abbr|default:row.formatted_date }}
     </span>
+    {% if row.country %}
+    <span class="d-block text-muted" style="font-size:0.65rem; line-height:1.2;">{{ row.country }}</span>
+    {% endif %}
   </a>
   {% endfor %}
 </div>

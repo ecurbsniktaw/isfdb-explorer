@@ -1319,6 +1319,54 @@ def get_magazine_group_info(cursor, names: list) -> list:
     return [rows[n] for n in names if n in rows]
 
 
+_SHILLING_RE = re.compile(r'^[A-Z]?[\d-]+/[\d-]|^/\d')
+
+def _price_to_country(price: str) -> str:
+    """Return a short country code from a publication price string, or ''."""
+    if not price:
+        return ""
+    p = price.strip()
+    if p.startswith('A$') or p.startswith('Au$'):
+        return "AU"
+    # Australian shillings: A1/6, A-/8, A-/9
+    if p.startswith('A') and '/' in p:
+        return "AU"
+    if p.startswith('C$') or p.upper().startswith('CAN$'):
+        return "CA"
+    if p.startswith('Ar$') or p.upper().startswith('ARS'):
+        return "AR"
+    if p.startswith('$') or p.startswith('#'):
+        return "US"
+    if p.startswith('£'):
+        return "UK"
+    # British shillings/pence: 1/6, 2/-, -/6, /4
+    if _SHILLING_RE.match(p):
+        return "UK"
+    if p.startswith('DM') or p.startswith('&#8499;'):
+        return "DE"
+    if p.startswith('€'):
+        return "EU"
+    if p.lower().startswith('skr') or p.lower().startswith('kr '):
+        return "SE"
+    if p.startswith('Lit') or p.startswith('L.'):
+        return "IT"
+    if p.startswith('Lei'):
+        return "RO"
+    if p.startswith('Bfr'):
+        return "BE"
+    if p.startswith('&#8361;'):
+        return "KR"
+    if p.startswith('&#8369;'):
+        return "PH"
+    if p.startswith('&#8377;'):
+        return "IN"
+    return ""
+
+
+_MONTH_ABBR = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
 def get_magazine_issues_by_name(cursor, mag_name: str) -> list:
     """
     Return all issues whose pub_title starts with mag_name followed by a comma,
@@ -1329,6 +1377,7 @@ def get_magazine_issues_by_name(cursor, mag_name: str) -> list:
             pub_id,
             pub_title,
             pub_frontimage,
+            pub_price,
             YEAR(pub_year)  AS pub_year,
             MONTH(pub_year) AS pub_month
         FROM pubs
@@ -1336,12 +1385,11 @@ def get_magazine_issues_by_name(cursor, mag_name: str) -> list:
           AND pub_title LIKE %s
         ORDER BY pub_year, MONTH(pub_year), pub_title
     """, (f"{mag_name},%",))
-    _MONTH_ABBR = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     rows = cursor.fetchall()
     for r in rows:
         r["formatted_date"] = format_date(r["pub_year"], r["pub_month"])
         r["month_abbr"] = _MONTH_ABBR[r["pub_month"]] if r["pub_month"] else ""
+        r["country"] = _price_to_country(r.get("pub_price") or "")
     return rows
 
 
@@ -1368,6 +1416,7 @@ def get_magazine_issues(cursor, mag_code: str) -> tuple:
             p.pub_id,
             p.pub_title,
             p.pub_frontimage,
+            p.pub_price,
             YEAR(p.pub_year)  AS pub_year,
             MONTH(p.pub_year) AS pub_month
         FROM pubs p
@@ -1376,11 +1425,10 @@ def get_magazine_issues(cursor, mag_code: str) -> tuple:
     """, patterns)
     rows = cursor.fetchall()
 
-    _MONTH_ABBR = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     for r in rows:
         r["formatted_date"] = format_date(r["pub_year"], r["pub_month"])
         r["month_abbr"] = _MONTH_ABBR[r["pub_month"]] if r["pub_month"] else ""
+        r["country"] = _price_to_country(r.get("pub_price") or "")
 
     return mag_name, rows
 
