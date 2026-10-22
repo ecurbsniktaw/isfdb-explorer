@@ -717,14 +717,29 @@ def get_author_books(cursor, author_id: int) -> list:
 
 
 _PUB_PTYPE_LABELS = {
-    "hc":      "Hardcover",
-    "pb":      "Paperback",
-    "tp":      "Trade Paperback",
-    "ebook":   "eBook",
-    "digest":  "Digest",
-    "ph":      "Pamphlet",
-    "audio":   "Audio",
-    "unknown": "Unknown",
+    "hc":                     "Hardcover",
+    "tp":                     "Trade Paperback",
+    "pb":                     "Paperback",
+    "digest":                 "Digest",
+    "pulp":                   "Pulp",
+    "bedsheet":               "Bedsheet",
+    "tabloid":                "Tabloid",
+    "quarto":                 "Quarto",
+    "octavo":                 "Octavo",
+    "A4":                     "A4",
+    "A5":                     "A5",
+    "ph":                     "Pamphlet / Hardcover",
+    "dos":                    "Dos-à-dos",
+    "ebook":                  "E-book",
+    "webzine":                "Webzine",
+    "audio CD":               "Audio CD",
+    "audio MP3 CD":           "Audio MP3 CD",
+    "audio cassette":         "Audio Cassette",
+    "audio LP":               "Audio LP",
+    "digital audio download": "Digital Audio Download",
+    "flexibound":             "Flexibound",
+    "other":                  "Other",
+    "unknown":                "Unknown",
 }
 
 
@@ -1871,7 +1886,6 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
     year_join_params = []
     lang_where_sql   = ""
     lang_param       = None
-    format_join_sql  = ""
     format_where_sql = ""
     format_param     = None
 
@@ -1895,11 +1909,23 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
 
         if field == "format":
             if op in _ADV_FORMAT_VALUES:
-                format_join_sql  = """
-                    JOIN pub_content pc_fmt ON pc_fmt.title_id = t.title_id
-                    JOIN pubs p_fmt         ON p_fmt.pub_id    = pc_fmt.pub_id"""
-                format_where_sql = "AND p_fmt.pub_ptype = %s"
-                format_param     = op
+                # Use EXISTS so we can reference t.title_ttype in the subquery.
+                # For book-container types (NOVEL, ANTHOLOGY, etc.) the pub's
+                # pub_ctype must match the title type — otherwise a novel that
+                # appears as content inside a dos-à-dos omnibus would wrongly
+                # match a search for format=dos.
+                format_where_sql = """AND EXISTS (
+                    SELECT 1 FROM pub_content pc_fmt
+                    JOIN pubs p_fmt ON p_fmt.pub_id = pc_fmt.pub_id
+                    WHERE pc_fmt.title_id = t.title_id
+                      AND p_fmt.pub_ptype = %s
+                      AND (
+                          t.title_ttype NOT IN
+                              ('NOVEL','ANTHOLOGY','COLLECTION','NONFICTION','OMNIBUS','CHAPBOOK')
+                          OR p_fmt.pub_ctype = t.title_ttype
+                      )
+                )"""
+                format_param = op
             continue
 
         if op == "is_anything" or not val:
@@ -1967,7 +1993,6 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
                 FROM titles t
                 {year_join_sql}
                 {author_join_sql}
-                {format_join_sql}
                 WHERE t.title_ttype IN ({type_placeholders})
                 {title_where_sql}
                 {type_filter_sql}
@@ -1989,7 +2014,6 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         FROM titles t
         {year_join_sql}
         {author_join_sql}
-        {format_join_sql}
         WHERE t.title_ttype IN ({type_placeholders})
         {title_where_sql}
         {type_filter_sql}
