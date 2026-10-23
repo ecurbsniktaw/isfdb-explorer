@@ -1884,10 +1884,12 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
     author_param     = None
     year_join_sql    = ""
     year_join_params = []
+    year_op_val      = None
+    year_val_int     = None
     lang_where_sql   = ""
     lang_param       = None
     format_where_sql = ""
-    format_param     = None
+    format_params    = []
 
     for crit in rows:
         field = crit.get("field", "")
@@ -1920,12 +1922,16 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
                     WHERE pc_fmt.title_id = t.title_id
                       AND p_fmt.pub_ptype = %s
                       AND (
-                          t.title_ttype NOT IN
-                              ('NOVEL','ANTHOLOGY','COLLECTION','NONFICTION','OMNIBUS','CHAPBOOK')
-                          OR p_fmt.pub_ctype = t.title_ttype
+                          (t.title_ttype IN
+                               ('NOVEL','ANTHOLOGY','COLLECTION','NONFICTION','OMNIBUS','CHAPBOOK')
+                           AND p_fmt.pub_ctype = t.title_ttype)
+                          OR
+                          (t.title_ttype NOT IN
+                               ('NOVEL','ANTHOLOGY','COLLECTION','NONFICTION','OMNIBUS','CHAPBOOK')
+                           AND p_fmt.pub_ctype = 'MAGAZINE')
                       )
                 )"""
-                format_param = op
+                format_params = [op]
             continue
 
         if op == "is_anything" or not val:
@@ -1965,7 +1971,45 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
                 author_where_sql = "AND a.author_canonical LIKE %s"
 
         elif field == "year" and op in ADV_YEAR_OPS and val.isdigit():
+            year_op_val  = op
+            year_val_int = int(val)
             year_join_sql, year_join_params = _year_join_sql_and_params(op, int(val))
+
+    # When both format and year are active, fold the year into the format EXISTS
+    # subquery so both constraints apply to the SAME pub. Without this a story
+    # first published in 1960 in a magazine and later reprinted in a 1968
+    # dos-à-dos anthology would match "year=1960, format=dos".
+    if format_params and year_val_int is not None:
+        n4   = f"{year_val_int:04d}"
+        n4p1 = f"{year_val_int + 1:04d}"
+        if year_op_val == "before":
+            year_in_fmt_sql    = "AND p_fmt.pub_year > '0000-12-00' AND p_fmt.pub_year < %s"
+            year_in_fmt_params = [f"{n4}-00-00"]
+        elif year_op_val == "after":
+            year_in_fmt_sql    = "AND p_fmt.pub_year > %s"
+            year_in_fmt_params = [f"{n4}-12-00"]
+        else:  # exactly
+            year_in_fmt_sql    = "AND p_fmt.pub_year >= %s AND p_fmt.pub_year < %s"
+            year_in_fmt_params = [f"{n4}-00-00", f"{n4p1}-00-00"]
+        format_where_sql = f"""AND EXISTS (
+                    SELECT 1 FROM pub_content pc_fmt
+                    JOIN pubs p_fmt ON p_fmt.pub_id = pc_fmt.pub_id
+                    WHERE pc_fmt.title_id = t.title_id
+                      AND p_fmt.pub_ptype = %s
+                      {year_in_fmt_sql}
+                      AND (
+                          (t.title_ttype IN
+                               ('NOVEL','ANTHOLOGY','COLLECTION','NONFICTION','OMNIBUS','CHAPBOOK')
+                           AND p_fmt.pub_ctype = t.title_ttype)
+                          OR
+                          (t.title_ttype NOT IN
+                               ('NOVEL','ANTHOLOGY','COLLECTION','NONFICTION','OMNIBUS','CHAPBOOK')
+                           AND p_fmt.pub_ctype = 'MAGAZINE')
+                      )
+                )"""
+        format_params    = format_params + year_in_fmt_params
+        year_join_sql    = ""
+        year_join_params = []
 
     # Checkbox conditions (no extra params — literals embedded in SQL)
     synopsis_sql   = "AND (t.title_synopsis IS NOT NULL AND t.title_synopsis != '')" if has_synopsis  else ""
@@ -1983,7 +2027,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         *([type_filter_param] if type_filter_param is not None else []),
         *([author_param]      if author_param      is not None else []),
         *([lang_param]        if lang_param        is not None else []),
-        *([format_param]      if format_param      is not None else []),
+        *format_params,
     )
 
     if count_only:
