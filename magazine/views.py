@@ -47,7 +47,7 @@ from .queries import (
     get_publisher_books_by_author, get_publisher_all_authors,
     get_publisher_magazines,
     format_date, NARRATIVE_TYPES,
-    advanced_search_titles, ADV_AUTHOR_OPS, ADV_TITLE_OPS, ADV_YEAR_OPS, ADV_PUB_FORMATS,
+    advanced_search_titles, ADV_AUTHOR_OPS, ADV_TITLE_OPS, ADV_YEAR_OPS, ADV_PUBLISHER_OPS, ADV_PUB_FORMATS,
     ADV_SEARCHABLE_TYPES, TITLE_LANGUAGES,
 )
 from .collection_queries import (
@@ -841,16 +841,16 @@ def title_search(request):
 
 def title_advanced_search(request):
     """Advanced title search: filter by language, author, and/or year published."""
-    _VALID_FIELDS      = {"title", "author", "year", "language", "type", "format"}
+    _VALID_FIELDS      = {"title", "author", "year", "language", "type", "format", "publisher"}
     _VALID_FORMAT_OPS  = {fmt for fmt, _ in ADV_PUB_FORMATS}
-    _VALID_OPS         = ADV_TITLE_OPS | ADV_AUTHOR_OPS | ADV_YEAR_OPS | {"is_anything"}
+    _VALID_OPS         = ADV_TITLE_OPS | ADV_AUTHOR_OPS | ADV_YEAR_OPS | ADV_PUBLISHER_OPS | {"is_anything"}
     _VALID_TYPES       = {t["type_id"] for t in ADV_SEARCHABLE_TYPES}
-    _FIELD_DEFAULTS    = {1: "language", 2: "title", 3: "author", 4: "type", 5: "format", 6: "year"}
+    _FIELD_DEFAULTS    = {1: "language", 2: "title", 3: "author", 4: "type", 5: "format", 6: "publisher", 7: "year"}
     _OP_DEFAULTS       = {1: "any", 2: "is_anything", 3: "is_anything",
-                          4: "is_anything", 5: "is_anything", 6: "is_anything"}
+                          4: "is_anything", 5: "is_anything", 6: "is_anything", 7: "is_anything"}
 
     rows = []
-    for i in (1, 2, 3, 4, 5, 6):
+    for i in (1, 2, 3, 4, 5, 6, 7):
         field = request.GET.get(f"field{i}", _FIELD_DEFAULTS[i])
         op    = request.GET.get(f"op{i}", _OP_DEFAULTS[i])
         val   = request.GET.get(f"val{i}", "").strip()

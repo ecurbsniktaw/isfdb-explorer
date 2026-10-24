@@ -25,8 +25,9 @@
             <option value="title"    {% if row.field == "title"    %}selected{% endif %}>Title</option>
             <option value="author"   {% if row.field == "author"   %}selected{% endif %}>Author</option>
             <option value="type"     {% if row.field == "type"     %}selected{% endif %}>Type</option>
-            <option value="format"   {% if row.field == "format"   %}selected{% endif %}>Format</option>
-            <option value="year"     {% if row.field == "year"     %}selected{% endif %}>Year published</option>
+            <option value="format"    {% if row.field == "format"    %}selected{% endif %}>Format</option>
+            <option value="publisher" {% if row.field == "publisher" %}selected{% endif %}>Publisher</option>
+            <option value="year"      {% if row.field == "year"      %}selected{% endif %}>Year published</option>
           </select>
         </div>
         <div class="col-auto">
@@ -45,6 +46,14 @@
           <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
             <option value="is_anything" {% if row.op == "is_anything" or not row.op %}selected{% endif %}>is anything</option>
             {% for fmt_id, fmt_label in pub_formats %}<option value="{{ fmt_id }}" {% if row.op == fmt_id %}selected{% endif %}>{{ fmt_label }}</option>{% endfor %}
+          </select>
+          {% elif row.field == "publisher" %}
+          <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
+            <option value="is_anything"  {% if row.op == "is_anything" or not row.op %}selected{% endif %}>is anything</option>
+            <option value="equals"       {% if row.op == "equals"       %}selected{% endif %}>equals</option>
+            <option value="starts_with"  {% if row.op == "starts_with"  %}selected{% endif %}>starts with</option>
+            <option value="ends_with"    {% if row.op == "ends_with"    %}selected{% endif %}>ends with</option>
+            <option value="contains"     {% if row.op == "contains"     %}selected{% endif %}>contains</option>
           </select>
           {% else %}
           <select name="op{{ forloop.counter }}" class="form-select adv-op" id="adv-op{{ forloop.counter }}">
@@ -70,6 +79,7 @@
           <input type="text" name="val{{ forloop.counter }}" value="{{ row.val }}"
                  class="form-control adv-val" placeholder="enter value…"
                  {% if row.field == "language" or row.field == "type" or row.field == "format" or row.op == "is_anything" or not row.op %}disabled{% endif %}>
+
         </div>
       </div>
       {% endfor %}
@@ -179,6 +189,13 @@
     {value: 'ends_with',   label: 'ends with'},
     {value: 'contains',    label: 'contains'},
   ];
+  var publisherOps = [
+    anythingOp,
+    {value: 'equals',      label: 'equals'},
+    {value: 'starts_with', label: 'starts with'},
+    {value: 'ends_with',   label: 'ends with'},
+    {value: 'contains',    label: 'contains'},
+  ];
   var authorOps = [
     anythingOp,
     {value: 'equals',      label: 'equals'},
@@ -208,6 +225,8 @@
       ops = typeOps;
     } else if (fieldSel.value === 'format') {
       ops = formatOps;
+    } else if (fieldSel.value === 'publisher') {
+      ops = publisherOps;
     } else if (fieldSel.value === 'year') {
       ops = yearOps;
     } else if (fieldSel.value === 'title') {

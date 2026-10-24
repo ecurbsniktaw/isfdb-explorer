@@ -1603,9 +1603,10 @@ def get_titles_by_tag(cursor, tag_name: str) -> tuple[str | None, list]:
 
 
 # Valid operators for the advanced title search form
-ADV_AUTHOR_OPS = {"equals", "starts_with", "ends_with"}
-ADV_TITLE_OPS  = {"equals", "starts_with", "ends_with", "contains"}
-ADV_YEAR_OPS   = {"before", "exactly", "after"}
+ADV_AUTHOR_OPS     = {"equals", "starts_with", "ends_with"}
+ADV_TITLE_OPS      = {"equals", "starts_with", "ends_with", "contains"}
+ADV_YEAR_OPS       = {"before", "exactly", "after"}
+ADV_PUBLISHER_OPS  = {"equals", "starts_with", "ends_with", "contains"}
 
 ADV_PUB_FORMATS = [
     ("hc",                    "Hardcover"),
@@ -1888,8 +1889,10 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
     year_val_int     = None
     lang_where_sql   = ""
     lang_param       = None
-    format_where_sql = ""
-    format_params    = []
+    format_where_sql    = ""
+    format_params       = []
+    publisher_where_sql = ""
+    publisher_param     = None
 
     for crit in rows:
         field = crit.get("field", "")
@@ -1970,6 +1973,45 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
                 author_param     = "%" + val.replace("%", r"\%").replace("_", r"\_")
                 author_where_sql = "AND a.author_canonical LIKE %s"
 
+        elif field == "publisher" and op in ADV_PUBLISHER_OPS:
+            escaped = val.replace("%", r"\%").replace("_", r"\_")
+            if op == "equals":
+                publisher_param     = val
+                publisher_where_sql = """AND EXISTS (
+                    SELECT 1 FROM pub_content pc_pub
+                    JOIN pubs p_pub ON p_pub.pub_id = pc_pub.pub_id
+                    JOIN publishers pub_t ON pub_t.publisher_id = p_pub.publisher_id
+                    WHERE pc_pub.title_id = t.title_id
+                      AND pub_t.publisher_name = %s
+                )"""
+            elif op == "starts_with":
+                publisher_param     = escaped + "%"
+                publisher_where_sql = """AND EXISTS (
+                    SELECT 1 FROM pub_content pc_pub
+                    JOIN pubs p_pub ON p_pub.pub_id = pc_pub.pub_id
+                    JOIN publishers pub_t ON pub_t.publisher_id = p_pub.publisher_id
+                    WHERE pc_pub.title_id = t.title_id
+                      AND pub_t.publisher_name LIKE %s
+                )"""
+            elif op == "ends_with":
+                publisher_param     = "%" + escaped
+                publisher_where_sql = """AND EXISTS (
+                    SELECT 1 FROM pub_content pc_pub
+                    JOIN pubs p_pub ON p_pub.pub_id = pc_pub.pub_id
+                    JOIN publishers pub_t ON pub_t.publisher_id = p_pub.publisher_id
+                    WHERE pc_pub.title_id = t.title_id
+                      AND pub_t.publisher_name LIKE %s
+                )"""
+            else:  # contains
+                publisher_param     = "%" + escaped + "%"
+                publisher_where_sql = """AND EXISTS (
+                    SELECT 1 FROM pub_content pc_pub
+                    JOIN pubs p_pub ON p_pub.pub_id = pc_pub.pub_id
+                    JOIN publishers pub_t ON pub_t.publisher_id = p_pub.publisher_id
+                    WHERE pc_pub.title_id = t.title_id
+                      AND pub_t.publisher_name LIKE %s
+                )"""
+
         elif field == "year" and op in ADV_YEAR_OPS and val.isdigit():
             year_op_val  = op
             year_val_int = int(val)
@@ -2028,6 +2070,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         *([author_param]      if author_param      is not None else []),
         *([lang_param]        if lang_param        is not None else []),
         *format_params,
+        *([publisher_param]   if publisher_param   is not None else []),
     )
 
     if count_only:
@@ -2043,6 +2086,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
                 {author_where_sql}
                 {lang_where_sql}
                 {format_where_sql}
+                {publisher_where_sql}
                 {synopsis_sql}
                 {archive_sql}
                 {cover_sql}
@@ -2064,6 +2108,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         {author_where_sql}
         {lang_where_sql}
         {format_where_sql}
+        {publisher_where_sql}
         {synopsis_sql}
         {archive_sql}
         {cover_sql}
