@@ -3382,6 +3382,23 @@ def get_publisher_detail(cursor, publisher_id: int) -> dict | None:
     """, (publisher_id, *_PUBLISHER_BOOK_TYPES))
     row["active_years"] = cursor.fetchall()
 
+    # Publication series used by this publisher
+    cursor.execute("""
+        SELECT ps.pub_series_id, ps.pub_series_name, COUNT(p.pub_id) AS pub_count
+        FROM pubs p
+        JOIN pub_series ps ON ps.pub_series_id = p.pub_series_id
+        WHERE p.publisher_id = %s
+        GROUP BY ps.pub_series_id, ps.pub_series_name
+        ORDER BY ps.pub_series_name
+    """, (publisher_id,))
+    row["pub_series"] = cursor.fetchall()
+
+    cursor.execute(
+        "SELECT COUNT(*) AS cnt FROM pubs WHERE publisher_id = %s AND pub_series_id IS NULL",
+        (publisher_id,),
+    )
+    row["no_series_count"] = cursor.fetchone()["cnt"]
+
     return row
 
 

@@ -20,7 +20,24 @@
   {% if pub_series.pub_series_note or pub_series.webpages %}
   <div class="col-lg-8">
     {% if pub_series.pub_series_note %}
-    <div class="text-muted mb-3">{{ pub_series.pub_series_note|expand_templates|safe }}</div>
+    <div class="accordion mb-3" id="notesAccordion">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header h6 mb-0">
+          <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#notesPanel"
+                  aria-expanded="false"
+                  aria-controls="notesPanel">
+            Notes
+          </button>
+        </h2>
+        <div id="notesPanel" class="accordion-collapse collapse"
+             data-bs-parent="#notesAccordion">
+          <div class="accordion-body px-2 pt-1 small text-muted">{{ pub_series.pub_series_note|expand_templates|safe }}</div>
+        </div>
+      </div>
+    </div>
     {% endif %}
     {% if pub_series.webpages %}
     <div class="d-flex flex-wrap gap-2">

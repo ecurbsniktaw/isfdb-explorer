@@ -269,6 +269,52 @@
 </div>
 {% endif %}
 
+{% if publisher.pub_series %}
+<div class="accordion mb-4" id="pubSeriesAccordion">
+  <div class="accordion-item border-0">
+    <h2 class="accordion-header h5 mb-0">
+      <button class="accordion-button collapsed ps-2 shadow-none fw-semibold"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#pubSeriesPanel"
+              aria-expanded="false"
+              aria-controls="pubSeriesPanel">
+        Publication Series <span class="badge text-bg-secondary fw-normal ms-2" style="font-size:.75em;">{{ publisher.pub_series|length }}</span>
+      </button>
+    </h2>
+    <div id="pubSeriesPanel" class="accordion-collapse collapse"
+         data-bs-parent="#pubSeriesAccordion">
+      <div class="accordion-body px-2 pt-2">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Series</th>
+                <th style="width:15%">Publications</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in publisher.pub_series %}
+              <tr>
+                <td><a href="{% url 'pub_series_detail' s.pub_series_id %}" class="text-decoration-none">{{ s.pub_series_name }}</a></td>
+                <td class="text-muted small">{{ s.pub_count }}</td>
+              </tr>
+              {% endfor %}
+              {% if publisher.no_series_count %}
+              <tr>
+                <td class="text-muted fst-italic">Not in a series</td>
+                <td class="text-muted small">{{ publisher.no_series_count }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% if publisher.active_years %}
 <div class="text-center">
 <h2 class="h5 mb-3">Active Years (Books)
