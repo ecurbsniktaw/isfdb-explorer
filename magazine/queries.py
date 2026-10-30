@@ -2812,6 +2812,7 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
             MAX(canon_title)  AS title_title,
             MAX(canon_ttype)  AS title_ttype,
             series_num,
+            MIN(pub_year_val) AS pub_year,
             GROUP_CONCAT(
                 DISTINCT author_canonical ORDER BY author_canonical SEPARATOR ' & '
             ) AS authors,
@@ -2824,6 +2825,7 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
                 COALESCE(tc.title_id,    t.title_id)    AS canon_id,
                 COALESCE(tc.title_title, t.title_title) AS canon_title,
                 COALESCE(tc.title_ttype, t.title_ttype) AS canon_ttype,
+                NULLIF(YEAR(p.pub_year), 0)             AS pub_year_val,
                 a.author_canonical,
                 a.author_id
             FROM pubs p
@@ -2837,7 +2839,7 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
               AND COALESCE(tc.title_ttype, t.title_ttype) = p.pub_ctype
         ) sub
         GROUP BY canon_id, series_num
-        ORDER BY LENGTH(series_num), series_num, MAX(canon_title)
+        ORDER BY MIN(pub_year_val), LENGTH(series_num), series_num, MAX(canon_title)
     """, (pub_series_id,))
     titles = cursor.fetchall()
     for t in titles:

@@ -61,16 +61,17 @@
   <table class="table table-sm table-hover align-middle">
     <thead class="table-light">
       <tr>
-        <th style="width:3rem;">#</th>
+        <th style="width:6rem;">Pub series #</th>
         <th>Title</th>
         <th>Author(s)</th>
+        <th style="width:5rem;">Year</th>
         <th>Type</th>
       </tr>
     </thead>
     <tbody>
       {% for t in pub_series.titles %}
       <tr>
-        <td class="text-muted">{{ t.series_num|default:"" }}</td>
+        <td class="text-muted small">{{ t.series_num|default:"" }}</td>
         <td>
           {% if t.title_ttype == "SHORTFICTION" or t.title_ttype == "POEM" %}
             <a href="{% url 'story_detail' t.title_id %}">{{ t.title_title |unescape_html }}</a>
@@ -88,6 +89,7 @@
             {% if not forloop.last %} &amp; {% endif %}
           {% endfor %}
         </td>
+        <td class="text-muted small">{{ t.pub_year|default:"—" }}</td>
         <td>
           {% if t.title_ttype != "NOVEL" %}
             <span class="badge text-bg-secondary">{{ t.type_label }}</span>
