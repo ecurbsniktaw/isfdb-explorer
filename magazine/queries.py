@@ -2834,9 +2834,7 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
                    ON ca.title_id = COALESCE(tc.title_id, t.title_id) AND ca.ca_status = 1
             LEFT JOIN authors a ON a.author_id = ca.author_id
             WHERE p.pub_series_id = %s
-              AND COALESCE(tc.title_ttype, t.title_ttype)
-                    IN ('NOVEL','COLLECTION','ANTHOLOGY','OMNIBUS',
-                        'CHAPBOOK','NONFICTION','SHORTFICTION')
+              AND COALESCE(tc.title_ttype, t.title_ttype) = p.pub_ctype
         ) sub
         GROUP BY canon_id, series_num
         ORDER BY LENGTH(series_num), series_num, MAX(canon_title)
