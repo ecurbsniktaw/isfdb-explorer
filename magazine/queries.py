@@ -751,6 +751,10 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
     Includes cover image, pub date, catalog id, publisher, format, and cover artist.
     """
     type_placeholders = ", ".join(["%s"] * len(BOOK_TYPES))
+    # When a specific pub is requested, also match variant titles (title_parent = title_id)
+    # so pubs that store a variant rather than the canonical record are still found.
+    title_cond = "(t.title_id = %s OR t.title_parent = %s)" if pub_id else "t.title_id = %s"
+    title_params: tuple = (title_id, title_id) if pub_id else (title_id,)
     query = f"""
         SELECT
             p.pub_id,
@@ -815,7 +819,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
         LEFT JOIN canonical_author ca_cv ON ca_cv.title_id = t_cv.title_id
         LEFT JOIN authors a_cv        ON a_cv.author_id = ca_cv.author_id
         LEFT JOIN languages lang      ON lang.lang_id = t.title_language
-        WHERE t.title_id = %s
+        WHERE {title_cond}
           AND p.pub_ctype IN ({type_placeholders})
           {f"AND p.pub_id = {int(pub_id)}" if pub_id else "AND YEAR(p.pub_year) > 0"}
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
@@ -827,7 +831,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
         ORDER BY p.pub_year, p.pub_id
         LIMIT 1
     """
-    cursor.execute(query, (title_id, *BOOK_TYPES))
+    cursor.execute(query, (*title_params, *BOOK_TYPES))
     row = cursor.fetchone()
     if not row:
         return None
