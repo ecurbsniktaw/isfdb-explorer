@@ -2813,6 +2813,7 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
             MAX(canon_ttype)  AS title_ttype,
             series_num,
             MIN(pub_year_val) AS pub_year,
+            MIN(pub_id)       AS pub_id,
             GROUP_CONCAT(
                 DISTINCT author_canonical ORDER BY author_canonical SEPARATOR ' & '
             ) AS authors,
@@ -2821,6 +2822,7 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
             ) AS author_ids
         FROM (
             SELECT
+                p.pub_id                                  AS pub_id,
                 p.pub_series_num                          AS series_num,
                 COALESCE(tc.title_id,    t.title_id)    AS canon_id,
                 COALESCE(tc.title_title, t.title_title) AS canon_title,
