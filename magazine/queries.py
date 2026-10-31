@@ -817,8 +817,7 @@ def get_book_detail(cursor, title_id: int, pub_id: int = None) -> dict | None:
         LEFT JOIN languages lang      ON lang.lang_id = t.title_language
         WHERE t.title_id = %s
           AND p.pub_ctype IN ({type_placeholders})
-          AND YEAR(p.pub_year) > 0
-          {f"AND p.pub_id = {int(pub_id)}" if pub_id else ""}
+          {f"AND p.pub_id = {int(pub_id)}" if pub_id else "AND YEAR(p.pub_year) > 0"}
         GROUP BY p.pub_id, p.pub_title, p.pub_year,
                  p.pub_catalog, p.pub_isbn, p.pub_price, p.pub_ptype, p.pub_pages, p.pub_frontimage,
                  pub.publisher_name, p.pub_series_id, ps.pub_series_name, p.pub_series_num,
