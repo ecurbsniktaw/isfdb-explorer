@@ -3392,13 +3392,25 @@ def get_publisher_detail(cursor, publisher_id: int) -> dict | None:
     """, (publisher_id, *_PUBLISHER_BOOK_TYPES))
     row["active_years"] = cursor.fetchall()
 
-    # Publication series used by this publisher
+    # Publication series used by this publisher.
+    # Count distinct canonical titles (same deduplication as the detail page).
     cursor.execute("""
-        SELECT ps.pub_series_id, ps.pub_series_name, COUNT(p.pub_id) AS pub_count
-        FROM pubs p
-        JOIN pub_series ps ON ps.pub_series_id = p.pub_series_id
-        WHERE p.publisher_id = %s
-        GROUP BY ps.pub_series_id, ps.pub_series_name
+        SELECT sub.pub_series_id, ps.pub_series_name, COUNT(*) AS pub_count
+        FROM (
+            SELECT DISTINCT
+                p.pub_series_id,
+                COALESCE(tc.title_id, t.title_id) AS canon_id,
+                p.pub_series_num
+            FROM pubs p
+            JOIN pub_content pc ON pc.pub_id  = p.pub_id
+            JOIN titles t       ON t.title_id = pc.title_id
+            LEFT JOIN titles tc ON tc.title_id = t.title_parent AND t.title_parent != 0
+            WHERE p.publisher_id = %s
+              AND p.pub_series_id IS NOT NULL
+              AND COALESCE(tc.title_ttype, t.title_ttype) = p.pub_ctype
+        ) sub
+        JOIN pub_series ps ON ps.pub_series_id = sub.pub_series_id
+        GROUP BY sub.pub_series_id, ps.pub_series_name
         ORDER BY ps.pub_series_name
     """, (publisher_id,))
     row["pub_series"] = cursor.fetchall()
