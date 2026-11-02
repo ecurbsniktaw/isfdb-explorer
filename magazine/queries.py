@@ -345,6 +345,11 @@ def get_contents(cursor, pub_id: int) -> list:
                 SEPARATOR ','
             ) AS author_ids,
             GROUP_CONCAT(
+                IFNULL(a.author_lastname, '')
+                ORDER BY ca.ca_id
+                SEPARATOR ' & '
+            ) AS author_lastnames,
+            GROUP_CONCAT(
                 IFNULL(pn.real_names, '')
                 ORDER BY ca.ca_id
                 SEPARATOR '|'
@@ -389,6 +394,11 @@ def get_contents(cursor, pub_id: int) -> list:
         row["is_narrative"] = row["title_ttype"] in NARRATIVE_TYPES
         row["kind"]         = "Fiction" if row["title_ttype"] in fiction_set else "Non Fiction"
         row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
+
+        # Attach author_lastname to each entry for last-name-first display in templates.
+        lastnames = (row.get("author_lastnames") or "").split(" & ")
+        for i, entry in enumerate(row["author_list"]):
+            entry["lastname"] = lastnames[i].strip() if i < len(lastnames) else ""
 
         # Enrich each author entry with real-author info when the credited name is a pen name.
         # "The Editor" is a generic placeholder, not a true pen name — skip it.

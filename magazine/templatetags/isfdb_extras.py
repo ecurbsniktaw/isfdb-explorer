@@ -117,3 +117,41 @@ def expand_isfdb_templates(text):
 @register.filter
 def expand_templates(value):
     return expand_isfdb_templates(value)
+
+
+_SUFFIX_RE = re.compile(r',\s*(Jr\.?|Sr\.?|Esq\.?|II|III|IV|VI?)$', re.IGNORECASE)
+
+
+@register.filter
+def lastname_first(author_entry):
+    """
+    Format an author dict {'name': ..., 'lastname': ...} as 'Last, First M. Suffix'.
+    Falls back to the canonical name if lastname is missing or can't be parsed.
+    """
+    if not isinstance(author_entry, dict):
+        return author_entry
+    canonical = author_entry.get('name') or ''
+    lastname  = author_entry.get('lastname') or ''
+    if not lastname or not canonical:
+        return canonical
+
+    # Split off a trailing suffix like ", Jr." or ", III"
+    suffix = ''
+    base   = canonical
+    m = _SUFFIX_RE.search(canonical)
+    if m:
+        suffix = m.group(1)
+        base   = canonical[:m.start()].strip()
+
+    # Remove the lastname from the end of the base name
+    if base.endswith(lastname):
+        first_part = base[:-len(lastname)].strip()
+        if first_part:
+            result = f'{lastname}, {first_part}'
+        else:
+            result = lastname
+        if suffix:
+            result += f' {suffix}'
+        return result
+
+    return canonical  # can't parse cleanly, return as-is
