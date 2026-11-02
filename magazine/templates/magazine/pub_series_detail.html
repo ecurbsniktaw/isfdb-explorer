@@ -58,14 +58,14 @@
   <small class="text-muted fw-normal fs-6">({{ pub_series.titles|length }})</small>
 </h2>
 <div class="table-responsive" style="max-width:860px;">
-  <table class="table table-sm table-hover align-middle">
+  <table id="pubseries-table" class="table table-sm table-hover align-middle">
     <thead class="table-light">
       <tr>
-        <th style="width:6rem;">Pub series #</th>
-        <th>Title</th>
-        <th>Author(s)</th>
-        <th style="width:5rem;">Year</th>
-        <th>Type</th>
+        <th data-col="0" style="width:6rem;">Pub series #</th>
+        <th data-col="1">Title</th>
+        <th data-col="2">Author(s)</th>
+        <th data-col="3" data-numeric="1" style="width:5rem;">Year</th>
+        <th data-col="4">Type</th>
       </tr>
     </thead>
     <tbody>
@@ -89,7 +89,7 @@
             {% if not forloop.last %} &amp; {% endif %}
           {% endfor %}
         </td>
-        <td class="text-muted small">{{ t.pub_year|default:"—" }}</td>
+        <td class="text-muted small" data-sort="{{ t.pub_year|default:0 }}">{{ t.pub_year|default:"—" }}</td>
         <td>
           {% if t.title_ttype != "NOVEL" %}
             <span class="badge text-bg-secondary">{{ t.type_label }}</span>
@@ -103,5 +103,55 @@
 {% else %}
 <p class="text-muted mt-3">No titles found in this publication series.</p>
 {% endif %}
+
+<script>
+(function () {
+  var table = document.getElementById('pubseries-table');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  var ths   = Array.from(table.querySelectorAll('thead th'));
+  var state = {col: -1, asc: true};
+
+  function sortBy(colIdx, numeric, asc) {
+    if (asc === undefined) asc = (state.col === colIdx) ? !state.asc : true;
+    state.col = colIdx;
+    state.asc = asc;
+
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort(function (a, b) {
+      var ca = a.cells[colIdx], cb = b.cells[colIdx];
+      if (numeric) {
+        var na = parseInt(ca.dataset.sort || ca.textContent, 10) || 0;
+        var nb = parseInt(cb.dataset.sort || cb.textContent, 10) || 0;
+        if (na === 0 && nb !== 0) return 1;
+        if (nb === 0 && na !== 0) return -1;
+        return asc ? na - nb : nb - na;
+      }
+      var sa = (ca.textContent || '').trim().toLowerCase();
+      var sb = (cb.textContent || '').trim().toLowerCase();
+      return asc ? sa.localeCompare(sb) : sb.localeCompare(sa);
+    });
+    rows.forEach(function (r) { tbody.appendChild(r); });
+
+    ths.forEach(function (th, i) {
+      var icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = (i === colIdx) ? (asc ? ' ▲' : ' ▼') : '';
+    });
+  }
+
+  ths.forEach(function (th, i) {
+    var icon = document.createElement('span');
+    icon.className = 'sort-icon text-muted';
+    icon.style.fontSize = '0.75em';
+    th.appendChild(icon);
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+    th.style.whiteSpace = 'nowrap';
+    th.addEventListener('click', function () {
+      sortBy(i, th.dataset.numeric === '1');
+    });
+  });
+})();
+</script>
 
 {% endblock %}
