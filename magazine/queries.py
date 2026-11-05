@@ -1098,7 +1098,10 @@ def get_book_contents(cursor, pub_id: int) -> list:
             ) AS authors,
             GROUP_CONCAT(
                 a.author_id ORDER BY ca.ca_id SEPARATOR ','
-            ) AS author_ids
+            ) AS author_ids,
+            GROUP_CONCAT(
+                IFNULL(a.author_lastname, '') ORDER BY ca.ca_id SEPARATOR ' & '
+            ) AS author_lastnames
         FROM pub_content pc
         JOIN titles t            ON t.title_id  = pc.title_id
         LEFT JOIN canonical_author ca ON ca.title_id = IF(t.title_parent > 0, t.title_parent, t.title_id)
@@ -1118,6 +1121,9 @@ def get_book_contents(cursor, pub_id: int) -> list:
         row["type_label"]   = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
         row["length_label"] = _STORY_LENGTH_LABELS.get(row.get("title_storylen") or "", "")
         row["author_list"]  = _make_author_list(row.get("authors"), row.get("author_ids"))
+        lastnames = (row.get("author_lastnames") or "").split(" & ")
+        for i, entry in enumerate(row["author_list"]):
+            entry["lastname"] = lastnames[i].strip() if i < len(lastnames) else ""
     return rows
 
 
