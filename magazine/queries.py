@@ -2843,7 +2843,10 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
             ) AS authors,
             GROUP_CONCAT(
                 DISTINCT author_id ORDER BY author_canonical SEPARATOR ','
-            ) AS author_ids
+            ) AS author_ids,
+            GROUP_CONCAT(
+                DISTINCT IFNULL(author_lastname, '') ORDER BY author_canonical SEPARATOR ' & '
+            ) AS author_lastnames
         FROM (
             SELECT
                 p.pub_id                                  AS pub_id,
@@ -2853,7 +2856,8 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
                 COALESCE(tc.title_ttype, t.title_ttype) AS canon_ttype,
                 NULLIF(YEAR(p.pub_year), 0)             AS pub_year_val,
                 a.author_canonical,
-                a.author_id
+                a.author_id,
+                a.author_lastname
             FROM pubs p
             JOIN pub_content pc ON pc.pub_id  = p.pub_id
             JOIN titles t       ON t.title_id = pc.title_id
@@ -2871,6 +2875,9 @@ def get_pub_series_detail(cursor, pub_series_id: int) -> dict | None:
     for t in titles:
         t["type_label"]  = TITLE_TYPE_LABELS.get(t["title_ttype"], t["title_ttype"] or "")
         t["author_list"] = _make_author_list(t.get("authors"), t.get("author_ids"))
+        lastnames = (t.get("author_lastnames") or "").split(" & ")
+        for i, entry in enumerate(t["author_list"]):
+            entry["lastname"] = lastnames[i].strip() if i < len(lastnames) else ""
 
     row["titles"] = titles
     return row
@@ -3562,7 +3569,12 @@ def get_publisher_books_by_author(cursor, publisher_id: int,
                 DISTINCT a_all.author_id
                 ORDER BY ca_all.ca_id
                 SEPARATOR ','
-            ) AS author_ids
+            ) AS author_ids,
+            GROUP_CONCAT(
+                DISTINCT IFNULL(a_all.author_lastname, '')
+                ORDER BY ca_all.ca_id
+                SEPARATOR ' & '
+            ) AS author_lastnames
         FROM pubs p
         JOIN pub_content pc               ON pc.pub_id   = p.pub_id
         JOIN titles t                     ON t.title_id  = pc.title_id
@@ -3581,6 +3593,9 @@ def get_publisher_books_by_author(cursor, publisher_id: int,
     for row in rows:
         row["type_label"]  = TITLE_TYPE_LABELS.get(row["title_ttype"], row["title_ttype"] or "")
         row["author_list"] = _make_author_list(row.get("authors"), row.get("author_ids"))
+        lastnames = (row.get("author_lastnames") or "").split(" & ")
+        for i, entry in enumerate(row["author_list"]):
+            entry["lastname"] = lastnames[i].strip() if i < len(lastnames) else ""
     return rows
 
 

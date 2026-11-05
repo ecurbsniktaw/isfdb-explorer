@@ -1,5 +1,5 @@
 {% extends "magazine/base.html" %}
-{% load humanize %}
+{% load humanize isfdb_extras %}
 
 {% block title %}{{ publisher.publisher_name }} — ISFDB Explorer{% endblock %}
 
@@ -102,13 +102,13 @@
             matching <strong>{{ author_param }}</strong>
           </p>
           <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
+            <table id="author-books-table" class="table table-sm table-hover mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>Title</th>
-                  <th style="width:30%">Author(s)</th>
-                  <th style="width:8%">Year</th>
-                  <th style="width:12%">Type</th>
+                  <th data-col="0">Title</th>
+                  <th data-col="1" style="width:30%">Author(s)</th>
+                  <th data-col="2" data-numeric="1" style="width:8%">Year</th>
+                  <th data-col="3" style="width:12%">Type</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,16 +121,62 @@
                   <td class="text-muted small">
                     {% for a in b.author_list %}
                       {% if not forloop.first %} &amp; {% endif %}
-                      {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                      {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a|lastname_first }}</a>{% else %}{{ a|lastname_first }}{% endif %}
                     {% empty %}—{% endfor %}
                   </td>
-                  <td class="text-muted small">{{ b.first_year }}</td>
+                  <td class="text-muted small" data-sort="{{ b.first_year|default:0 }}">{{ b.first_year }}</td>
                   <td class="text-muted small">{{ b.type_label }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+          <script>
+          (function () {
+            var table = document.getElementById('author-books-table');
+            if (!table) return;
+            var tbody = table.querySelector('tbody');
+            var ths   = Array.from(table.querySelectorAll('thead th'));
+            var state = {col: -1, asc: true};
+
+            function sortBy(colIdx, numeric, asc) {
+              if (asc === undefined) asc = (state.col === colIdx) ? !state.asc : true;
+              state.col = colIdx; state.asc = asc;
+              var rows = Array.from(tbody.querySelectorAll('tr'));
+              rows.sort(function (a, b) {
+                var ca = a.cells[colIdx], cb = b.cells[colIdx];
+                if (numeric) {
+                  var na = parseInt(ca.dataset.sort || ca.textContent, 10) || 0;
+                  var nb = parseInt(cb.dataset.sort || cb.textContent, 10) || 0;
+                  if (na === 0 && nb !== 0) return 1;
+                  if (nb === 0 && na !== 0) return -1;
+                  return asc ? na - nb : nb - na;
+                }
+                var sa = (ca.textContent || '').trim().toLowerCase();
+                var sb = (cb.textContent || '').trim().toLowerCase();
+                return asc ? sa.localeCompare(sb) : sb.localeCompare(sa);
+              });
+              rows.forEach(function (r) { tbody.appendChild(r); });
+              ths.forEach(function (th, i) {
+                var icon = th.querySelector('.sort-icon');
+                if (icon) icon.textContent = (i === colIdx) ? (asc ? ' ▲' : ' ▼') : '';
+              });
+            }
+
+            ths.forEach(function (th, i) {
+              var icon = document.createElement('span');
+              icon.className = 'sort-icon text-muted';
+              icon.style.fontSize = '0.75em';
+              th.appendChild(icon);
+              th.style.cursor = 'pointer';
+              th.style.userSelect = 'none';
+              th.style.whiteSpace = 'nowrap';
+              th.addEventListener('click', function () { sortBy(i, th.dataset.numeric === '1'); });
+            });
+
+            sortBy(2, true, true);
+          })();
+          </script>
           {% else %}
           <div class="alert alert-warning alert-dismissible fade show mt-3 mb-0" role="alert">
             No books found for author matching <strong>{{ author_param }}</strong>.

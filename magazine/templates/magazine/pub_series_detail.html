@@ -1,4 +1,5 @@
 {% extends "magazine/base.html" %}
+{% load isfdb_extras %}
 
 {% block title %}{{ pub_series.pub_series_name }} — ISFDB Explorer{% endblock %}
 
@@ -82,9 +83,9 @@
         <td>
           {% for auth in t.author_list %}
             {% if auth.id %}
-              <a href="{% url 'author_detail' auth.id %}">{{ auth.name }}</a>
+              <a href="{% url 'author_detail' auth.id %}">{{ auth|lastname_first }}</a>
             {% else %}
-              {{ auth.name }}
+              {{ auth|lastname_first }}
             {% endif %}
             {% if not forloop.last %} &amp; {% endif %}
           {% endfor %}
