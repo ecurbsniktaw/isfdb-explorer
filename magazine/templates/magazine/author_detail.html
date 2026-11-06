@@ -288,19 +288,20 @@ function authorPhotoMissing(img) {
                   data-bs-target="#authorAwardsPanel"
                   aria-expanded="false"
                   aria-controls="authorAwardsPanel">
-            Awards <span class="badge text-bg-secondary ms-2">{{ author_awards|length|intcomma }}</span>
+            Awards <span id="awards-count-label" class="badge text-bg-secondary ms-2">{{ author_awards|length|intcomma }}</span>
           </button>
         </h2>
         <div id="authorAwardsPanel" class="accordion-collapse collapse"
              data-bs-parent="#authorAwardsAccordion">
           <div class="accordion-body px-0 pt-1">
-            <table class="table table-sm mb-0">
+            <div id="awards-level-filter" class="mb-2 ps-1"></div>
+            <table id="awards-table" class="table table-sm mb-0">
               <thead class="table-light">
                 <tr><th>Year</th><th>Award</th><th>Category</th><th>Title</th><th>Status</th></tr>
               </thead>
               <tbody>
                 {% for aw in author_awards %}
-                <tr>
+                <tr data-level="{{ aw.level }}">
                   <td class="text-muted small">{{ aw.year }}</td>
                   <td><a href="{% url 'new_award_detail' aw.award_type_id %}?year={{ aw.year }}&year_nominees=yes" class="text-decoration-none">{{ aw.award_name }}</a></td>
                   <td class="text-muted small">{{ aw.category }}</td>
@@ -655,6 +656,50 @@ document.querySelectorAll('.art-thumb').forEach(function(img) {
     document.getElementById('artCoverModalImg').src = this.dataset.fullsrc;
   });
 });
+</script>
+{% endif %}
+{% if author_awards %}
+<script>
+(function () {
+  const total    = {{ author_awards|length }};
+  const rows     = Array.from(document.querySelectorAll('#awards-table tbody tr[data-level]'));
+  const countEl  = document.getElementById('awards-count-label');
+  const filterDiv = document.getElementById('awards-level-filter');
+  if (!rows.length || !filterDiv) return;
+
+  const levels = ['All', 'Winner', 'Finalist', 'Runner-up', 'Nominee'];
+
+  const group = document.createElement('div');
+  group.className = 'btn-group flex-wrap';
+  group.setAttribute('role', 'group');
+
+  function makeBtn(label, active) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-sm ' + (active ? 'btn-secondary' : 'btn-outline-secondary');
+    btn.textContent = label;
+    btn.dataset.filter = label;
+    return btn;
+  }
+
+  levels.forEach((l, i) => group.appendChild(makeBtn(l, i === 0)));
+  filterDiv.appendChild(group);
+
+  function applyFilter(selected) {
+    let visible = 0;
+    rows.forEach(r => {
+      const show = selected === 'All' || r.dataset.level === selected;
+      r.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    group.querySelectorAll('button').forEach(btn => {
+      btn.className = 'btn btn-sm ' + (btn.dataset.filter === selected ? 'btn-secondary' : 'btn-outline-secondary');
+    });
+    countEl.textContent = selected === 'All' ? total : visible;
+  }
+
+  group.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') applyFilter(e.target.dataset.filter); });
+})();
 </script>
 {% endif %}
 {% endblock %}
