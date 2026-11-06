@@ -669,6 +669,10 @@ document.querySelectorAll('.art-thumb').forEach(function(img) {
 
   const levels = ['All', 'Winner', 'Finalist', 'Runner-up', 'Nominee'];
 
+  const countLine = document.createElement('p');
+  countLine.className = 'text-muted small mb-2 ps-1';
+  filterDiv.appendChild(countLine);
+
   const group = document.createElement('div');
   group.className = 'btn-group flex-wrap';
   group.setAttribute('role', 'group');
@@ -695,10 +699,13 @@ document.querySelectorAll('.art-thumb').forEach(function(img) {
     group.querySelectorAll('button').forEach(btn => {
       btn.className = 'btn btn-sm ' + (btn.dataset.filter === selected ? 'btn-secondary' : 'btn-outline-secondary');
     });
-    countEl.textContent = selected === 'All' ? total : visible;
+    const n = selected === 'All' ? total : visible;
+    countEl.textContent = n;
+    countLine.textContent = 'Showing ' + n + ' of ' + total + ' award' + (total !== 1 ? 's' : '');
   }
 
   group.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') applyFilter(e.target.dataset.filter); });
+  applyFilter('All');
 })();
 </script>
 {% endif %}
