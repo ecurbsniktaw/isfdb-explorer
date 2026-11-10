@@ -1168,7 +1168,7 @@ def get_book_reviews(cursor, title_id: int) -> list:
 def get_title_tags(cursor, title_id: int) -> list:
     """Return tag names for a title, sorted alphabetically (case-insensitive)."""
     cursor.execute("""
-        SELECT t.tag_name
+        SELECT DISTINCT t.tag_name
         FROM tag_mapping tm
         JOIN tags t ON t.tag_id = tm.tag_id
         WHERE tm.title_id = %s
