@@ -151,19 +151,20 @@
                   data-bs-target="#awardsPanel"
                   aria-expanded="false"
                   aria-controls="awardsPanel">
-            Awards <span class="badge text-bg-secondary ms-2">{{ story.awards|length|intcomma }}</span>
+            Awards <span id="story-awards-count-label" class="badge text-bg-secondary ms-2">{{ story.awards|length|intcomma }}</span>
           </button>
         </h2>
         <div id="awardsPanel" class="accordion-collapse collapse"
              data-bs-parent="#awardsAccordion">
           <div class="accordion-body px-0 pt-1">
-            <table class="table table-sm mb-0">
+            <div id="story-awards-level-filter" class="mb-2 ps-1"></div>
+            <table id="story-awards-table" class="table table-sm mb-0">
               <thead class="table-light">
                 <tr><th>Year</th><th>Award</th><th>Category</th><th>Status</th></tr>
               </thead>
               <tbody>
                 {% for award in story.awards %}
-                <tr>
+                <tr data-level="{{ award.level }}">
                   <td class="text-muted small">{{ award.year }}</td>
                   <td><a href="{% url 'new_award_detail' award.award_type_id %}?year={{ award.year }}&year_nominees=yes" class="text-decoration-none">{{ award.award_name }}</a></td>
                   <td class="text-muted">{{ award.category }}</td>
@@ -317,6 +318,57 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if story.awards %}
+<script>
+(function () {
+  const total    = {{ story.awards|length }};
+  const rows     = Array.from(document.querySelectorAll('#story-awards-table tbody tr[data-level]'));
+  const countEl  = document.getElementById('story-awards-count-label');
+  const filterDiv = document.getElementById('story-awards-level-filter');
+  if (!rows.length || !filterDiv) return;
+
+  const levels = ['All', 'Winner', 'Runner-up', 'Nominee/Finalist'];
+
+  const countLine = document.createElement('p');
+  countLine.className = 'text-muted small mb-2 ps-1';
+  filterDiv.appendChild(countLine);
+
+  const group = document.createElement('div');
+  group.className = 'btn-group flex-wrap';
+  group.setAttribute('role', 'group');
+
+  function makeBtn(label, active) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-sm ' + (active ? 'btn-secondary' : 'btn-outline-secondary');
+    btn.textContent = label;
+    btn.dataset.filter = label;
+    return btn;
+  }
+
+  levels.forEach((l, i) => group.appendChild(makeBtn(l, i === 0)));
+  filterDiv.appendChild(group);
+
+  function applyFilter(selected) {
+    let visible = 0;
+    rows.forEach(r => {
+      const show = selected === 'All' || r.dataset.level === selected;
+      r.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    group.querySelectorAll('button').forEach(btn => {
+      btn.className = 'btn btn-sm ' + (btn.dataset.filter === selected ? 'btn-secondary' : 'btn-outline-secondary');
+    });
+    const n = selected === 'All' ? total : visible;
+    countEl.textContent = n;
+    countLine.textContent = 'Showing ' + n + ' of ' + total + ' award' + (total !== 1 ? 's' : '');
+  }
+
+  group.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') applyFilter(e.target.dataset.filter); });
+  applyFilter('All');
+})();
+</script>
+{% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   var modal = document.getElementById('pubCoverModal');
