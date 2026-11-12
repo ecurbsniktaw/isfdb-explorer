@@ -20,7 +20,7 @@
         <div class="form-text">Exact match unless wildcards are used. Use <code>*</code> for any characters, <code>?</code> for one character (e.g. <code>Slan*</code>, <code>Fo?ndation</code>).</div>
       </div>
       <div class="col-auto">
-        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="submit" id="title-search-btn" class="btn btn-primary">Search</button>
       </div>
     </div>
     <div class="mt-2">
@@ -240,6 +240,14 @@
     });
     el.addEventListener('hide.bs.collapse', function () {
       chevron.classList.replace('bi-chevron-up', 'bi-chevron-down');
+    });
+  }
+
+  var btn = document.getElementById('title-search-btn');
+  if (btn) {
+    btn.closest('form').addEventListener('submit', function () {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Searching…';
     });
   }
 })();
