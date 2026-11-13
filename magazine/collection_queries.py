@@ -143,7 +143,11 @@ def get_full_user_collection(cursor, user_id: int) -> dict:
                 GROUP_CONCAT(
                     DISTINCT a.author_id
                     ORDER BY ca.ca_id SEPARATOR ','
-                ) AS author_ids
+                ) AS author_ids,
+                GROUP_CONCAT(
+                    IFNULL(a.author_lastname, '')
+                    ORDER BY ca.ca_id SEPARATOR ' & '
+                ) AS author_lastnames
             FROM titles t
             LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
             LEFT JOIN authors a           ON a.author_id  = ca.author_id
@@ -157,6 +161,9 @@ def get_full_user_collection(cursor, user_id: int) -> dict:
         for r in cursor.fetchall():
             r["type_label"]  = TITLE_TYPE_LABELS.get(r["title_ttype"], r["title_ttype"] or "")
             r["author_list"] = _make_author_list(r.get("authors"), r.get("author_ids"))
+            lastnames = (r.get("author_lastnames") or "").split(" & ")
+            for i, entry in enumerate(r["author_list"]):
+                entry["lastname"] = lastnames[i].strip() if i < len(lastnames) else ""
             book_map[r["title_id"]] = r
 
     mag_map = {}
@@ -240,7 +247,11 @@ def get_full_collection(cursor, token: str) -> dict:
                 GROUP_CONCAT(
                     DISTINCT a.author_id
                     ORDER BY ca.ca_id SEPARATOR ','
-                ) AS author_ids
+                ) AS author_ids,
+                GROUP_CONCAT(
+                    IFNULL(a.author_lastname, '')
+                    ORDER BY ca.ca_id SEPARATOR ' & '
+                ) AS author_lastnames
             FROM titles t
             LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
             LEFT JOIN authors a           ON a.author_id  = ca.author_id
@@ -254,6 +265,9 @@ def get_full_collection(cursor, token: str) -> dict:
         for r in cursor.fetchall():
             r["type_label"]  = TITLE_TYPE_LABELS.get(r["title_ttype"], r["title_ttype"] or "")
             r["author_list"] = _make_author_list(r.get("authors"), r.get("author_ids"))
+            lastnames = (r.get("author_lastnames") or "").split(" & ")
+            for i, entry in enumerate(r["author_list"]):
+                entry["lastname"] = lastnames[i].strip() if i < len(lastnames) else ""
             book_map[r["title_id"]] = r
 
     # ── Magazine details ──────────────────────────────────────────────────────

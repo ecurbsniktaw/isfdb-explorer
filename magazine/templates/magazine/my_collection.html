@@ -1,5 +1,5 @@
 {% extends "magazine/base.html" %}
-{% load humanize %}
+{% load humanize isfdb_extras %}
 
 {% block title %}My Collection — ISFDB Explorer{% endblock %}
 
@@ -57,7 +57,7 @@
                 <td class="text-muted small">
                   {% for a in b.author_list %}
                     {% if not forloop.first %} &amp; {% endif %}
-                    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a|lastname_first }}</a>{% else %}{{ a|lastname_first }}{% endif %}
                   {% empty %}—{% endfor %}
                 </td>
                 <td class="text-muted small" data-sort="{{ b.first_year|default:0 }}">{{ b.first_year }}</td>
@@ -106,7 +106,7 @@
                 <td class="text-muted small">
                   {% for a in b.author_list %}
                     {% if not forloop.first %} &amp; {% endif %}
-                    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                    {% if a.id %}<a href="{% url 'author_detail' a.id %}" class="text-decoration-none">{{ a|lastname_first }}</a>{% else %}{{ a|lastname_first }}{% endif %}
                   {% empty %}—{% endfor %}
                 </td>
                 <td class="text-muted small" data-sort="{{ b.first_year|default:0 }}">{{ b.first_year }}</td>
