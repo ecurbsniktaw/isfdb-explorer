@@ -130,6 +130,7 @@ def get_full_user_collection(cursor, user_id: int) -> dict:
     if book_ids:
         bp = ", ".join(["%s"] * len(book_ids))
         tp = ", ".join(["%s"] * len(BOOK_TYPES))
+        cursor.execute("SET SESSION group_concat_max_len = 1000000")
         cursor.execute(f"""
             SELECT
                 t.title_id,
@@ -145,8 +146,8 @@ def get_full_user_collection(cursor, user_id: int) -> dict:
                     ORDER BY ca.ca_id SEPARATOR ','
                 ) AS author_ids,
                 GROUP_CONCAT(
-                    IFNULL(a.author_lastname, '')
-                    ORDER BY ca.ca_id SEPARATOR ' & '
+                    DISTINCT IFNULL(a.author_lastname, '')
+                    ORDER BY a.author_canonical SEPARATOR ' & '
                 ) AS author_lastnames
             FROM titles t
             LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
@@ -234,6 +235,7 @@ def get_full_collection(cursor, token: str) -> dict:
     if book_ids:
         bp = ", ".join(["%s"] * len(book_ids))
         tp = ", ".join(["%s"] * len(BOOK_TYPES))
+        cursor.execute("SET SESSION group_concat_max_len = 1000000")
         cursor.execute(f"""
             SELECT
                 t.title_id,
@@ -249,8 +251,8 @@ def get_full_collection(cursor, token: str) -> dict:
                     ORDER BY ca.ca_id SEPARATOR ','
                 ) AS author_ids,
                 GROUP_CONCAT(
-                    IFNULL(a.author_lastname, '')
-                    ORDER BY ca.ca_id SEPARATOR ' & '
+                    DISTINCT IFNULL(a.author_lastname, '')
+                    ORDER BY a.author_canonical SEPARATOR ' & '
                 ) AS author_lastnames
             FROM titles t
             LEFT JOIN canonical_author ca ON ca.title_id = t.title_id
