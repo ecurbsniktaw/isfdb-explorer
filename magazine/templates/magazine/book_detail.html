@@ -618,7 +618,6 @@
       btn.className = 'btn btn-sm ' + (btn.dataset.filter === selected ? 'btn-secondary' : 'btn-outline-secondary');
     });
     const n = selected === 'All' ? total : visible;
-    countEl.textContent = n;
     countLine.textContent = 'Showing ' + n + ' of ' + total + ' award' + (total !== 1 ? 's' : '');
   }
 
