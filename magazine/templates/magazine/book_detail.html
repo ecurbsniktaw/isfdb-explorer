@@ -414,19 +414,19 @@
          data-bs-parent="#contentsAccordion">
       <div class="accordion-body px-0 pt-2">
         <div class="table-responsive">
-          <table class="table table-sm table-hover align-middle">
+          <table id="book-contents-table" class="table table-sm table-hover align-middle">
             <thead class="table-light">
               <tr>
-                <th>Page</th>
-                <th>Title</th>
-                <th>Author(s)</th>
-                <th>Type</th>
+                <th data-col="0" data-numeric="1">Page</th>
+                <th data-col="1">Title</th>
+                <th data-col="2">Author(s)</th>
+                <th data-col="3">Type</th>
               </tr>
             </thead>
             <tbody>
               {% for item in contents %}
               <tr>
-                <td class="text-muted small">{{ item.pubc_page|default:"" }}</td>
+                <td class="text-muted small" data-sort="{{ item.pubc_page|default:0 }}">{{ item.pubc_page|default:"" }}</td>
                 <td>
                   <a href="{% url 'story_detail' item.title_id %}" class="text-decoration-none">{{ item.title_title |unescape_html }}</a>
                 </td>
@@ -535,6 +535,52 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if contents %}
+<script>
+(function () {
+  var table = document.getElementById('book-contents-table');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  var ths   = Array.from(table.querySelectorAll('thead th[data-col]'));
+  var state = {col: -1, asc: true};
+
+  function sortBy(colIdx, numeric, asc) {
+    if (asc === undefined) asc = (state.col === colIdx) ? !state.asc : true;
+    state.col = colIdx; state.asc = asc;
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort(function (a, b) {
+      var ca = a.cells[colIdx], cb = b.cells[colIdx];
+      if (numeric) {
+        var na = parseInt(ca.dataset.sort || ca.textContent, 10) || 0;
+        var nb = parseInt(cb.dataset.sort || cb.textContent, 10) || 0;
+        if (na === 0 && nb !== 0) return 1;
+        if (nb === 0 && na !== 0) return -1;
+        return asc ? na - nb : nb - na;
+      }
+      var sa = (ca.textContent || '').trim().toLowerCase();
+      var sb = (cb.textContent || '').trim().toLowerCase();
+      return asc ? sa.localeCompare(sb) : sb.localeCompare(sa);
+    });
+    rows.forEach(function (r) { tbody.appendChild(r); });
+    ths.forEach(function (th, i) {
+      var icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = (i === colIdx) ? (asc ? ' ▲' : ' ▼') : '';
+    });
+  }
+
+  ths.forEach(function (th, i) {
+    var icon = document.createElement('span');
+    icon.className = 'sort-icon text-muted';
+    icon.style.fontSize = '0.75em';
+    th.appendChild(icon);
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+    th.style.whiteSpace = 'nowrap';
+    th.addEventListener('click', function () { sortBy(i, th.dataset.numeric === '1'); });
+  });
+})();
+</script>
+{% endif %}
 <script>
 (function () {
   var itemType = "{{ col_item_type }}";
