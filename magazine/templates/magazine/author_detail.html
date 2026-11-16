@@ -552,7 +552,7 @@ function authorPhotoMissing(img) {
 {% if mag_works %}
 <script>
 (function () {
-  const total = {{ mag_works|length|intcomma }};
+  const total = {{ mag_works|length }};
   const suffix = 'work' + (total === 1 ? '' : 's') + ' in English-language magazines';
   const rows = Array.from(document.querySelectorAll('#works-table tbody tr[data-type]'));
   const countLabel = document.getElementById('works-count-label');
@@ -602,7 +602,7 @@ function authorPhotoMissing(img) {
 {% if books %}
 <script>
 (function () {
-  const total = {{ books|length|intcomma }};
+  const total = {{ books|length }};
   const suffix = 'English-language ' + (total === 1 ? 'book' : 'books');
   const rows = Array.from(document.querySelectorAll('#books-table tbody tr[data-type]'));
   const countLabel = document.getElementById('books-count-label');
