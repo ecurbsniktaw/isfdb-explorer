@@ -66,7 +66,9 @@
 (function () {
   function cellText(row, col) {
     var c = row.cells[col];
-    return c ? c.textContent.trim() : '';
+    if (!c) return '';
+    if (c.dataset.sort !== undefined) return c.dataset.sort;
+    return c.textContent.trim();
   }
 
   function applySort(table, col, asc) {

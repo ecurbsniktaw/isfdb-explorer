@@ -124,7 +124,7 @@ function authorPhotoMissing(img) {
                 <tbody>
                   {% for row in mag_works %}
                   <tr data-type="{{ row.type_label }}">
-                    <td>
+                    <td data-sort="{{ row.pub_year }}{{ row.pub_month|stringformat:'02d' }}">
                       <a href="{% url 'issue_detail' row.pub_id %}" class="text-decoration-none">{{ row.formatted_date }}</a>
                     </td>
                     <td class="text-muted small">{{ row.pubc_page|default:"" }}</td>
