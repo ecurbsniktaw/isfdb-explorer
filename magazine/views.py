@@ -816,6 +816,7 @@ def title_search(request):
     title_type   = request.GET.get("title_type", "").strip().upper()
     length       = request.GET.get("length", "").strip()
     language     = request.GET.get("language", "").strip()
+    lang_op      = request.GET.get("lang_op", "").strip()
     juvenile     = bool(request.GET.get("juvenile"))
     novelization = bool(request.GET.get("novelization"))
     non_genre    = bool(request.GET.get("non_genre"))
@@ -824,11 +825,13 @@ def title_search(request):
     if content_type not in ("all", "book", "fiction"):   content_type = "all"
     if title_type   not in _VALID_TITLE_TYPES:           title_type   = ""
     if length       not in ("novelette", "novella", "short story"): length = ""
-    lang_id = int(language) if language.isdigit() else 0  # 0 = any language
+    if lang_op      not in ("eq", "ne"):                 lang_op      = ""
+    lang_id = int(language) if (language.isdigit() and lang_op) else 0
 
     context = {
         "query": query, "content_type": content_type,
         "title_type": title_type, "length": length, "language": language,
+        "lang_op": lang_op,
         "juvenile": juvenile, "novelization": novelization,
         "non_genre": non_genre, "graphic": graphic,
     }
@@ -837,7 +840,7 @@ def title_search(request):
         cursor = _dict_cursor()
         try:
             titles = find_titles(cursor, query, "exact", content_type,
-                                 title_type, length, lang_id,
+                                 title_type, length, lang_id, lang_op or "eq",
                                  juvenile, novelization, non_genre, graphic)
         finally:
             cursor.close()
@@ -854,7 +857,7 @@ def title_advanced_search(request):
     _VALID_OPS         = ADV_TITLE_OPS | ADV_AUTHOR_OPS | ADV_YEAR_OPS | ADV_PUBLISHER_OPS | {"is_anything"}
     _VALID_TYPES       = {t["type_id"] for t in ADV_SEARCHABLE_TYPES}
     _FIELD_DEFAULTS    = {1: "language", 2: "title", 3: "author", 4: "type", 5: "format", 6: "publisher", 7: "year"}
-    _OP_DEFAULTS       = {1: "any", 2: "is_anything", 3: "is_anything",
+    _OP_DEFAULTS       = {1: "is_anything", 2: "is_anything", 3: "is_anything",
                           4: "is_anything", 5: "is_anything", 6: "is_anything", 7: "is_anything"}
 
     rows = []
@@ -865,8 +868,8 @@ def title_advanced_search(request):
         if field not in _VALID_FIELDS:
             field = _FIELD_DEFAULTS[i]
         if field == "language":
-            if op != "any" and not op.isdigit():
-                op = "any"
+            if op not in ("is_anything", "equals", "is_not"):
+                op = "is_anything"
         elif field == "type":
             if op != "is_anything" and op not in _VALID_TYPES:
                 op = "is_anything"

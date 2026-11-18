@@ -1482,7 +1482,7 @@ _FICTION_SEARCH_TYPES = ("SHORTFICTION", "SERIAL")
 
 def find_titles(cursor, title: str, match_type: str = "exact",
                 content_type: str = "all", title_type: str = "",
-                length: str = "", language: int = 17,
+                length: str = "", language: int = 17, lang_op: str = "eq",
                 juvenile: bool = False, novelization: bool = False,
                 non_genre: bool = False, graphic: bool = False) -> list:
     """
@@ -1528,7 +1528,8 @@ def find_titles(cursor, title: str, match_type: str = "exact",
     extra_params  = []
 
     if language:
-        extra_clauses.append("t.title_language = %s")
+        op_sql = "!=" if lang_op == "ne" else "="
+        extra_clauses.append(f"t.title_language {op_sql} %s")
         extra_params.append(language)
 
     if length:
@@ -1924,10 +1925,13 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         val   = (crit.get("val") or "").strip()
 
         if field == "language":
-            if op == "any" or not op.isdigit():
+            if op in ("any", "is_anything") or not op:
                 continue
-            lang_where_sql = "AND t.title_language = %s"
-            lang_param     = int(op)
+            lang_id_str = (crit.get("val") or "").strip()
+            if not lang_id_str.isdigit():
+                continue
+            lang_where_sql = "AND t.title_language != %s" if op == "is_not" else "AND t.title_language = %s"
+            lang_param     = int(lang_id_str)
             continue
 
         if field == "type":

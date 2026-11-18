@@ -66,9 +66,14 @@
           </select>
         </div>
         <div class="col-auto">
-          <label for="ts-lang" class="form-label fw-semibold small mb-1">Language</label>
-          <select class="form-select form-select-sm" id="ts-lang" name="language">
-            <option value=""    {% if not language       %}selected{% endif %}>Any</option>
+          <label class="form-label fw-semibold small mb-1">Language</label>
+          <div class="d-flex gap-1">
+          <select class="form-select form-select-sm" id="ts-lang-op" name="lang_op" onchange="tsLangOpChange(this)">
+            <option value=""   {% if not lang_op      %}selected{% endif %}>is anything</option>
+            <option value="eq" {% if lang_op == "eq"  %}selected{% endif %}>equals</option>
+            <option value="ne" {% if lang_op == "ne"  %}selected{% endif %}>is not</option>
+          </select>
+          <select class="form-select form-select-sm" id="ts-lang" name="language" {% if not lang_op %}disabled{% endif %}>
             <option value="17"  {% if language == "17"  %}selected{% endif %}>English</option>
             <option value="1"   {% if language == "1"   %}selected{% endif %}>Afrikaans</option>
             <option value="105" {% if language == "105" %}selected{% endif %}>Akkadian</option>
@@ -205,6 +210,7 @@
             <option value="103" {% if language == "103" %}selected{% endif %}>Yoruba</option>
             <option value="135" {% if language == "135" %}selected{% endif %}>Zulu</option>
           </select>
+          </div>{# /d-flex gap-1 #}
         </div>
       </div>
       <div class="d-flex flex-wrap gap-4">
@@ -231,6 +237,10 @@
 
 {% block extra_js %}
 <script>
+function tsLangOpChange(sel) {
+  var langSel = document.getElementById('ts-lang');
+  if (langSel) langSel.disabled = (sel.value === '');
+}
 (function () {
   var el = document.getElementById('tsMoreOptions');
   var chevron = document.getElementById('tsMoreOptionsChevron');

@@ -134,9 +134,14 @@
                     </select>
                   </div>
                   <div class="col-auto">
-                    <label for="tl-lang" class="form-label fw-semibold small mb-1">Language</label>
-                    <select class="form-select form-select-sm" id="tl-lang" name="language">
-                      <option value="" selected>Any</option>
+                    <label class="form-label fw-semibold small mb-1">Language</label>
+                    <div class="d-flex gap-1">
+                    <select class="form-select form-select-sm" id="tl-lang-op" name="lang_op" onchange="tlLangOpChange(this)">
+                      <option value="">is anything</option>
+                      <option value="eq">equals</option>
+                      <option value="ne">is not</option>
+                    </select>
+                    <select class="form-select form-select-sm" id="tl-lang" name="language" disabled>
                       <option value="17">English</option>
                       <option value="1">Afrikaans</option>
                       <option value="105">Akkadian</option>
@@ -273,6 +278,7 @@
                       <option value="103">Yoruba</option>
                       <option value="135">Zulu</option>
                     </select>
+                    </div>{# /d-flex gap-1 #}
                   </div>
                 </div>
                 <div class="d-flex flex-wrap gap-4">
@@ -601,6 +607,10 @@
 
 {% block extra_js %}
 <script>
+function tlLangOpChange(sel) {
+  var langSel = document.getElementById('tl-lang');
+  if (langSel) langSel.disabled = (sel.value === '');
+}
 (function () {
   var el = document.getElementById('titleMoreOptions');
   var chevron = document.getElementById('titleMoreOptionsChevron');
