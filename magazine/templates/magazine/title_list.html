@@ -895,10 +895,31 @@ function tlLangOpChange(sel) {
     {value: 'equals',      label: 'equals'},
     {value: 'is_not',      label: 'is not'},
   ];
+  var langValues = [
+    {value: '17', label: 'English'},
+    {% for lang in languages %}{% if lang.lang_id != "17" %}{value: '{{ lang.lang_id }}', label: '{{ lang.lang_name|escapejs }}'},
+    {% endif %}{% endfor %}
+  ];
+
+  function makeLangSelect(name, disabled) {
+    var sel = document.createElement('select');
+    sel.name = name;
+    sel.className = 'form-select adv-val adv-lang-val';
+    sel.disabled = disabled;
+    langValues.forEach(function (lv) {
+      var opt = document.createElement('option');
+      opt.value = lv.value;
+      opt.textContent = lv.label;
+      sel.appendChild(opt);
+    });
+    return sel;
+  }
 
   function setOps(fieldSel) {
-    var row   = fieldSel.dataset.row;
-    var opSel = document.getElementById('adv-op' + row);
+    var row     = fieldSel.dataset.row;
+    var opSel   = document.getElementById('adv-op' + row);
+    var rowEl   = fieldSel.closest('.adv-row');
+    var valWrap = rowEl ? rowEl.querySelector('.adv-val-wrap') : null;
     var ops;
     if (fieldSel.value === 'language') {
       ops = langOps;
@@ -918,6 +939,24 @@ function tlLangOpChange(sel) {
     opSel.innerHTML = ops.map(function (o) {
       return '<option value="' + o.value + '">' + o.label + '</option>';
     }).join('');
+
+    if (valWrap) {
+      var existing = valWrap.querySelector('.adv-val');
+      if (fieldSel.value === 'language') {
+        if (existing && !existing.classList.contains('adv-lang-val')) {
+          valWrap.replaceChild(makeLangSelect(existing.name, true), existing);
+        }
+      } else {
+        if (existing && existing.classList.contains('adv-lang-val')) {
+          var inp = document.createElement('input');
+          inp.type = 'text'; inp.name = existing.name;
+          inp.className = 'form-control adv-val';
+          inp.placeholder = 'enter value…'; inp.disabled = true;
+          valWrap.replaceChild(inp, existing);
+        }
+      }
+    }
+
     syncVal(opSel);
   }
 
