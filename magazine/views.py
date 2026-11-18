@@ -568,6 +568,14 @@ def book_detail(request, title_id):
     try:
         book = get_book_detail(cursor, title_id, pub_id)
         if not book:
+            # Variant title with no independent publication — redirect to canonical parent
+            cursor.execute(
+                "SELECT title_parent FROM titles WHERE title_id = %s AND title_parent IS NOT NULL",
+                (title_id,),
+            )
+            parent = cursor.fetchone()
+            if parent:
+                return redirect("book_detail", title_id=parent["title_parent"])
             raise Http404(f"No book found for title_id={title_id}")
         editions   = get_book_editions(cursor, title_id, book["pub_id"])
         contents   = get_book_contents(cursor, book["pub_id"])
