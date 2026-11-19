@@ -1870,6 +1870,41 @@ def _year_join_sql_and_params(op, yr):
         )
 
 
+def _build_year_join(year_conds):
+    """
+    Return (join_sql, params) for a list of (op, yr) year conditions (ANDed).
+
+    Uses MIN(pub_year) per title_id so multiple conditions share one derived table:
+      'before N'  → MIN(pub_year) < NNNN-00-00   (first pub is before N)
+      'after N'   → MIN(pub_year) > NNNN-12-00   (first pub is after N)
+      'exactly N' → MIN(pub_year) in [NNNN-00-00, NNNN+1-00-00)
+    These are semantically identical to _year_join_sql_and_params for single conditions.
+    """
+    having_parts = []
+    params = []
+    for op, yr in year_conds:
+        n4   = f"{yr:04d}"
+        n4p1 = f"{yr + 1:04d}"
+        if op == "before":
+            having_parts.append("MIN(p.pub_year) < %s")
+            params.append(f"{n4}-00-00")
+        elif op == "after":
+            having_parts.append("MIN(p.pub_year) > %s")
+            params.append(f"{n4}-12-00")
+        else:  # exactly
+            having_parts.append("MIN(p.pub_year) >= %s AND MIN(p.pub_year) < %s")
+            params.extend([f"{n4}-00-00", f"{n4p1}-00-00"])
+    having_sql = " AND ".join(having_parts)
+    join_sql = f"""JOIN (
+                SELECT pc.title_id
+                FROM pubs p JOIN pub_content pc ON pc.pub_id = p.pub_id
+                WHERE p.pub_year > '0000-12-00'
+                GROUP BY pc.title_id
+                HAVING {having_sql}
+            ) yr_f ON yr_f.title_id = t.title_id"""
+    return join_sql, params
+
+
 def advanced_search_titles(cursor, rows, limit=500, count_only=False,
                            has_synopsis=False, on_archive=False,
                            has_cover=False, has_wikipedia=False):
@@ -1901,17 +1936,14 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
 
     Returns (count, titles).  count_only=True returns (n, []) without rows.
     """
-    title_where_sql      = ""
-    title_param          = None
+    title_clauses        = []   # AND conditions for title field (accumulated)
+    title_params         = []
     type_filter_sql      = ""
     type_filter_param    = None
     author_join_sql      = ""
     author_where_sql = ""
     author_param     = None
-    year_join_sql    = ""
-    year_join_params = []
-    year_op_val      = None
-    year_val_int     = None
+    year_conds       = []   # list of (op, yr_int) — multiple year rows supported
     lang_where_sql   = ""
     lang_param       = None
     format_where_sql    = ""
@@ -1971,17 +2003,17 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         if field == "title" and op in ADV_TITLE_OPS:
             escaped = val.replace("%", r"\%").replace("_", r"\_")
             if op == "equals":
-                title_param     = val
-                title_where_sql = "AND t.title_title = %s"
+                title_clauses.append("AND t.title_title = %s")
+                title_params.append(val)
             elif op == "starts_with":
-                title_param     = escaped + "%"
-                title_where_sql = "AND t.title_title LIKE %s"
+                title_clauses.append("AND t.title_title LIKE %s")
+                title_params.append(escaped + "%")
             elif op == "ends_with":
-                title_param     = "%" + escaped
-                title_where_sql = "AND t.title_title LIKE %s"
+                title_clauses.append("AND t.title_title LIKE %s")
+                title_params.append("%" + escaped)
             else:  # contains
-                title_param     = "%" + escaped + "%"
-                title_where_sql = "AND t.title_title LIKE %s"
+                title_clauses.append("AND t.title_title LIKE %s")
+                title_params.append("%" + escaped + "%")
 
         elif field == "author" and op in ADV_AUTHOR_OPS:
             # Join to canonical_author + authors so MySQL can hit the canonical
@@ -2041,26 +2073,35 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
                 )"""
 
         elif field == "year" and op in ADV_YEAR_OPS and val.isdigit():
-            year_op_val  = op
-            year_val_int = int(val)
-            year_join_sql, year_join_params = _year_join_sql_and_params(op, int(val))
+            year_conds.append((op, int(val)))
+
+    # Build year join from accumulated conditions (or clear if no year rows).
+    if year_conds:
+        year_join_sql, year_join_params = _build_year_join(year_conds)
+    else:
+        year_join_sql    = ""
+        year_join_params = []
 
     # When both format and year are active, fold the year into the format EXISTS
     # subquery so both constraints apply to the SAME pub. Without this a story
     # first published in 1960 in a magazine and later reprinted in a 1968
     # dos-à-dos anthology would match "year=1960, format=dos".
-    if format_params and year_val_int is not None:
-        n4   = f"{year_val_int:04d}"
-        n4p1 = f"{year_val_int + 1:04d}"
-        if year_op_val == "before":
-            year_in_fmt_sql    = "AND p_fmt.pub_year > '0000-12-00' AND p_fmt.pub_year < %s"
-            year_in_fmt_params = [f"{n4}-00-00"]
-        elif year_op_val == "after":
-            year_in_fmt_sql    = "AND p_fmt.pub_year > %s"
-            year_in_fmt_params = [f"{n4}-12-00"]
-        else:  # exactly
-            year_in_fmt_sql    = "AND p_fmt.pub_year >= %s AND p_fmt.pub_year < %s"
-            year_in_fmt_params = [f"{n4}-00-00", f"{n4p1}-00-00"]
+    if format_params and year_conds:
+        year_in_fmt_parts  = []
+        year_in_fmt_params = []
+        for yop, yv in year_conds:
+            n4   = f"{yv:04d}"
+            n4p1 = f"{yv + 1:04d}"
+            if yop == "before":
+                year_in_fmt_parts.append("p_fmt.pub_year > '0000-12-00' AND p_fmt.pub_year < %s")
+                year_in_fmt_params.append(f"{n4}-00-00")
+            elif yop == "after":
+                year_in_fmt_parts.append("p_fmt.pub_year > %s")
+                year_in_fmt_params.append(f"{n4}-12-00")
+            else:  # exactly
+                year_in_fmt_parts.append("p_fmt.pub_year >= %s AND p_fmt.pub_year < %s")
+                year_in_fmt_params.extend([f"{n4}-00-00", f"{n4p1}-00-00"])
+        year_in_fmt_sql = "AND " + " AND ".join(year_in_fmt_parts)
         format_where_sql = f"""AND EXISTS (
                     SELECT 1 FROM pub_content pc_fmt
                     JOIN pubs p_fmt ON p_fmt.pub_id = pc_fmt.pub_id
@@ -2081,6 +2122,9 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
         year_join_sql    = ""
         year_join_params = []
 
+    # Build combined title WHERE clause from accumulated conditions.
+    title_where_sql = " ".join(title_clauses)
+
     # Checkbox conditions (no extra params — literals embedded in SQL)
     synopsis_sql   = "AND (t.title_synopsis IS NOT NULL AND t.title_synopsis != '')" if has_synopsis  else ""
     archive_sql    = "AND EXISTS (SELECT 1 FROM webpages w WHERE w.title_id = t.title_id AND w.url LIKE '%%archive.org%%')" if on_archive   else ""
@@ -2093,7 +2137,7 @@ def advanced_search_titles(cursor, rows, limit=500, count_only=False,
     all_params = (
         *year_join_params,
         *_SEARCHABLE_TYPES,
-        *([title_param]       if title_param       is not None else []),
+        *title_params,
         *([type_filter_param] if type_filter_param is not None else []),
         *([author_param]      if author_param      is not None else []),
         *([lang_param]        if lang_param        is not None else []),
